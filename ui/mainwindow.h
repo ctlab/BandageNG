@@ -19,6 +19,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "features_forest/blastfeaturenodesmatcher.h"
+
 #include "graph/debruijnnode.h"
 #include "graph/nodecolorer.h"
 #include "graph/contiguity.h"
@@ -35,6 +37,7 @@
 #include <QLineEdit>
 #include <QRectF>
 #include <QThread>
+#include "ui/featuresforestwidget.h"
 
 Q_MOC_INCLUDE("graph/debruijnnode.h")
 
@@ -46,7 +49,7 @@ class GraphSearchDialog;
 namespace search {
     class GraphSearch;
 }
-enum UiState {NO_GRAPH_LOADED, GRAPH_LOADED, GRAPH_DRAWN};
+enum UiState {NO_GRAPH_LOADED, GRAPH_LOADED, GRAPH_DRAWN, NO_FEATURES_LOADED, FEATURES_LOADED, FEATURES_DRAWN};
 
 namespace Ui {
 class MainWindow;
@@ -63,16 +66,21 @@ public:
 private:
     Ui::MainWindow *ui;
     BandageGraphicsScene * m_scene;
+    BandageGraphicsScene * m_featuresforestScene;
 
     GraphicsViewZoom * m_graphicsViewZoom;
+    GraphicsViewZoom * m_featuresForestViewZoom;
     double m_previousZoomSpinBoxValue;
     QString m_imageFilter;
     QString m_fileToLoadOnStartup;
     bool m_drawGraphAfterLoad;
     UiState m_uiState;
+    UiState m_featuresUiState;
     GraphSearchDialog * m_blastSearchDialog;
 
     bool m_alreadyShown;
+    FeaturesForestWidget* m_featuresForestWidget;
+    BlastFeaturesNodesMatcher* m_blastFeaturesNodesMatcher;
 
     void cleanUp();
     void displayGraphDetails();
@@ -80,7 +88,7 @@ private:
     void resetScene();
     void resetAllNodeColours();
     void layoutGraph();
-    void zoomToFitRect(QRectF rect);
+    void zoomToFitRect(QRectF rect, BandageGraphicsView* graphicsView);
     void setZoomSpinBoxStep();
     void getSelectedNodeInfo(int & selectedNodeCount, QString & selectedNodeCountText,
                              QString & selectedNodeListText, QString & selectedNodeLengthText, QString &selectedNodeDepthText,
@@ -90,11 +98,11 @@ private:
     void setUiState(UiState uiState);
     void selectBasedOnContiguity(ContiguityStatus contiguityStatus);
     void setWidgetsFromSettings();
-    QString getDefaultImageFileName();
+    QString getDefaultGraphImageFileName();
+    QString getDefaultFeaturesImageFileName();
     void setGraphScopeComboBox(GraphScope graphScope);
     void setupBlastQueryComboBox();
     void setupPathSelectionLineEdit(QLineEdit *lineEdit);
-    bool checkForImageSave();
 
     void setSelectedNodesWidgetsVisibility(bool visible);
     void setSelectedEdgesWidgetsVisibility(bool visible);
@@ -105,6 +113,11 @@ private:
     static QByteArray makeStringUrlSafe(QByteArray s);
     std::vector<DeBruijnNode *> addComplementaryNodes(std::vector<DeBruijnNode *> nodes);
     void resetNodeContiguityStatus();
+    void setFeaturesUiState(UiState uiState);
+    bool checkForGraphImageSave();
+    bool checkForFeaturesImageSave();
+    void resetFeatureForestScene();
+    void cleanUpFeatureForest();
 
 private slots:
     void loadGraph(QString fullFileName = "");
@@ -126,8 +139,6 @@ private slots:
     void switchColourScheme(int idx = -1);
     void switchTagValue();
     void determineContiguityFromSelectedNode();
-    void saveImageCurrentView();
-    void saveImageEntireScene();
     void setTextDisplaySettings();
     void fontButtonPressed();
     void setNodeCustomColour();
@@ -143,8 +154,8 @@ private slots:
     void selectUserSpecifiedNodes();
     void graphLayoutFinished(const GraphLayout &layout);
     void openBlastSearchDialog();
-    void blastChanged();
-    void blastQueryChanged();
+    void blastChanged(QString chosenTypeName = "");
+    void blastQueryChanged(QString chosenTypeName = "");
     void showHidePanels();
     void bringSelectedNodesToFront();
     void selectNodesWithBlastHits();
@@ -177,6 +188,23 @@ private slots:
     void changeNodeDepth();
     void openGraphInfoDialog();
     void exportGraphLayout();
+    void loadFeaturesForest(QString fullFileName = "");
+    void zoomToFitFeatureScene();
+    void saveImageCurrentView(QString defaultFileNameAndPath, BandageGraphicsView* graphicsView);
+    void saveImageGraphCurrentView();
+    void saveImageFeaturesCurrentView();
+    void saveImageEntireScene(QString defaultFileNameAndPath, BandageGraphicsView* graphicsView, BandageGraphicsScene* scene);
+    void saveImageGraphEntireScene();
+    void saveImageFeaturesEntireScene();
+    void featureNodeWidthChanged();
+    void drawFeaturesForest();
+    void featureSelectionChanged();
+    void matchSelectedFeatureNodes();
+    void switchFeatureColourScheme(int idx = -1);
+    void setFeatureNodeCustomColour();
+    void setFeatureNodeCustomLabel();
+    void setFeatureTextDisplaySettings();
+    void resetAllFeaturesNodeColours();
 
 protected:
       void showEvent(QShowEvent *ev) override;

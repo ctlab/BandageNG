@@ -84,6 +84,9 @@ namespace search {
 
         void setColour(QColor newColour) { m_colour = newColour; }
         void setShown(bool newShown) { m_shown = newShown; }
+
+        QColor getFeatureClassColour() const { return m_featureClassColour; }
+        void setFeatureClassColour(QColor newColour) { m_featureClassColour = newColour; }
     private:
         QString m_name;
         QString m_sequence;
@@ -93,6 +96,7 @@ namespace search {
         bool m_searchedFor = false;
         bool m_shown = true;
         QColor m_colour;
+        QColor m_featureClassColour;
         std::vector<QueryPath> m_paths;
 
         void autoSetSequenceType();

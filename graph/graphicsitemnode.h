@@ -28,13 +28,14 @@
 #include <QStringList>
 #include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
+#include "painting/commongraphicsitemnode.h"
 
 #include <vector>
 
 class DeBruijnNode;
 class Path;
 
-class GraphicsItemNode : public QGraphicsItem
+class GraphicsItemNode : public CommonGraphicsItemNode
 {
 public:
     GraphicsItemNode(DeBruijnNode * deBruijnNode,
@@ -50,43 +51,24 @@ public:
                      QGraphicsItem * parent = nullptr);
 
     DeBruijnNode * m_deBruijnNode;
-    adt::SmallPODVector<QPointF> m_linePoints;
-    QColor m_colour;
-    QPainterPath m_path;
-    float m_width;
-    size_t m_grabIndex : 31;
-    bool m_hasArrow : 1;
 
     static QSize getNodeTextSize(const QString& text);
     static float getNodeWidth(double depthRelativeToMeanDrawnDepth,
                               double depthPower,
                               double depthEffectOnWidth,
                               double averageNodeWidth);
-    static void drawTextPathAtLocation(QPainter *painter, const QPainterPath& textPath, QPointF centre);
+    static void drawTextPathAtLocation(QPainter * painter, const QPainterPath &textPath, QPointF centre);
 
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem *, QWidget *) override;
     QPainterPath shape() const override;
-    void shiftPoints(QPointF difference);
-    void remakePath();
     bool usePositiveNodeColour() const;
-    QPointF getFirst() const {return m_linePoints.front();}
-    QPointF getSecond() const {return m_linePoints[1];}
-    QPointF getLast() const {return m_linePoints.back();}
-    QPointF getSecondLast() const {return m_linePoints[m_linePoints.size()-2];}
-    std::vector<QPointF> getCentres() const;
-    void setNodeColour(QColor color) { m_colour = color; }
     QStringList getNodeText() const;
     void setWidth(double depthRelativeToMeanDrawnDepth,
                   double averageNodeWidth = 5.0,
                   double depthPower = 0.5, double depthEffectOnWidth = 0.5);
-    QPainterPath makePartialPath(double startFraction, double endFraction);
-    double getNodePathLength();
-    QPointF findLocationOnPath(double fraction);
     QRectF boundingRect() const override;
-    void shiftPointsLeft();
-    void shiftPointsRight();
     void fixEdgePaths(std::vector<GraphicsItemNode *> * nodes = nullptr) const;
     double indexToFraction(int64_t pos) const;
 
@@ -95,5 +77,4 @@ private:
     void queryPathHighlightNode(QPainter * painter);
     void pathHighlightNode2(QPainter * painter, DeBruijnNode * node, bool reverse, Path * path);
     QPainterPath buildPartialHighlightPath(double startFraction, double endFraction, bool reverse);
-    void shiftPointSideways(bool left);
 };

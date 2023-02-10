@@ -19,6 +19,7 @@
 #pragma once
 
 #include "graphsearch/graphsearch.h"
+#include "features_forest/assemblyfeaturesforest.h"
 
 #include <QDir>
 #include <QString>
@@ -45,6 +46,8 @@ public:
     int loadQueriesFromFile(QString fullFileName) override;
     QString buildDatabase(const AssemblyGraph &graph,
                           bool includePaths = true) override;
+    QString buildDatabase(const AssemblyFeaturesForest &graph);
+
     QString doSearch(QString extraParameters) override;
     QString doSearch(search::Queries &queries, QString extraParameters) override;
 

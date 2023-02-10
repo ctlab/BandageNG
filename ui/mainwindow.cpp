@@ -33,6 +33,7 @@
 #include "graphsearch/blast/blastsearch.h"
 #include "graphsearch/minimap2/minimap2search.h"
 
+#include "graph/annotation.h"
 #include "graph/assemblygraph.h"
 #include "graph/debruijnnode.h"
 #include "graph/debruijnedge.h"
@@ -81,6 +82,10 @@
 #include <iostream>
 #include <filesystem>
 
+#include "features_forest/assemblyfeaturesforest.h"
+#include "features_forest/graphicsitemfeaturenode.h"
+#include <QtWidgets/QSplitter>
+
 MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
     QMainWindow(nullptr),
     ui(new Ui::MainWindow), m_imageFilter("PNG (*.png)"),
@@ -90,6 +95,10 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
     ui->setupUi(this);
 
     QApplication::setWindowIcon(QIcon(QPixmap(":/icons/icon.png")));
+    ui->graphicsViewWidget->layout()->addWidget(g_graphicsView);
+
+    ui->featureClassInfoText->setFixedHeight(87);
+    ui->featureClassInfoText->setEnabled(false);
     ui->graphicsViewWidget->layout()->addWidget(g_graphicsView);
 
     srand(time(nullptr));
@@ -104,12 +113,21 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
     ui->selectedEdgesTextEdit->setFixedHeight(ui->selectedEdgesTextEdit->sizeHint().height() / 2.5);
 
     setUiState(NO_GRAPH_LOADED);
+    setFeaturesUiState(NO_FEATURES_LOADED);
 
     m_graphicsViewZoom = new GraphicsViewZoom(g_graphicsView);
     g_graphicsView->m_zoom = m_graphicsViewZoom;
 
     m_scene = new BandageGraphicsScene(this);
     g_graphicsView->setScene(m_scene);
+
+    QSplitter* allViewsSplitter = new QSplitter;
+    allViewsSplitter->setOrientation(Qt::Horizontal);
+    allViewsSplitter->addWidget(g_graphicsView);
+    allViewsSplitter->addWidget(g_graphicsViewFeaturesForest);
+
+    ui->graphicsViewWidget->layout()->addWidget(allViewsSplitter);
+    m_featuresForestWidget = new FeaturesForestWidget();
 
     //Nothing is selected yet, so this will hide the appropriate labels.
     selectionChanged();
@@ -121,6 +139,7 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
 
     graphScopeChanged();
     switchColourScheme();
+    switchFeatureColourScheme();
 
     ui->bedButton->setContent(ui->bedLoadWidget);
     ui->annotationsButton->setContent(ui->annotationsListWidget);
@@ -147,8 +166,6 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
     connect(ui->actionSave_selected_node_path_to_FASTA, SIGNAL(triggered(bool)), this, SLOT(saveSelectedPathToFile()));
     connect(ui->coloursComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchColourScheme()));
     connect(ui->tagsComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchTagValue()));
-    connect(ui->actionSave_image_current_view, SIGNAL(triggered()), this, SLOT(saveImageCurrentView()));
-    connect(ui->actionSave_image_entire_scene, SIGNAL(triggered()), this, SLOT(saveImageEntireScene()));
     connect(ui->actionExport_layout, SIGNAL(triggered()), this, SLOT(exportGraphLayout()));
     connect(ui->nodeCustomLabelsCheckBox, SIGNAL(toggled(bool)), this, SLOT(setTextDisplaySettings()));
     connect(ui->nodeNamesCheckBox, SIGNAL(toggled(bool)), this, SLOT(setTextDisplaySettings()));
@@ -204,6 +221,20 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
     connect(ui->actionChange_node_name, SIGNAL(triggered(bool)), this, SLOT(changeNodeName()));
     connect(ui->actionChange_node_depth, SIGNAL(triggered(bool)), this, SLOT(changeNodeDepth()));
     connect(ui->moreInfoButton, SIGNAL(clicked(bool)), this, SLOT(openGraphInfoDialog()));
+
+    connect(ui->drawFeaturesButton, SIGNAL(clicked()), this, SLOT(drawFeaturesForest()));
+    connect(ui->actionLoad_features_forest, SIGNAL(triggered(bool)), this, SLOT(loadFeaturesForest()));
+    connect(ui->featuresColoursComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchFeatureColourScheme()));
+    connect(ui->actionSave_image_current_view, SIGNAL(triggered()), this, SLOT(saveImageGraphCurrentView()));
+    connect(ui->actionSave_image_entire_scene, SIGNAL(triggered()), this, SLOT(saveImageGraphEntireScene()));
+    //connect(ui->actionSave_image_features_current_view, SIGNAL(triggered()), this, SLOT(saveImageFeaturesCurrentView()));
+    //connect(ui->actionSave_image_features_entire_scene, SIGNAL(triggered()), this, SLOT(saveImageFeaturesEntireScene()));
+    connect(ui->featureNodeWidthSpinBox, SIGNAL(valueChanged(double)), this, SLOT(featureNodeWidthChanged()));
+    connect(ui->connectSelectedFeatureNodes, SIGNAL(clicked()), this, SLOT(matchSelectedFeatureNodes()));
+    connect(ui->featureIdCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
+    connect(ui->featureClassCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
+    connect(ui->featureCustomCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
+    connect(ui->featureClassLikeFigureCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
 
     connect(this, SIGNAL(windowLoaded()), this, SLOT(afterMainWindowShow()), Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 }
@@ -906,7 +937,6 @@ void MainWindow::resetScene() {
     g_graphicsView->undoRotation();
 }
 
-
 std::vector<DeBruijnNode *> MainWindow::getNodesFromLineEdit(QLineEdit * lineEdit, bool exactMatch, std::vector<QString> * nodesNotInGraph)
 {
     return g_assemblyGraph->getNodesFromString(lineEdit->text(), exactMatch, nodesNotInGraph);
@@ -990,15 +1020,15 @@ void MainWindow::zoomedWithMouseWheel()
 
 void MainWindow::zoomToFitScene()
 {
-    zoomToFitRect(m_scene->sceneRect());
+    zoomToFitRect(m_scene->sceneRect(), g_graphicsView);
 }
 
 
-void MainWindow::zoomToFitRect(QRectF rect)
+void MainWindow::zoomToFitRect(QRectF rect, BandageGraphicsView* graphicsView)
 {
-    double startingZoom = g_graphicsView->transform().m11();
-    g_graphicsView->fitInView(rect, Qt::KeepAspectRatio);
-    double endingZoom = g_graphicsView->transform().m11();
+    double startingZoom = graphicsView->transform().m11();
+    graphicsView->fitInView(rect, Qt::KeepAspectRatio);
+    double endingZoom = graphicsView->transform().m11();
     double zoomFactor = endingZoom / startingZoom;
     g_absoluteZoom *= zoomFactor;
     double newSpinBoxValue = ui->zoomSpinBox->value() * zoomFactor;
@@ -1180,6 +1210,18 @@ void MainWindow::resetAllNodeColours() {
     g_graphicsView->viewport()->update();
 }
 
+void MainWindow::resetAllFeaturesNodeColours() {
+    for (auto &entry : g_assemblyFeaturesForest->m_nodes) {
+        auto *graphicsItemNode = entry->getGraphicsItemFeatureNode();
+        if (!graphicsItemNode)
+            continue;
+
+        graphicsItemNode->setNodeColour(g_settings->featureNodeColorer->get(graphicsItemNode));
+    }
+
+    g_graphicsViewFeaturesForest->viewport()->update();
+}
+
 void MainWindow::switchTagValue() {
     NodeColorScheme scheme = g_settings->nodeColorer->scheme();
     if (scheme == TAG_VALUE) {
@@ -1253,7 +1295,7 @@ void MainWindow::determineContiguityFromSelectedNode() {
 }
 
 
-QString MainWindow::getDefaultImageFileName()
+QString MainWindow::getDefaultGraphImageFileName()
 {
     QString fileNameAndPath = g_memory->rememberedPath + "/graph";
 
@@ -1270,12 +1312,12 @@ QString MainWindow::getDefaultImageFileName()
 }
 
 
-void MainWindow::saveImageCurrentView()
+void MainWindow::saveImageCurrentView(QString defaultFileNameAndPath, BandageGraphicsView* graphicsView)
 {
-    if (!checkForImageSave())
+    if (!checkForGraphImageSave())
         return;
 
-    QString defaultFileNameAndPath = getDefaultImageFileName();
+    //QString defaultFileNameAndPath = getDefaultGraphImageFileName();
 
     QString selectedFilter = m_imageFilter;
     QString fullFileName = QFileDialog::getSaveFileName(this, "Save graph image (current view)",
@@ -1296,12 +1338,12 @@ void MainWindow::saveImageCurrentView()
         QPainter painter;
         if (pixelImage)
         {
-            QImage image(g_graphicsView->viewport()->rect().size(), QImage::Format_ARGB32);
+            QImage image(graphicsView->viewport()->rect().size(), QImage::Format_ARGB32);
             image.fill(Qt::white);
             painter.begin(&image);
             painter.setRenderHint(QPainter::Antialiasing);
             painter.setRenderHint(QPainter::TextAntialiasing);
-            g_graphicsView->render(&painter);
+            graphicsView->render(&painter);
             image.save(fullFileName);
             g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
             painter.end();
@@ -1310,25 +1352,26 @@ void MainWindow::saveImageCurrentView()
         {
             QSvgGenerator generator;
             generator.setFileName(fullFileName);
-            QSize size = g_graphicsView->viewport()->rect().size();
+            QSize size = graphicsView->viewport()->rect().size();
             generator.setSize(size);
             generator.setViewBox(QRect(0, 0, size.width(), size.height()));
             painter.begin(&generator);
             painter.fillRect(0, 0, size.width(), size.height(), Qt::white);
             painter.setRenderHint(QPainter::Antialiasing);
             painter.setRenderHint(QPainter::TextAntialiasing);
-            g_graphicsView->render(&painter);
+            graphicsView->render(&painter);
             painter.end();
         }
     }
 }
 
-void MainWindow::saveImageEntireScene()
+
+void MainWindow::saveImageEntireScene(QString defaultFileNameAndPath, BandageGraphicsView* graphicsView, BandageGraphicsScene* scene)
 {
-    if (!checkForImageSave())
+    if (!checkForGraphImageSave())
         return;
 
-    QString defaultFileNameAndPath = getDefaultImageFileName();
+    //QString defaultFileNameAndPath = getDefaultGraphImageFileName();
 
     QString selectedFilter = m_imageFilter;
     QString fullFileName = QFileDialog::getSaveFileName(this,
@@ -1351,15 +1394,15 @@ void MainWindow::saveImageEntireScene()
         g_settings->positionTextNodeCentre = true;
 
         //Temporarily undo any rotation so labels appear upright.
-        double rotationBefore = g_graphicsView->getRotation();
-        g_graphicsView->undoRotation();
+        double rotationBefore = graphicsView->getRotation();
+        graphicsView->undoRotation();
 
         m_imageFilter = selectedFilter;
 
         QPainter painter;
         if (pixelImage)
         {
-            QSize imageSize = g_absoluteZoom * m_scene->sceneRect().size().toSize();
+            QSize imageSize = g_absoluteZoom * scene->sceneRect().size().toSize();
 
             if (imageSize.width() > 32767 || imageSize.height() > 32767)
             {
@@ -1389,8 +1432,8 @@ void MainWindow::saveImageEntireScene()
             painter.begin(&image);
             painter.setRenderHint(QPainter::Antialiasing);
             painter.setRenderHint(QPainter::TextAntialiasing);
-            m_scene->setSceneRectangle();
-            m_scene->render(&painter);
+            scene->setSceneRectangle();
+            scene->render(&painter);
             image.save(fullFileName);
             g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
             painter.end();
@@ -1399,20 +1442,20 @@ void MainWindow::saveImageEntireScene()
         {
             QSvgGenerator generator;
             generator.setFileName(fullFileName);
-            QSize size = g_absoluteZoom * m_scene->sceneRect().size().toSize();
+            QSize size = g_absoluteZoom * scene->sceneRect().size().toSize();
             generator.setSize(size);
             generator.setViewBox(QRect(0, 0, size.width(), size.height()));
             painter.begin(&generator);
             painter.fillRect(0, 0, size.width(), size.height(), Qt::white);
             painter.setRenderHint(QPainter::Antialiasing);
             painter.setRenderHint(QPainter::TextAntialiasing);
-            m_scene->setSceneRectangle();
-            m_scene->render(&painter);
+            scene->setSceneRectangle();
+            scene->render(&painter);
             painter.end();
         }
 
         g_settings->positionTextNodeCentre = positionTextNodeCentreSettingBefore;
-        g_graphicsView->setRotation(rotationBefore);
+        graphicsView->setRotation(rotationBefore);
     }
 }
 
@@ -1421,7 +1464,7 @@ void MainWindow::saveImageEntireScene()
 //This function makes sure that a graph is loaded and drawn so that an image can be saved.
 //It returns true if everything is fine.  If things aren't ready, it displays a message
 //to the user and returns false.
-bool MainWindow::checkForImageSave()
+bool MainWindow::checkForGraphImageSave()
 {
     if (m_uiState == NO_GRAPH_LOADED)
     {
@@ -1463,8 +1506,10 @@ void MainWindow::fontButtonPressed()
 
 void MainWindow::setNodeCustomColour() {
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
-    if (selectedNodes.empty())
+    if (selectedNodes.empty()) {
+        setFeatureNodeCustomColour();
         return;
+    }
 
     QString dialogTitle = "Select custom colour for selected node";
     if (selectedNodes.size() > 1)
@@ -1495,8 +1540,10 @@ void MainWindow::setNodeCustomColour() {
 void MainWindow::setNodeCustomLabel()
 {
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
-    if (selectedNodes.empty())
+    if (selectedNodes.empty()) {
+        setFeatureNodeCustomLabel();
         return;
+    }
 
     QString dialogMessage = "Type a custom label for selected node";
     if (selectedNodes.size() > 1)
@@ -1707,7 +1754,7 @@ void MainWindow::openBlastSearchDialog() {
 
 //This function is called whenever the user does something in the
 //GraphSearchDialog that should be reflected here in MainWindow.
-void MainWindow::blastChanged() {
+void MainWindow::blastChanged(QString chosenTypeName) {
     if (!m_blastSearchDialog)
         return;
 
@@ -1740,7 +1787,11 @@ void MainWindow::blastChanged() {
             ui->blastQueryComboBox->setCurrentIndex(indexOfQuery);
     }
 
-    blastQueryChanged();
+    if (blastQueryText == "all") {
+        ui->blastQueryComboBox->setCurrentText("all");
+    }
+
+    blastQueryChanged(chosenTypeName);
 }
 
 void MainWindow::setupBlastQueryComboBox() {
@@ -1767,7 +1818,7 @@ void MainWindow::setupBlastQueryComboBox() {
     }
 }
 
-void MainWindow::blastQueryChanged() {
+void MainWindow::blastQueryChanged(QString chosenTypeName) {
     if (!m_blastSearchDialog)
         return;
 
@@ -1786,7 +1837,24 @@ void MainWindow::blastQueryChanged() {
         if (query->isShown())
             shownQueries.push_back(query);
 
-    g_annotationsManager->updateGroupFromHits(search->annotationGroupName(), shownQueries);
+    if (chosenTypeName != "") {
+        g_annotationsManager->updateGroupFromHits(search->annotationGroupName(), shownQueries, chosenTypeName);
+    } else if (m_featuresUiState == FEATURES_DRAWN) {
+        FeatureNodeColorScheme scheme = (FeatureNodeColorScheme)ui->featuresColoursComboBox->currentIndex();
+        switch (scheme) {
+        case FEATURE_BLAST_SOLID_COLOURS:
+            g_annotationsManager->updateGroupFromHits(search->annotationGroupName(), shownQueries, convertAnnotationToQString(SOLID_ANNOTATION));
+            break;
+        case FEATURE_BLAST_CLASS_COLOURS:
+            g_annotationsManager->updateGroupFromHits(search->annotationGroupName(), shownQueries, convertAnnotationToQString(FEATURE_CLASS_ANNOTATION));
+            break;
+        default:
+            g_annotationsManager->updateGroupFromHits(search->annotationGroupName(), shownQueries);
+            break;
+        }
+    } else {
+        g_annotationsManager->updateGroupFromHits(search->annotationGroupName(), shownQueries);
+    }
     g_graphicsView->viewport()->update();
 }
 
@@ -2022,7 +2090,7 @@ void MainWindow::zoomToSelection()
     for (auto *selectedItem : selection)
         boundingBox = boundingBox | selectedItem->boundingRect();
 
-    zoomToFitRect(boundingBox);
+    zoomToFitRect(boundingBox, g_graphicsView);
 }
 
 
@@ -2538,4 +2606,325 @@ void MainWindow::showPathListDialog() {
 
     PathListDialog pathListDialog(*g_assemblyGraph, selectedNodes, this);
     pathListDialog.exec();
+}
+
+
+
+void MainWindow::resetFeatureForestScene() {
+    g_assemblyFeaturesForest->resetEdges();
+    g_assemblyFeaturesForest->resetNodes();
+    m_featuresForestWidget->cleanUp();
+
+    m_featuresForestWidget = new FeaturesForestWidget();
+
+    //connect(m_featuresforestScene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
+    //selectionChanged();
+
+    g_graphicsViewFeaturesForest->undoRotation();
+}
+
+void MainWindow::cleanUpFeatureForest() {
+    ui->blastQueryComboBox->clear();
+    ui->blastQueryComboBox->addItem("none");
+
+    if (m_blastSearchDialog) {
+        m_blastSearchDialog->search()->cleanUp();
+        delete m_blastSearchDialog;
+        m_blastSearchDialog = nullptr;
+    }
+
+    g_assemblyFeaturesForest->cleanUp();
+
+    switchFeatureColourScheme(FEATURE_UNIFORM_COLOURS);
+}
+
+void MainWindow::loadFeaturesForest(QString fullFileName) {
+    QString selectedFilter = "Comma separated value (*.txt)";
+    if (fullFileName == "")
+    {
+        fullFileName = QFileDialog::getOpenFileName(this, "Load Features forest", g_memory->rememberedPath,
+            "Comma separated value (*.txt)",
+            &selectedFilter);
+    }
+
+    if (fullFileName == "")
+        return; // user clicked on cancel
+    QString errormsg;
+    QStringList columns;
+
+    resetFeatureForestScene();
+    cleanUpFeatureForest();
+
+    try
+    {
+        bool success = g_assemblyFeaturesForest->loadFeatureForestFromFile(fullFileName, &errormsg);
+
+        if (success)
+        {
+            setFeaturesUiState(FEATURES_LOADED);
+        }
+    }
+    catch (...)
+    {
+        QString errorTitle = "Error loading features forest";
+        QString errorMessage = "There was an error when attempting to load:\n"
+            + fullFileName + "\n\n"
+            "Please verify that this file has the correct format.";
+        QMessageBox::warning(this, errorTitle, errorMessage);
+    }
+}
+
+void MainWindow::setFeaturesUiState(UiState uiState) {
+    m_featuresUiState = uiState;
+    switch (uiState)
+    {
+    case NO_FEATURES_LOADED:
+        ui->featuresForestWidget->setEnabled(false);
+        break;
+    case FEATURES_LOADED:
+        ui->featuresForestWidget->setEnabled(true);
+        break;
+    case FEATURES_DRAWN:
+        ui->featuresForestWidget->setEnabled(true);
+        ui->selectionScrollAreaWidgetContents->setEnabled(true);
+        ui->actionZoom_to_selection->setEnabled(true);
+        break;
+    }
+}
+
+void MainWindow::featureSelectionChanged() {
+    std::vector<FeatureTreeNode*> selectedNodes = m_featuresForestWidget->m_scene->getSelectedFeatureNodes();
+
+    if (selectedNodes.size() == 0)
+    {
+        ui->selectedNodesTextEdit->setPlainText("");
+        setSelectedNodesWidgetsVisibility(false);
+    }
+
+    else //One or more nodes selected
+    {
+        setSelectedNodesWidgetsVisibility(true);
+
+        int selectedNodeCount;
+        QString selectedFeatureNodeText;
+
+        m_featuresForestWidget->getSelectedNodeInfo(selectedNodeCount, selectedFeatureNodeText);
+
+        if (selectedNodeCount == 1)
+        {
+            ui->selectedNodesTitleLabel->setText("Selected node");
+            ui->selectedNodesLengthLabel->setText("");
+            ui->selectedNodesDepthLabel->setText("");
+        }
+        else
+        {
+            ui->selectedNodesTitleLabel->setText("Selected nodes (" + formatIntForDisplay(selectedNodeCount) + ")");
+            ui->selectedNodesLengthLabel->setText("");
+            ui->selectedNodesDepthLabel->setText("");
+        }
+
+        ui->selectedNodesTextEdit->setPlainText(selectedFeatureNodeText);
+    }
+
+    ui->selectedEdgesTextEdit->setPlainText("");
+    setSelectedEdgesWidgetsVisibility(false);
+}
+
+void MainWindow::drawFeaturesForest() {
+    m_featuresForestWidget->drawGraph(this);
+    setFeaturesUiState(FEATURES_DRAWN);
+
+    zoomToFitFeatureScene();
+    connect(m_featuresForestWidget->m_scene, SIGNAL(selectionChanged()), this, SLOT(featureSelectionChanged()));
+    featureSelectionChanged();
+}
+
+void MainWindow::zoomToFitFeatureScene()
+{
+    zoomToFitRect(m_featuresForestWidget->m_scene->sceneRect(), g_graphicsViewFeaturesForest);
+}
+
+void MainWindow::switchFeatureColourScheme(int idx)
+{
+    if (idx != -1) {
+        if (ui->featuresColoursComboBox->currentIndex() != idx)
+            ui->featuresColoursComboBox->setCurrentIndex(idx);
+    }
+
+    FeatureNodeColorScheme scheme = (FeatureNodeColorScheme)ui->featuresColoursComboBox->currentIndex();
+    g_settings->initializeColorer(scheme);
+
+    resetAllFeaturesNodeColours();
+    if (scheme == FEATURE_BLAST_SOLID_COLOURS) {
+        switchColourScheme(GRAY_COLOR);
+        blastQueryChanged(convertAnnotationToQString(SOLID_ANNOTATION));
+    } else if (scheme == FEATURE_BLAST_CLASS_COLOURS) {
+        switchColourScheme(GRAY_COLOR);
+        blastQueryChanged(convertAnnotationToQString(FEATURE_CLASS_ANNOTATION));
+    }
+}
+
+QString MainWindow::getDefaultFeaturesImageFileName()
+{
+    QString fileNameAndPath = g_memory->rememberedPath + "/features";
+
+    if (m_imageFilter == "PNG (*.png)")
+        fileNameAndPath += ".png";
+    else if (m_imageFilter == "JPEG (*.jpg)")
+        fileNameAndPath += ".jpg";
+    else if (m_imageFilter == "SVG (*.svg)")
+        fileNameAndPath += ".svg";
+    else
+        fileNameAndPath += ".png";
+
+    return fileNameAndPath;
+}
+
+void MainWindow::saveImageGraphCurrentView() {
+    if (!checkForGraphImageSave())
+        return;
+    QString defaultFileNameAndPath = getDefaultGraphImageFileName();
+    saveImageCurrentView(defaultFileNameAndPath, g_graphicsView);
+}
+
+void MainWindow::saveImageFeaturesCurrentView() {
+    if (!checkForFeaturesImageSave())
+        return;
+    QString defaultFileNameAndPath = getDefaultFeaturesImageFileName();
+    saveImageCurrentView(defaultFileNameAndPath, g_graphicsViewFeaturesForest);
+}
+
+void MainWindow::saveImageGraphEntireScene() {
+    if (!checkForGraphImageSave())
+        return;
+    QString defaultFileNameAndPath = getDefaultGraphImageFileName();
+    saveImageEntireScene(defaultFileNameAndPath, g_graphicsView, m_scene);
+}
+
+void MainWindow::saveImageFeaturesEntireScene() {
+    if (!checkForFeaturesImageSave())
+        return;
+    QString defaultFileNameAndPath = getDefaultFeaturesImageFileName();
+    saveImageEntireScene(defaultFileNameAndPath, g_graphicsViewFeaturesForest, m_featuresForestWidget->m_scene);
+}
+
+void MainWindow::setFeatureTextDisplaySettings()
+{
+    g_settings->displayFeatureIdLabels = ui->featureIdCheckBox->isChecked();
+    g_settings->displayFeatureClassLabels = ui->featureClassCheckBox->isChecked();
+    g_settings->displayFeatureCustomLabels = ui->featureCustomCheckBox->isChecked();
+    g_settings->displayFeatureClassLikeFigure = ui->featureClassLikeFigureCheckBox->isChecked();
+    if (g_settings->displayFeatureClassLikeFigure) {
+        QString classesInfo = g_assemblyFeaturesForest->getClassFigureInfo();
+        ui->featureClassInfoText->setPlainText(classesInfo);
+        ui->featureClassInfoText->setEnabled(true);
+    }
+    else {
+        ui->featureClassInfoText->setEnabled(false);
+    }
+    g_graphicsViewFeaturesForest->viewport()->update();
+}
+
+void MainWindow::setFeatureNodeCustomColour()
+{
+    std::vector<FeatureTreeNode*> selectedNodes = m_featuresForestWidget->m_scene->getSelectedFeatureNodes();
+    if (selectedNodes.empty())
+        return;
+
+    QString dialogTitle = "Select custom colour for selected node";
+    if (selectedNodes.size() > 1)
+        dialogTitle += "s";
+
+    QColor newColour = QColorDialog::getColor(selectedNodes[0]->getCustomColour(), this, dialogTitle);
+    if (newColour.isValid())
+    {
+
+        //If the colouring scheme is not currently custom, change it to custom now
+        g_settings->initializeColorer(FEATURE_CUSTOM_COLOURS);
+        ui->featuresColoursComboBox->setCurrentIndex(g_settings->featureNodeColorer->scheme());
+
+        for (auto & selectedNode : selectedNodes)
+        {
+            g_assemblyFeaturesForest->setCustomColour(selectedNode, newColour);
+            if (selectedNode->getGraphicsItemFeatureNode() != nullptr)
+                selectedNode->getGraphicsItemFeatureNode()->setNodeColour(newColour);
+        }
+        g_graphicsViewFeaturesForest->viewport()->update();
+    }
+}
+
+void MainWindow::setFeatureNodeCustomLabel()
+{
+    std::vector<FeatureTreeNode*> selectedNodes = m_featuresForestWidget->m_scene->getSelectedFeatureNodes();
+    if (selectedNodes.empty())
+        return;
+
+    QString dialogMessage = "Type a custom label for selected node";
+    if (selectedNodes.size() > 1)
+        dialogMessage += "s";
+    dialogMessage += ":";
+
+    bool ok;
+    QString newLabel = QInputDialog::getText(this, "Custom label", dialogMessage, QLineEdit::Normal,
+        selectedNodes[0]->getCustomLabel(), &ok);
+
+    if (ok)
+    {
+        //If the custom label option isn't currently on, turn it on now.
+        ui->nodeCustomLabelsCheckBox->setChecked(true);
+
+        for (size_t i = 0; i < selectedNodes.size(); ++i)
+            selectedNodes[i]->setCustomLabel(newLabel);
+    }
+}
+
+void MainWindow::featureNodeWidthChanged()
+{
+    g_settings->averageFeatureNodeWidth = ui->featureNodeWidthSpinBox->value();
+    g_assemblyFeaturesForest->recalculateAllNodeWidths();
+    g_graphicsViewFeaturesForest->viewport()->update();
+}
+
+void MainWindow::matchSelectedFeatureNodes() {
+    std::vector<FeatureTreeNode*> selectedNodes = m_featuresForestWidget->m_scene->getSelectedFeatureNodes();
+
+    if (selectedNodes.size() == 0)
+    {
+        return;
+    }
+
+    if (!m_blastSearchDialog) {
+        m_blastSearchDialog = new GraphSearchDialog(this);
+        connect(m_blastSearchDialog, SIGNAL(changed()), this, SLOT(blastChanged()));
+        connect(m_blastSearchDialog, SIGNAL(queryPathSelectionChanged()), g_graphicsView->viewport(), SLOT(update()));
+    }
+    auto *search = m_blastSearchDialog->search();
+
+    if (!m_blastFeaturesNodesMatcher) {
+        m_blastFeaturesNodesMatcher = new BlastFeaturesNodesMatcher();
+    }
+
+    m_blastSearchDialog->buildDatabase(false);
+    m_blastFeaturesNodesMatcher->matchFeaturesNode(m_blastSearchDialog, selectedNodes, search);
+
+    ui->blastQueryComboBox->setEnabled(true);
+    ui->blastQueryComboBox->setCurrentText("all");
+    blastChanged(convertAnnotationToQString(SOLID_ANNOTATION));
+    switchColourScheme(GRAY_COLOR);
+    switchFeatureColourScheme(FEATURE_BLAST_SOLID_COLOURS);
+}
+
+bool MainWindow::checkForFeaturesImageSave()
+{
+    if (m_featuresUiState == NO_FEATURES_LOADED)
+    {
+        QMessageBox::information(this, "No image to save", "You must first load and then draw a features forest before you can save an image to file.");
+        return false;
+    }
+    if (m_featuresUiState == FEATURES_LOADED)
+    {
+        QMessageBox::information(this, "No image to save", "You must first draw the features forest before you can save an image to file.");
+        return false;
+    }
+    return true;
 }

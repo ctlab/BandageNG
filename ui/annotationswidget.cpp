@@ -52,7 +52,6 @@ AnnotationSettingsDialog::AnnotationSettingsDialog(const AnnotationGroup &annota
     setLayout(formLayout);
 }
 
-
 AnnotationsListWidget::AnnotationsListWidget(QWidget *parent) : QListWidget(parent) {
     connect(g_annotationsManager.get(), &AnnotationsManager::annotationGroupsUpdated,
             this, &AnnotationsListWidget::updateAnnotationGroups);
@@ -64,7 +63,6 @@ AnnotationsListWidget::AnnotationsListWidget(QWidget *parent) : QListWidget(pare
         settingsDialog->open();
     });
 }
-
 
 void AnnotationsListWidget::updateAnnotationGroups() {
     clear();

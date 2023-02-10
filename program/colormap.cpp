@@ -326,8 +326,6 @@ std::vector<QColor> getPresetColours() {
     return presetColours;
 }
 
-
-
 //This function will convert a colour to its SVG name, if one exists, or the hex value otherwise.
 QString getColourName(QColor colour)
 {

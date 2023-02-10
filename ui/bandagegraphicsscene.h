@@ -18,6 +18,7 @@
 #pragma once
 
 #include "layout/graphlayout.h"
+#include "layout/featureslayout.h"
 
 #include <QGraphicsScene>
 #include <vector>
@@ -28,6 +29,10 @@ class DeBruijnEdge;
 class GraphicsItemNode;
 class GraphicsItemEdge;
 class AssemblyGraph;
+class AssemblyFeaturesForest;
+class GraphicsItemFeatureNode;
+class CommonGraphicsItemNode;
+class FeatureTreeNode;
 
 class BandageGraphicsScene : public QGraphicsScene
 {
@@ -56,6 +61,12 @@ public:
                                                bool reverseComplement);
 
     void duplicateGraphicsNode(DeBruijnNode * originalNode, DeBruijnNode * newNode);
+
+    void addGraphicsItemsToScene(AssemblyFeaturesForest &graph,
+                                 const FeaturesLayout &layout);
+    void possiblyExpandSceneRectangle(std::vector<GraphicsItemFeatureNode *> * movedNodes);
+    std::vector<GraphicsItemFeatureNode*> getSelectedGraphicsItemFeatureNode();
+    std::vector<FeatureTreeNode *> getSelectedFeatureNodes();
 
 private:
     void removeGraphicsItemNodes(const std::unordered_set<GraphicsItemNode*> &nodes);

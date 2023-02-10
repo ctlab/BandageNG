@@ -17,6 +17,7 @@
 
 
 #include "graph/assemblygraph.h"
+#include "features_forest/assemblyfeaturesforest.h"
 
 #include "command_line/load.h"
 #include "command_line/info.h"
@@ -113,7 +114,9 @@ int main(int argc, char *argv[])
     g_memory.reset(new Memory());
     g_blastSearch.reset(new search::BlastSearch());
     g_assemblyGraph.reset(new AssemblyGraph());
+    g_assemblyFeaturesForest.reset(new AssemblyFeaturesForest());
     g_graphicsView = new BandageGraphicsView();
+    g_graphicsViewFeaturesForest = new BandageGraphicsView();
     g_annotationsManager = std::make_shared<AnnotationsManager>();
 
     //Save the terminal width (useful for displaying help text neatly).

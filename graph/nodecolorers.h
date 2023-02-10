@@ -19,6 +19,7 @@
 
 #include "nodecolorer.h"
 #include "contiguity.h"
+#include "features_forest/graphicsitemfeaturenode.h"
 
 #include <tsl/htrie_map.h>
 #include <vector>

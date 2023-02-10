@@ -22,12 +22,45 @@
 
 #include <utility>
 #include <set>
+#include <QString>
 
 using AnnotationGroupId = int;
 using ViewId = int;
 
 class QPainter;
 class GraphicsItemNode;
+
+enum AnnotationTypeName {
+    SOLID_ANNOTATION,
+    RAINBOW_ANNOTATION,
+    BED_TICK_ANNOTATION,
+    BED_BLOCKS_ANNOTATION,
+    FEATURE_CLASS_ANNOTATION
+
+};
+
+static QString convertAnnotationToQString(AnnotationTypeName typeName) {
+    switch (typeName) {
+    case SOLID_ANNOTATION:
+        return "Solid";
+        break;
+    case RAINBOW_ANNOTATION:
+        return "Rainbow";
+        break;
+    case BED_TICK_ANNOTATION:
+        return "BED Thick";
+        break;
+    case BED_BLOCKS_ANNOTATION:
+        return "BED Blocks";
+        break;
+    case FEATURE_CLASS_ANNOTATION:
+        return "Feature Class";
+        break;
+    default:
+        return "Solid";
+        break;
+    }
+}
 
 class IAnnotationView {
 public:
@@ -49,7 +82,7 @@ public:
                     int64_t end) const override;
 
     [[nodiscard]] QString getTypeName() const override {
-        return "Solid";
+        return convertAnnotationToQString(SOLID_ANNOTATION);
     }
 
 private:
@@ -66,7 +99,7 @@ public:
                     int64_t end) const override;
 
     [[nodiscard]] QString getTypeName() const override {
-        return "Rainbow";
+        return convertAnnotationToQString(RAINBOW_ANNOTATION);
     }
 
 private:
@@ -86,7 +119,7 @@ public:
     }
 
     [[nodiscard]] QString getTypeName() const override {
-        return "BED Thick";
+        return convertAnnotationToQString(BED_TICK_ANNOTATION);
     }
 
 private:
@@ -103,7 +136,7 @@ public:
                     int64_t end) const override;
 
     [[nodiscard]] QString getTypeName() const override {
-        return "BED Blocks";
+        return convertAnnotationToQString(BED_BLOCKS_ANNOTATION);
     }
 
 private:
@@ -112,6 +145,19 @@ private:
     std::vector<BedThickView> m_blocks;
 };
 
+class FeatureClassView : public SolidView {
+public:
+    FeatureClassView(double widthMultiplier, const QColor &color) : SolidView(widthMultiplier, color) {}
+
+    void drawFigure(QPainter &painter, GraphicsItemNode &graphicsItemNode, bool reverseComplement, int64_t start,
+                    int64_t end) const override {
+        SolidView::drawFigure(painter, graphicsItemNode, reverseComplement, start, end);
+    }
+
+    [[nodiscard]] QString getTypeName() const override {
+        return convertAnnotationToQString(FEATURE_CLASS_ANNOTATION);
+    }
+};
 
 class Annotation {
 public:

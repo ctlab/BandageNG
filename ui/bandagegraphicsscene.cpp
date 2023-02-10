@@ -24,6 +24,10 @@
 #include "graph/graphicsitemedge.h"
 #include "layout/graphlayout.h"
 #include "program/settings.h"
+#include "features_forest/assemblyfeaturesforest.h"
+#include "features_forest/featuretreenode.h"
+#include "features_forest/featuretreeedge.h"
+#include "features_forest/graphicsitemfeaturenode.h"
 
 #include <unordered_set>
 
@@ -374,4 +378,98 @@ void BandageGraphicsScene::duplicateGraphicsNode(DeBruijnNode * originalNode, De
         graphicsItemEdge->setFlag(QGraphicsItem::ItemIsSelectable);
         addItem(graphicsItemEdge);
     }
+}
+
+//This function returns all of the selected nodes, sorted by their node number.
+std::vector<FeatureTreeNode *> BandageGraphicsScene::getSelectedFeatureNodes()
+{
+    std::vector<FeatureTreeNode*> returnVector;
+
+    QList<QGraphicsItem*> selection = selectedItems();
+    for (int i = 0; i < selection.size(); ++i)
+    {
+        QGraphicsItem* selectedItem = selection[i];
+        GraphicsItemFeatureNode* selectedNodeItem = dynamic_cast<GraphicsItemFeatureNode *>(selectedItem);
+        if (selectedNodeItem != 0)
+            returnVector.push_back(selectedNodeItem->m_featureNode);
+    }
+
+    //std::sort(returnVector.begin(), returnVector.end(), compareNodePointers);
+
+    return returnVector;
+}
+
+void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyFeaturesForest &graph,
+                                                   const FeaturesLayout &layout) {
+    clear();
+
+    // First make the GraphicsItemNode objects
+    for (auto &entry : layout) {
+        FeatureTreeNode *node = entry.first;
+        //if (!node->isDrawn())
+        //    continue;
+
+        auto *graphicsItemNode = new GraphicsItemFeatureNode(node, entry.second);
+
+        node->setGraphicsItemFeatureNode(graphicsItemNode);
+        graphicsItemNode->setFlag(QGraphicsItem::ItemIsSelectable);
+        graphicsItemNode->setFlag(QGraphicsItem::ItemIsMovable);
+
+        graphicsItemNode->setNodeColour(g_settings->featureNodeColorer->get(graphicsItemNode));
+    }
+
+    // Then make the GraphicsItemEdge objects and add them to the scene first,
+    // so they are drawn underneath
+    for (auto &entry : graph.m_edges) {
+        FeatureTreeEdge * edge = entry;
+        //if (!edge->determineIfDrawn())
+        //    continue;
+
+        auto * graphicsItemEdge = new GraphicsItemFeatureEdge(edge->m_startingNode, edge->m_endingNode);
+        edge->setGraphicsItemFeatureEdge(graphicsItemEdge);
+        graphicsItemEdge->setFlag(QGraphicsItem::ItemIsSelectable);
+        addItem(graphicsItemEdge);
+    }
+
+    // Now add the GraphicsItemNode objects to the scene, so they are drawn
+    // on top
+    for (auto *node : graph.m_nodes) {
+        if (!node->hasGraphicsItemFeature())
+            continue;
+
+        addItem(node->getGraphicsItemFeatureNode());
+    }
+}
+
+void BandageGraphicsScene::possiblyExpandSceneRectangle(std::vector<GraphicsItemFeatureNode *> * movedNodes)
+{
+    QRectF currentSceneRect = sceneRect();
+    QRectF newSceneRect = currentSceneRect;
+
+    for (size_t i = 0; i < movedNodes->size(); ++i)
+    {
+        GraphicsItemFeatureNode* node = (*movedNodes)[i];
+        QRectF nodeRect = node->boundingRect();
+        newSceneRect = newSceneRect.united(nodeRect);
+    }
+
+    if (newSceneRect != currentSceneRect)
+        setSceneRect(newSceneRect);
+}
+
+//This function returns all of the selected nodes, sorted by their node number.
+std::vector<GraphicsItemFeatureNode*> BandageGraphicsScene::getSelectedGraphicsItemFeatureNode()
+{
+    std::vector<GraphicsItemFeatureNode*> returnVector;
+
+    QList<QGraphicsItem*> selection = selectedItems();
+    for (int i = 0; i < selection.size(); ++i)
+    {
+        QGraphicsItem* selectedItem = selection[i];
+        GraphicsItemFeatureNode* selectedNodeItem = dynamic_cast<GraphicsItemFeatureNode*>(selectedItem);
+        if (selectedNodeItem != 0)
+            returnVector.push_back(selectedNodeItem);
+    }
+
+    return returnVector;
 }
