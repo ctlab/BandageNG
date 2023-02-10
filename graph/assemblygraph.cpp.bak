@@ -1714,6 +1714,7 @@ QStringList AssemblyGraph::getCustomLabelForDisplay(const DeBruijnNode *node) co
     return customLabelLines;
 }
 
+
 QColor AssemblyGraph::getCustomColourForDisplay(const DeBruijnNode *node) const {
     if (hasCustomColour(node))
         return getCustomColour(node);
