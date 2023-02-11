@@ -2731,6 +2731,7 @@ void MainWindow::featureSelectionChanged() {
 }
 
 void MainWindow::drawFeaturesForest() {
+    g_settings->averageFeatureNodeWidth = ui->featureNodeWidthSpinBox->value();
     m_featuresForestWidget->drawGraph(this);
     setFeaturesUiState(FEATURES_DRAWN);
 

@@ -61,9 +61,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-979</y>
-         <width>439</width>
-         <height>1845</height>
+         <y>-959</y>
+         <width>425</width>
+         <height>1839</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -1669,35 +1669,55 @@ then colour which other nodes in the graph are likely to be contiguous
         <item>
          <widget class="QWidget" name="featuresForestWidget" native="true">
           <layout class="QGridLayout" name="gridLayout_9">
-           <item row="1" column="0" colspan="3">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <pointsize>13</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Features display</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
             <widget class="Line" name="line_3">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
             </widget>
            </item>
-           <item row="2" column="0" rowspan="2" colspan="2">
+           <item row="2" column="0">
             <widget class="QLabel" name="label_9">
              <property name="text">
               <string>Zoom:</string>
              </property>
             </widget>
            </item>
-           <item row="7" column="1">
-            <widget class="QCheckBox" name="featureClassCheckBox">
-             <property name="text">
-              <string>Class</string>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="zoomFeaturesSpinBox">
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="value">
+              <double>100.000000000000000</double>
              </property>
             </widget>
            </item>
-           <item row="8" column="0">
-            <widget class="QCheckBox" name="featureClassLikeFigureCheckBox">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_11">
              <property name="text">
-              <string>Class like figure</string>
+              <string>Node width:</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="2">
+           <item row="3" column="1">
             <widget class="QDoubleSpinBox" name="featureNodeWidthSpinBox">
              <property name="suffix">
               <string/>
@@ -1713,35 +1733,48 @@ then colour which other nodes in the graph are likely to be contiguous
              </property>
             </widget>
            </item>
-           <item row="7" column="2">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_17">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Feature labels</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QCheckBox" name="featureIdCheckBox">
+             <property name="text">
+              <string>Feature Id</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QCheckBox" name="featureClassCheckBox">
+             <property name="text">
+              <string>Class</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QCheckBox" name="featureClassLikeFigureCheckBox">
+             <property name="text">
+              <string>Class like figure</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
             <widget class="QCheckBox" name="featureCustomCheckBox">
              <property name="text">
               <string>Custom</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="0" colspan="3">
-            <widget class="QLabel" name="label_3">
-             <property name="font">
-              <font>
-               <pointsize>13</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Features display</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>Node width:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="0">
+           <item row="7" column="0" colspan="2">
             <widget class="QPlainTextEdit" name="featureClassInfoText">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -1763,7 +1796,7 @@ then colour which other nodes in the graph are likely to be contiguous
              </property>
             </widget>
            </item>
-           <item row="10" column="0">
+           <item row="8" column="0" colspan="2">
             <widget class="QComboBox" name="featuresColoursComboBox">
              <item>
               <property name="text">
@@ -1792,40 +1825,7 @@ then colour which other nodes in the graph are likely to be contiguous
              </item>
             </widget>
            </item>
-           <item row="7" column="0">
-            <widget class="QCheckBox" name="featureIdCheckBox">
-             <property name="text">
-              <string>Feature Id</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QDoubleSpinBox" name="zoomFeaturesSpinBox">
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-             <property name="value">
-              <double>100.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0" rowspan="2" colspan="2">
-            <widget class="QLabel" name="label_17">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Feature labels</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="0">
+           <item row="9" column="0" colspan="2">
             <widget class="QPushButton" name="drawFeaturesButton">
              <property name="text">
               <string>Draw features</string>
@@ -1925,8 +1925,8 @@ then colour which other nodes in the graph are likely to be contiguous
       <widget class="QWidget" name="selectionScrollAreaWidgetContents">
        <property name="geometry">
         <rect>
-         <x>-2</x>
-         <y>-158</y>
+         <x>0</x>
+         <y>0</y>
          <width>299</width>
          <height>1024</height>
         </rect>
