@@ -5,12 +5,13 @@ on:
   push:
     tags:
       - "v*.*"
+    branches: [ dev ]
 
 env:
   BUILD_TYPE: Release
   QT_QPA_PLATFORM: offscreen
   XDG_RUNTIME_DIR: '/tmp/runtime-runner'
-  QT_VERSION: 6.2.3
+  QT_VERSION: 6.2.*
 
 jobs:
   build-linux:

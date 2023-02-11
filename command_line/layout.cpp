@@ -16,43 +16,53 @@
 // along with Bandage.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "reduce.h"
+#include "layout.h"
 #include "commoncommandlinefunctions.h"
 
 #include "graph/assemblygraph.h"
-#include "graph/gfawriter.h"
+
 #include "graphsearch/blast/blastsearch.h"
 
 #include "program/globals.h"
 #include "program/settings.h"
 
-#include <CLI/CLI.hpp>
+#include "layout/graphlayout.h"
+#include "layout/graphlayoutworker.h"
+#include "layout/io.h"
+
 #include <vector>
 
-CLI::App *addReduceSubcommand(CLI::App &app, ReduceCmd &cmd) {
-    auto *reduce = app.add_subcommand("reduce", "Save a subgraph of a larger graph");
-    reduce->add_option("<inputgraph>", cmd.m_graph, "A graph file of any type supported by Bandage")
+#include <CLI/CLI.hpp>
+
+CLI::App *addLayoutSubcommand(CLI::App &app, LayoutCmd &cmd) {
+    auto *layout = app.add_subcommand("layout", "Layout the graph");
+    layout->add_option("<graph>", cmd.m_graph, "A graph file of any type supported by Bandage")
             ->required()->check(CLI::ExistingFile);
-    reduce->add_option("<outputgraph>", cmd.m_out, "The filename for the GFA graph to be made (if it does not end in '.gfa', that extension will be added)")
+    layout->add_option("<layout>", cmd.m_layout, "The layout file to be created (must end with .tsv or .layout)")
             ->required();
 
-    reduce->footer("Bandage reduce takes an input graph and saves a reduced subgraph using the graph scope settings. The saved graph will be in GFA format.\n"
-                   "If a graph scope is not specified, then the 'entire' scope will be used, in which case this will simply convert the input graph to GFA format.");
-
-    return reduce;
+    return layout;
 }
 
-int handleReduceCmd(QApplication *app,
-                    const CLI::App &cli, const ReduceCmd &cmd) {
+int handleLayoutCmd(QApplication *app,
+                   const CLI::App &cli, const LayoutCmd &cmd) {
+    auto layoutFileExtension = cmd.m_layout.extension();
+    bool isTSV;
+
     QTextStream out(stdout);
     QTextStream err(stderr);
+    if (layoutFileExtension == ".tsv")
+        isTSV = true;
+    else if (layoutFileExtension == ".layout")
+        isTSV = false;
+    else {
+        outputText("Bandage-NG error: the output filename must end in .tsv or .layout", &err);
+        return 1;
+    }
 
-    QString outputFilename = cmd.m_out.c_str();
-    if (!outputFilename.endsWith(".gfa"))
-        outputFilename += ".gfa";
-
-    if (!g_assemblyGraph->loadGraphFromFile(cmd.m_graph.c_str())) {
-        outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err);
+    bool loadSuccess = g_assemblyGraph->loadGraphFromFile(cmd.m_graph.c_str());
+    if (!loadSuccess) {
+        outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME
         return 1;
     }
 
@@ -79,8 +89,8 @@ int handleReduceCmd(QApplication *app,
                               g_settings->minDepthRange, g_settings->maxDepthRange,
                               &g_blastSearch->queries(), "all",
                               "", g_settings->nodeDistance);
-    auto startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
-                                                 *g_assemblyGraph, scope);
+    std::vector<DeBruijnNode *> startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
+                                                                        *g_assemblyGraph, scope);
     if (!errorMessage.isEmpty()) {
         err << errorMessage << Qt::endl;
         return 1;
@@ -88,8 +98,17 @@ int handleReduceCmd(QApplication *app,
 
     g_assemblyGraph->markNodesToDraw(scope, startingNodes);
 
-    if (!gfa::saveVisibleGraph(outputFilename, *g_assemblyGraph)) {
-        err << "Bandage was unable to save the graph file." << Qt::endl;
+    GraphLayoutStorage layout =
+            GraphLayoutWorker(g_settings->graphLayoutQuality,
+                              g_settings->linearLayout,
+                              g_settings->componentSeparation).layoutGraph(*g_assemblyGraph);
+
+    bool success = (isTSV ?
+                    layout::io::saveTSV(cmd.m_layout.c_str(), layout) :
+                    layout::io::save(cmd.m_layout.c_str(), layout));
+    
+    if (!success) {
+        out << "There was an error writing the layout to file." << Qt::endl;
         return 1;
     }
 

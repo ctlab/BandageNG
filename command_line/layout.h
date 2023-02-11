@@ -22,12 +22,12 @@ namespace CLI {
     class App;
 }
 
-struct LoadCmd {
+struct LayoutCmd {
     std::filesystem::path m_graph;
-    bool m_draw = false;
+    std::filesystem::path m_layout;
 };
 
-CLI::App *addLoadSubcommand(CLI::App &app,
-                            LoadCmd &cmd);
-int handleLoadCmd(QApplication *app,
-                  const CLI::App &cli, const LoadCmd &cmd);
+CLI::App *addLayoutSubcommand(CLI::App &app,
+                              LayoutCmd &cmd);
+int handleLayoutCmd(QApplication *app,
+                    const CLI::App &cli, const LayoutCmd &cmd);

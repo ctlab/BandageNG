@@ -209,7 +209,10 @@ struct record {
 
 
 std::optional<gfa::record> parseRecord(const char* line, size_t len) {
-    auto result = lexy::parse<grammar::record>(lexy::string_input(line, len), lexy_ext::report_error);
+    lexy::visualization_options opts;
+    opts.max_lexeme_width = 35;
+
+    auto result = lexy::parse<grammar::record>(lexy::string_input(line, len), lexy_ext::report_error.opts(opts));
     if (result.has_value())
         return std::make_optional(result.value());
 

@@ -23,6 +23,7 @@
 //some numbers in Bandage (BLAST e-values and their products) can potentially
 //exceed the limits of the C++ double type.
 
+#include <ostream>
 #include <QString>
 
 class SciNot
@@ -33,6 +34,8 @@ public:
     SciNot(double coefficient, int exponent);
     SciNot(const QString& sciNotString);
     SciNot(double num);
+    SciNot(const SciNot&) = default;
+    SciNot& operator=(const SciNot&) = default;
 
     // ACCESSORS
     bool operator<(SciNot const &other) const;
@@ -61,5 +64,7 @@ private:
 
     void normalise();
 };
+
+std::ostream& operator<<(std::ostream &os, SciNot e);
 
 #endif // SCINOT_H
