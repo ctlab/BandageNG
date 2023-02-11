@@ -55,6 +55,17 @@ void Queries::addQuery(Query * newQuery) {
     m_queries.push_back(newQuery);
 }
 
+void Queries::addQuery(Query * newQuery, int colourInd, int classInd) {
+    newQuery->setName(getUniqueName(newQuery->getName()));
+
+    // Give the new query a colour
+    colourInd %= m_presetColours.size();
+    newQuery->setColour(m_presetColours[colourInd]);
+    classInd %= m_presetColours.size();
+    newQuery->setFeatureClassColour(m_presetColours[classInd]);
+    m_queries.push_back(newQuery);
+}
+
 // This function renames the query.  It returns the name given, because that
 // might not be exactly the same as the name passed to the function if it
 // wasn't unique.

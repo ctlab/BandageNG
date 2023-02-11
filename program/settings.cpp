@@ -143,9 +143,20 @@ Settings::Settings()
     maxDepthRange = FloatSetting(100.0, 0.0, 1000000.0);
 
     annotationsSettings = {};
+
+    averageFeatureNodeWidth = FloatSetting(5.0, 0.5, 1000.0);
+    displayFeatureIdLabels = false;
+    displayFeatureClassLabels = false;
+    displayFeatureCustomLabels = false;
+    displayFeatureClassLikeFigure = false;
 }
 
 
 void Settings::initializeColorer(NodeColorScheme scheme) {
     nodeColorer = INodeColorer::create(scheme);
 }
+
+void Settings::initializeColorer(FeatureNodeColorScheme scheme) {
+    featureNodeColorer = IFeatureNodeColorer::create(scheme);
+}
+

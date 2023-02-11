@@ -28,6 +28,7 @@ class Settings;
 class Memory;
 class BandageGraphicsView;
 class AssemblyGraph;
+class AssemblyFeaturesForest;
 class AnnotationsManager;
 
 namespace search {
@@ -40,9 +41,11 @@ class BlastSearch;
 extern QSharedPointer<Settings> g_settings;
 extern QSharedPointer<Memory> g_memory;
 extern BandageGraphicsView * g_graphicsView;
+extern BandageGraphicsView * g_graphicsViewFeaturesForest;
 extern double g_absoluteZoom;
 extern QSharedPointer<search::BlastSearch> g_blastSearch;
 extern QSharedPointer<AssemblyGraph> g_assemblyGraph;
+extern QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;
 extern std::shared_ptr<AnnotationsManager> g_annotationsManager;
 
 

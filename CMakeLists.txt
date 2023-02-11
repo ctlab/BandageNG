@@ -71,7 +71,18 @@ set(LIB_SOURCES
         graph/fastawriter.cpp
         graph/io.cpp
         graph/graphscope.cpp
-        graphsearch/graphsearch.cpp)
+        graphsearch/graphsearch.cpp
+        features_forest/assemblyfeaturesforest.cpp
+        features_forest/blastfeaturenodesmatcher.cpp
+        features_forest/featurenodecolorer.cpp
+        features_forest/featuretreeedge.cpp
+        features_forest/featuretreenode.cpp
+        features_forest/graphicsitemfeatureedge.cpp
+        features_forest/graphicsitemfeaturenode.cpp
+        painting/commongraphicsitemnode.cpp
+        ui/featuresforestwidget.cpp
+        painting/commongraphicsitemnode.cpp
+        )
 
 set(FORMS
         ui/dialogs/aboutdialog.ui
@@ -99,7 +110,7 @@ include(FetchContent)
 FetchContent_Declare(lexy URL https://lexy.foonathan.net/download/lexy-src.zip)
 FetchContent_MakeAvailable(lexy)
 
-add_library(BandageLayout STATIC layout/graphlayoutworker.cpp layout/io.cpp layout/graphlayout.cpp)
+add_library(BandageLayout STATIC layout/graphlayoutworker.cpp layout/io.cpp layout/graphlayout.cpp layout/customogdftreelayout.cpp layout/featureslayout.cpp layout/treelayoutworker.cpp)
 target_link_libraries(BandageLayout PRIVATE OGDF Qt6::Concurrent Qt6::Gui Qt6::Widgets)
 
 add_library(BandageIo STATIC

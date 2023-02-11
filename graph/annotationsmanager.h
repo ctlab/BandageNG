@@ -72,6 +72,7 @@ public:
     const AnnotationGroup *findGroupByName(const QString &name) const;
     const AnnotationGroup *findGroupById(AnnotationGroupId id) const;
     void updateGroupFromHits(const QString &name, const std::vector<search::Query*> &queries);
+    void updateGroupFromHits(const QString &name, const std::vector<search::Query *> &queries, QString typeName);
 
 public:
 signals:

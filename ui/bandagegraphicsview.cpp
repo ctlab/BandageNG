@@ -26,6 +26,9 @@
 #include <QMessageBox>
 #include <qmath.h>
 #include <cmath>
+#include "../features_forest/featuretreenode.h"
+#include "../features_forest/graphicsitemfeaturenode.h"
+#include "../painting/commongraphicsitemnode.h"
 
 BandageGraphicsView::BandageGraphicsView(QObject * /*parent*/) :
     QGraphicsView(), m_rotation(0.0)

@@ -20,38 +20,32 @@
 #include <QColor>
 #include <QSharedPointer>
 
-class AssemblyGraph;
-class GraphicsItemNode;
+class AssemblyFeaturesForest;
+class GraphicsItemFeatureNode;
 
 // This needs to be synchronizes with selection combo box!
-enum NodeColorScheme : int {
-    GRAY_COLOR = 0,
-    RANDOM_COLOURS = 1,
-    UNIFORM_COLOURS = 2,
-    DEPTH_COLOUR = 3,
-    CONTIGUITY_COLOUR = 4,
-    CUSTOM_COLOURS = 5,
-    GC_CONTENT = 6,
-    TAG_VALUE = 7,
-    CSV_COLUMN = 8,
-    LAST_SCHEME = CSV_COLUMN
+enum FeatureNodeColorScheme : int {
+    FEATURE_UNIFORM_COLOURS = 0,
+    FEATURE_CLASS_COLOURS = 1,
+    FEATURE_CUSTOM_COLOURS = 2,
+    FEATURE_BLAST_SOLID_COLOURS = 3,
+    FEATURE_BLAST_CLASS_COLOURS = 4,
+    FEATURE_LAST_SCHEME = FEATURE_BLAST_CLASS_COLOURS
 };
 
-class INodeColorer {
+class IFeatureNodeColorer {
 public:
-    explicit INodeColorer(NodeColorScheme scheme);
-    virtual ~INodeColorer() = default;
+    explicit IFeatureNodeColorer(FeatureNodeColorScheme scheme);
+    virtual ~IFeatureNodeColorer() = default;
 
-    [[nodiscard]] virtual QColor get(const GraphicsItemNode *node) = 0;
-    [[nodiscard]] virtual std::pair<QColor, QColor> get(const GraphicsItemNode *node,
-                                                        const GraphicsItemNode *rcNode);
+    [[nodiscard]] virtual QColor get(const GraphicsItemFeatureNode *node) = 0;
     virtual void reset() {};
     [[nodiscard]] virtual const char* name() const = 0;
 
-    static std::unique_ptr<INodeColorer> create(NodeColorScheme scheme);
+    static std::unique_ptr<IFeatureNodeColorer> create(FeatureNodeColorScheme scheme);
 
-    [[nodiscard]] NodeColorScheme scheme() const { return m_scheme; }
+    [[nodiscard]] FeatureNodeColorScheme scheme() const { return m_scheme; }
 protected:
-    NodeColorScheme m_scheme;
-    QSharedPointer<AssemblyGraph> m_graph;
+    FeatureNodeColorScheme m_scheme;
+    QSharedPointer<AssemblyFeaturesForest> m_graph;
 };

@@ -61,9 +61,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-683</y>
-         <width>283</width>
-         <height>1526</height>
+         <y>-959</y>
+         <width>425</width>
+         <height>1839</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -207,6 +207,7 @@
             <widget class="QLabel" name="label_7">
              <property name="font">
               <font>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -266,6 +267,7 @@
             <widget class="QLabel" name="label_5">
              <property name="font">
               <font>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -867,6 +869,7 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
             <widget class="QLabel" name="label_10">
              <property name="font">
               <font>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -1173,6 +1176,7 @@ then colour which other nodes in the graph are likely to be contiguous
             <widget class="QLabel" name="nodeLabelsG">
              <property name="font">
               <font>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -1200,44 +1204,6 @@ then colour which other nodes in the graph are likely to be contiguous
               <property name="rightMargin">
                <number>0</number>
               </property>
-              <item row="0" column="0">
-               <widget class="InfoTextWidget" name="nodeLabelsInfoText" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tick any of the node labelling options to display those labels over &amp;quot;nodes in the graph.&lt;br/&gt;&lt;br/&gt;'Name', 'Length' and 'Depth' labels are created automatically. &amp;quot;'Custom' labels must be assigned by clicking the 'Set label' button when one or more nodes are selected.&lt;br/&gt;&lt;br/&gt;When 'BLAST hits' labels are shown, they are displayed over any BLAST hits present in the node.&lt;br/&gt;&lt;br/&gt;The 'CSV data' option allows you to import custom labels. To use this, you must first load a CSV file (using the 'Load CSV label data' item in the 'File' menu) which contains the node names in the first column and custom labels in subsequent columns. The CSV file must also contain a header row.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="InfoTextWidget" name="nodeFontInfoText" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click the 'Font' button to choose the font used for node labels. The colour of the font is configurable in Bandage's %SETTINGS%.&lt;br/&gt;&lt;br/&gt;Ticking 'Text outline' will surround the text with a white outline. This can help to make text more readable, but will obscure more of the underlying graph. The thickness of the text outline is configurable in Bandage's %SETTINGS%.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="1">
                <widget class="QPushButton" name="fontButton">
                 <property name="focusPolicy">
@@ -1337,6 +1303,44 @@ then colour which other nodes in the graph are likely to be contiguous
                   </widget>
                  </item>
                 </layout>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="InfoTextWidget" name="nodeLabelsInfoText" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tick any of the node labelling options to display those labels over &amp;quot;nodes in the graph.&lt;br/&gt;&lt;br/&gt;'Name', 'Length' and 'Depth' labels are created automatically. &amp;quot;'Custom' labels must be assigned by clicking the 'Set label' button when one or more nodes are selected.&lt;br/&gt;&lt;br/&gt;When 'BLAST hits' labels are shown, they are displayed over any BLAST hits present in the node.&lt;br/&gt;&lt;br/&gt;The 'CSV data' option allows you to import custom labels. To use this, you must first load a CSV file (using the 'Load CSV label data' item in the 'File' menu) which contains the node names in the first column and custom labels in subsequent columns. The CSV file must also contain a header row.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="InfoTextWidget" name="nodeFontInfoText" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click the 'Font' button to choose the font used for node labels. The colour of the font is configurable in Bandage's %SETTINGS%.&lt;br/&gt;&lt;br/&gt;Ticking 'Text outline' will surround the text with a white outline. This can help to make text more readable, but will obscure more of the underlying graph. The thickness of the text outline is configurable in Bandage's %SETTINGS%.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                </widget>
               </item>
              </layout>
@@ -1650,6 +1654,188 @@ then colour which other nodes in the graph are likely to be contiguous
          <widget class="AnnotationsListWidget" name="annotationsListWidget"/>
         </item>
         <item>
+         <spacer name="verticalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>229</width>
+            <height>15</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QWidget" name="featuresForestWidget" native="true">
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <pointsize>13</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Features display</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="Line" name="line_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Zoom:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="zoomFeaturesSpinBox">
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="value">
+              <double>100.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>Node width:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QDoubleSpinBox" name="featureNodeWidthSpinBox">
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="minimum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>10.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_17">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Feature labels</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QCheckBox" name="featureIdCheckBox">
+             <property name="text">
+              <string>Feature Id</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QCheckBox" name="featureClassCheckBox">
+             <property name="text">
+              <string>Class</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QCheckBox" name="featureClassLikeFigureCheckBox">
+             <property name="text">
+              <string>Class like figure</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QCheckBox" name="featureCustomCheckBox">
+             <property name="text">
+              <string>Custom</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0" colspan="2">
+            <widget class="QPlainTextEdit" name="featureClassInfoText">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>256</width>
+               <height>45</height>
+              </size>
+             </property>
+             <property name="baseSize">
+              <size>
+               <width>256</width>
+               <height>45</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0" colspan="2">
+            <widget class="QComboBox" name="featuresColoursComboBox">
+             <item>
+              <property name="text">
+               <string>Uniform colour</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Class colours</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Custom colours</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>BLAST hits (solid)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>BLAST hits (class colours)</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="9" column="0" colspan="2">
+            <widget class="QPushButton" name="drawFeaturesButton">
+             <property name="text">
+              <string>Draw features</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_10">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -1661,6 +1847,19 @@ then colour which other nodes in the graph are likely to be contiguous
            <size>
             <width>229</width>
             <height>15</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_11">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
            </size>
           </property>
          </spacer>
@@ -1728,8 +1927,8 @@ then colour which other nodes in the graph are likely to be contiguous
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>254</width>
-         <height>1130</height>
+         <width>299</width>
+         <height>1024</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -1749,6 +1948,7 @@ then colour which other nodes in the graph are likely to be contiguous
           </property>
           <property name="font">
            <font>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -1911,6 +2111,7 @@ then colour which other nodes in the graph are likely to be contiguous
           </property>
           <property name="font">
            <font>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -2118,6 +2319,7 @@ then colour which other nodes in the graph are likely to be contiguous
           </property>
           <property name="font">
            <font>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -2308,6 +2510,7 @@ then colour which other nodes in the graph are likely to be contiguous
           </property>
           <property name="font">
            <font>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -2337,6 +2540,13 @@ then colour which other nodes in the graph are likely to be contiguous
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="connectSelectedFeatureNodes">
+          <property name="text">
+           <string>Connect fetaure node(s) with de bruijn nodes</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_5">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -2361,7 +2571,7 @@ then colour which other nodes in the graph are likely to be contiguous
      <x>0</x>
      <y>0</y>
      <width>1465</width>
-     <height>37</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2372,6 +2582,7 @@ then colour which other nodes in the graph are likely to be contiguous
     <addaction name="actionLoad_CSV"/>
     <addaction name="actionLoad_layout"/>
     <addaction name="actionLoad_paths"/>
+    <addaction name="actionLoad_features_forest"/>
     <addaction name="separator"/>
     <addaction name="actionSave_image_current_view"/>
     <addaction name="actionSave_image_entire_scene"/>
@@ -2859,6 +3070,16 @@ then colour which other nodes in the graph are likely to be contiguous
    </property>
    <property name="text">
     <string>Zoom to fit graph</string>
+   </property>
+  </action>
+  <action name="actionLoad_features_forest">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/load-256.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Load features forest</string>
    </property>
   </action>
  </widget>

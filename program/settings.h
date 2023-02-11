@@ -26,6 +26,7 @@
 
 // FIXME: This needs to be properly factored out
 #include "graph/nodecolorer.h"
+#include "features_forest/featurenodecolorer.h"
 
 #include <QColor>
 #include <QFont>
@@ -228,6 +229,17 @@ public:
     // This is needed for backward compatibility to support selecting blast colors from CLI.
     // To be removed when general approach will be implemented.
     AnnotationSetting defaultBlastAnnotationSetting;
+
+    FloatSetting averageFeatureNodeWidth;
+    bool displayFeatureIdLabels;
+    bool displayFeatureClassLabels;
+    bool displayFeatureCustomLabels;
+    bool displayFeatureClassLikeFigure;
+    int featureForestEdgeLength = 10;
+    void initializeColorer(FeatureNodeColorScheme scheme);
+    std::shared_ptr<IFeatureNodeColorer> featureNodeColorer;
+
+    bool isHiCLoaded = false;
 };
 
 #endif // SETTINGS_H

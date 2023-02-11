@@ -111,3 +111,48 @@ void AnnotationsManager::updateGroupFromHits(const QString &name, const std::vec
 
     emit annotationGroupsUpdated();
 }
+
+void AnnotationsManager::updateGroupFromHits(const QString &name, const std::vector<search::Query *> &queries, QString typeName) {
+    // Preserve annotation settings, if they existed
+    AnnotationSetting groupSettings;
+    if (const auto *group = findGroupByName(name))
+        groupSettings = g_settings->annotationsSettings[group->id];
+
+    removeGroupByName(name);
+
+    if (queries.empty())
+        return;
+
+    auto &group = createAnnotationGroup(name);
+    for (auto *query: queries) {
+        for (const auto &hit: query->getHits()) {
+            auto &annotation = group.annotationMap[hit->m_node].emplace_back(
+                    std::make_unique<Annotation>(
+                            hit->m_nodeStart,
+                            hit->m_nodeEnd,
+                            query->getName().toStdString()));
+            annotation->addView(std::make_unique<SolidView>(1.0, query->getColour()));
+            annotation->addView(std::make_unique<FeatureClassView>(1.0, query->getFeatureClassColour()));
+            annotation->addView(std::make_unique<RainbowBlastHitView>(hit->queryStartFraction(),
+                                                                      hit->queryEndFraction()));
+        }
+    }
+
+    g_settings->annotationsSettings[group.id] = groupSettings;
+
+    const auto &annotationGroup = *g_annotationsManager->findGroupById(group.id);
+    if (!annotationGroup.annotationMap.empty() && !annotationGroup.annotationMap.begin()->second.empty()) {
+        // All annotations in group have the same types of views, so we can get view's names from any annotation
+        ViewId i = 0;
+        for (const auto &view: annotationGroup.annotationMap.begin()->second.front()->getViews()) {
+
+            if (view->getTypeName() == typeName) {
+                auto &viewsToShow = g_settings->annotationsSettings[group.id].viewsToShow;
+                viewsToShow.clear();
+                viewsToShow.insert(i);
+            }
+            i++;
+        }
+    }
+    emit annotationGroupsUpdated();
+}

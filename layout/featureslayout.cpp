@@ -15,21 +15,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Bandage.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+#include "featureslayout.h"
 
-#include <colormap/tinycolormap_fwd.hpp>
+#include "features_forest/assemblyfeaturesforest.h"
+#include "features_forest/featuretreenode.h"
+#include "features_forest/graphicsitemfeaturenode.h"
 
-#include <QString>
-#include <QColor>
+namespace layout {
+    FeaturesLayout fromGraph(const AssemblyFeaturesForest &graph) {
+        FeaturesLayout res(graph);
 
-enum ColorMap : int {
-    Viridis = 0,
-    Parula, Heat, Jet, Turbo, Hot, Gray, Magma, Inferno, Plasma, Cividis, Github, Cubehelix
-};
+        for (auto *node : graph.m_nodes) {
+            if (!node->hasGraphicsItemFeature())
+                continue;
 
-ColorMap colorMapFromName(const QString& name);
-tinycolormap::ColormapType colorMap(ColorMap colorMap);
-QString getColorMapName(ColorMap colorMap);
+            const auto &segments = node->getGraphicsItemFeatureNode()->m_linePoints;
+            res.segments(node) = segments;
 
-std::vector<QColor> getPresetColours();
-QString getColourName(QColor colour);
+        }
+
+        return res;
+    }
+
+    void apply(AssemblyFeaturesForest &graph, const FeaturesLayout &layout) {
+        graph.resetNodes();
+    }
+}

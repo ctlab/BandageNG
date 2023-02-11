@@ -122,19 +122,19 @@ private:
     void clearHits();
 
     void loadQueriesFromFile(const QString &fullFileName);
-    void buildDatabase(bool separateThread);
-    void runGraphSearches(bool separateThread);
     void setFilterText();
     void setUiCaptions();
-
+public slots:
+    void buildGraphDatabaseInThread();
+    void runGraphSearchesInThread();
+    void buildDatabase(bool separateThread);
+    void runGraphSearches(bool separateThread);
 private slots:
     void afterWindowShow();
-    void buildGraphDatabaseInThread();
     void loadQueriesFromFileButtonClicked();
     void enterQueryManually();
     void clearAllQueries();
     void clearSelectedQueries();
-    void runGraphSearchesInThread();
     void fillTablesAfterGraphSearch();
     void updateTables();
     void searcherChanged();

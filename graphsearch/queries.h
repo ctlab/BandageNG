@@ -41,6 +41,7 @@ public:
     const auto end() const { return m_queries.end(); }
 
     void addQuery(Query * newQuery);
+    void addQuery(Query * newQuery, int colourInd, int classInd);
     QString renameQuery(Query * newQuery, QString newName);
     void clearAllQueries();
     void clearSomeQueries(const std::vector<Query *> &queriesToRemove);

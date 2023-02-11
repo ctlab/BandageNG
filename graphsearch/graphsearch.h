@@ -69,6 +69,7 @@ public:
     static bool findProgram(const QString& programName, QString * command);
 
     static QString cleanQueryName(QString queryName);
+    void addQuery(Query *newQuery, int colourInd, int classInd) { m_queries.addQuery(newQuery, colourInd, classInd); }
     void addQuery(Query *newQuery) { m_queries.addQuery(newQuery); }
     search::Query *getQueryFromName(QString queryName) const { return m_queries.getQueryFromName(queryName); }
 
