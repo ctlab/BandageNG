@@ -105,6 +105,9 @@ void FeaturesForestWidget::getSelectedNodeInfo(int & selectedNodeCount, QString 
         if (selectedNodes[i]->getClass() != nullptr) {
             selectedFeatureNodeText += "Class: " + selectedNodes[i]->getClass() + "\n";
         }
+        if (selectedNodes[i]->getDetails() != nullptr) {
+            selectedFeatureNodeText += "Details:\n" + selectedNodes[i]->getDetails() + "\n";
+        }
         for (QString seq : selectedNodes[i]->getQuerySequences()) {
             selectedFeatureNodeText += "Seq: ";
             selectedFeatureNodeText += seq;

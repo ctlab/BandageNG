@@ -60,6 +60,11 @@ bool AssemblyFeaturesForest::loadFeatureForestFromFile(QString filename, QString
             addClass(clazz);
             m_nodes[nodeName]->setClass(m_classes[clazz], clazz);
         }
+        if (data[0] == "D") {
+            QString nodeName = data[1];
+            QString details = data[2];
+            m_nodes[nodeName]->setDetails(details);
+        }
 
     }
     featureForestFile.close();

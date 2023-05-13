@@ -227,8 +227,8 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
     connect(ui->featuresColoursComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchFeatureColourScheme()));
     connect(ui->actionSave_image_current_view, SIGNAL(triggered()), this, SLOT(saveImageGraphCurrentView()));
     connect(ui->actionSave_image_entire_scene, SIGNAL(triggered()), this, SLOT(saveImageGraphEntireScene()));
-    //connect(ui->actionSave_image_features_current_view, SIGNAL(triggered()), this, SLOT(saveImageFeaturesCurrentView()));
-    //connect(ui->actionSave_image_features_entire_scene, SIGNAL(triggered()), this, SLOT(saveImageFeaturesEntireScene()));
+    connect(ui->actionSave_image_features_current_view, SIGNAL(triggered()), this, SLOT(saveImageFeaturesCurrentView()));
+    connect(ui->actionSave_image_features_entire_scene, SIGNAL(triggered()), this, SLOT(saveImageFeaturesEntireScene()));
     connect(ui->featureNodeWidthSpinBox, SIGNAL(valueChanged(double)), this, SLOT(featureNodeWidthChanged()));
     connect(ui->connectSelectedFeatureNodes, SIGNAL(clicked()), this, SLOT(matchSelectedFeatureNodes()));
     connect(ui->featureIdCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
@@ -1315,9 +1315,6 @@ QString MainWindow::getDefaultGraphImageFileName()
 
 void MainWindow::saveImageCurrentView(QString defaultFileNameAndPath, BandageGraphicsView* graphicsView)
 {
-    if (!checkForGraphImageSave())
-        return;
-
     //QString defaultFileNameAndPath = getDefaultGraphImageFileName();
 
     QString selectedFilter = m_imageFilter;
@@ -1369,9 +1366,6 @@ void MainWindow::saveImageCurrentView(QString defaultFileNameAndPath, BandageGra
 
 void MainWindow::saveImageEntireScene(QString defaultFileNameAndPath, BandageGraphicsView* graphicsView, BandageGraphicsScene* scene)
 {
-    if (!checkForGraphImageSave())
-        return;
-
     //QString defaultFileNameAndPath = getDefaultGraphImageFileName();
 
     QString selectedFilter = m_imageFilter;
@@ -1479,7 +1473,6 @@ bool MainWindow::checkForGraphImageSave()
     }
     return true;
 }
-
 
 void MainWindow::setTextDisplaySettings()
 {
@@ -1802,9 +1795,14 @@ void MainWindow::setupBlastQueryComboBox() {
 
     const auto *search = m_blastSearchDialog->search();
     QStringList comboBoxItems;
+    int allQueryCount = 0;
+    int matchedQueryCount = 0;
     for (const auto &query : search->queries()) {
-        if (query->hasHits())
+        allQueryCount += 1;
+        if (query->hasHits()) {
             comboBoxItems.push_back(query->getName());
+            matchedQueryCount += 1;
+        }
     }
 
     if (comboBoxItems.size() > 1)

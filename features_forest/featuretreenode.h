@@ -51,7 +51,8 @@ public:
     void addEdge(FeatureTreeEdge* edge) { m_edges.push_back(edge); }
     QByteArray getFasta(bool newLines, bool evenIfEmpty);
     QByteArray getNodeNameForFasta(int currentSeqInd);
-    //bool sequenceIsMissing() { return m_querySequences.empty(); }
+    QString getDetails() { return m_details; }
+    void setDetails(QString details) { m_details = details; }
 
 private:
     QString m_name;
@@ -68,6 +69,7 @@ private:
     int m_blastColourIndex = -1;
     QColor m_customColour;
     QString m_customLabel;
+    QString m_details;
 
     std::vector<FeatureTreeEdge*> m_edges;
 

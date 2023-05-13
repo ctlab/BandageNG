@@ -7,6 +7,7 @@
 #include "ui/bandagegraphicsscene.h"
 #include <set>
 #include "featuretreeedge.h"
+#include <iostream>
 
 GraphicsItemFeatureNode::GraphicsItemFeatureNode(FeatureTreeNode* featureNode,
                                    const adt::SmallPODVector<QPointF> &linePoints,
@@ -179,11 +180,13 @@ QStringList GraphicsItemFeatureNode::getNodeText()
     if (g_settings->displayFeatureIdLabels)
     {
         QString id = m_featureNode->getName();
-        nodeText << id;
+        if (id.size() != 0) {
+            nodeText << id;
+        }
+        //nodeText << id;
     }
     if (g_settings->displayFeatureClassLabels)
         nodeText << m_featureNode->getClass();
-
     return nodeText;
 }
 
