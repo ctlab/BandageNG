@@ -61,7 +61,7 @@ Settings::Settings()
     maxZoom = 100.0;
     maxAutomaticZoom = 10.0;
     zoomFactor = 1.0005;
-    textZoomScaleFactor = 0.7;
+    textZoomScaleFactor = 1.0;
 
     dragStrength = 100.0;
 

@@ -154,11 +154,16 @@ QString BlastSearch::runOneBlastSearch(QuerySequenceType sequenceType,
 
     writeQueryFile(&tmpFile, queries, sequenceType);
 
+    QString filePath = temporaryDir().filePath("all_nodes.fasta");
+    QString queryFile = tmpFile.fileName();
+    QStringList params = extraParameters.split(" ", Qt::SkipEmptyParts);
+
     QStringList blastOptions;
     blastOptions << "-query" << tmpFile.fileName()
                  << "-db" << temporaryDir().filePath("all_nodes.fasta")
                  << "-outfmt" << "6";
     blastOptions << extraParameters.split(" ", Qt::SkipEmptyParts);
+    blastOptions << "-word_size" << "20" << "-dust" << "no";
 
     m_doSearch = new QProcess();
     m_doSearch->start(sequenceType == NUCLEOTIDE ? m_blastnCommand : m_tblastnCommand,

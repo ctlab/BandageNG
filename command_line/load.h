@@ -23,8 +23,10 @@ namespace CLI {
 }
 
 struct LoadCmd {
-    std::filesystem::path m_graph;
+    std::filesystem::path m_graph = "";
     bool m_draw = false;
+    std::filesystem::path m_featuresForest = "";
+    bool m_featuresForestDraw = false;
 };
 
 CLI::App *addLoadSubcommand(CLI::App &app,

@@ -86,11 +86,13 @@
 #include "features_forest/graphicsitemfeaturenode.h"
 #include <QtWidgets/QSplitter>
 
-MainWindow::MainWindow(QString fileToLoadOnStartup, bool drawGraphAfterLoad) :
+MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileToLoadOnStartup, bool drawGraphAfterLoad, bool drawFeaturesForestAfterLoad) :
     QMainWindow(nullptr),
     ui(new Ui::MainWindow), m_imageFilter("PNG (*.png)"),
     m_fileToLoadOnStartup(fileToLoadOnStartup), m_drawGraphAfterLoad(drawGraphAfterLoad),
-    m_uiState(NO_GRAPH_LOADED), m_blastSearchDialog(nullptr), m_alreadyShown(false)
+    m_uiState(NO_GRAPH_LOADED), m_blastSearchDialog(nullptr), m_alreadyShown(false),
+    m_featuresForestFileToLoadOnStartup(featuresForestFileToLoadOnStartup),
+    m_drawFeaturesForestAfterLoad(drawFeaturesForestAfterLoad)
 {
     ui->setupUi(this);
 
@@ -255,6 +257,14 @@ void MainWindow::afterMainWindowShow() {
         std::cerr << std::filesystem::path(m_fileToLoadOnStartup.toStdString()).filename().string()
                   << ", " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     }
+    // If the user passed a features forest filename as a command line argument, try to open it now.
+    if (!m_featuresForestFileToLoadOnStartup.isEmpty()) {
+        auto start = std::chrono::system_clock::now();
+        loadFeaturesForest(m_featuresForestFileToLoadOnStartup);
+        auto end = std::chrono::system_clock::now();
+        std::cerr << std::filesystem::path(m_featuresForestFileToLoadOnStartup.toStdString()).filename().string()
+                  << ", " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+    }
 
     // If a BLAST query filename is present, do the BLAST search now automatically.
     if (!g_settings->blastQueryFilename.isEmpty()) {
@@ -267,6 +277,11 @@ void MainWindow::afterMainWindowShow() {
     // FIXME: This does not work as graph loading is asynchronous now. We need to wait until it is loaded
     if (!m_fileToLoadOnStartup.isEmpty() && m_drawGraphAfterLoad && !g_assemblyGraph->m_deBruijnGraphNodes.empty())
         drawGraph();
+    // If the features forest draw option was used and the features forest appears to have loaded (i.e. there
+    // is at least one node), then draw the graph.
+    // FIXME: This does not work as graph loading is asynchronous now. We need to wait until it is loaded
+    if (!m_featuresForestFileToLoadOnStartup.isEmpty() && m_drawFeaturesForestAfterLoad && !g_assemblyFeaturesForest->m_nodes.empty())
+        drawFeaturesForest();
 
     // If a csv query filename is present, pull the info automatically.
     if (!g_settings->csvFilename.isEmpty())
@@ -2661,6 +2676,10 @@ void MainWindow::loadFeaturesForest(QString fullFileName) {
         if (success)
         {
             setFeaturesUiState(FEATURES_LOADED);
+        } else {
+            QMessageBox::warning(this, "Cannot load features forest file", "Cannot load features forest file: " + errormsg);
+            return;
+
         }
     }
     catch (...)

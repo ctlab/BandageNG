@@ -60,7 +60,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QString fileToLoadOnStartup = "", bool drawGraphAfterLoad = false);
+    explicit MainWindow(QString fileToLoadOnStartup = "", QString featuresForestFileToLoadOnStartup = "" , bool drawGraphAfterLoad = false, bool drawFeaturesForestAfterLoad = false);
     ~MainWindow() override;
 
 private:
@@ -74,6 +74,8 @@ private:
     QString m_imageFilter;
     QString m_fileToLoadOnStartup;
     bool m_drawGraphAfterLoad;
+    QString m_featuresForestFileToLoadOnStartup;
+    bool m_drawFeaturesForestAfterLoad;
     UiState m_uiState;
     UiState m_featuresUiState;
     GraphSearchDialog * m_blastSearchDialog;

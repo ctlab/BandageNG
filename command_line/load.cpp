@@ -27,15 +27,16 @@
 CLI::App *addLoadSubcommand(CLI::App &app, LoadCmd &cmd) {
     auto *load = app.add_subcommand("load", "Launch the BandageNG GUI and load a graph file");
     load->add_flag("--draw", cmd.m_draw, "Draw graph after loading");
-    load->add_option("<graph>", cmd.m_graph, "A graph file of any type supported by Bandage")
-            ->required()->check(CLI::ExistingFile);
+    load->add_flag("--features-draw", cmd.m_featuresForestDraw, "Draw features forest after loading");
+    load->add_option("<graph>", cmd.m_graph, "A graph file of any type supported by Bandage")->required();
+    load->add_option("<featuresForest>", cmd.m_featuresForest, "A features forest file in special format supported by Bandage");
 
     return load;
 }
 
 int handleLoadCmd(QApplication *app,
                   const CLI::App &cli, const LoadCmd &cmd) {
-    MainWindow w{cmd.m_graph.c_str(), cmd.m_draw};
+    MainWindow w{cmd.m_graph.c_str(), cmd.m_featuresForest.c_str(), cmd.m_draw, cmd.m_featuresForestDraw};
 
     w.show();
     return app->exec();

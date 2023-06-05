@@ -122,7 +122,9 @@ void GraphicsItemFeatureNode::paint(QPainter* painter, const QStyleOptionGraphic
 void GraphicsItemFeatureNode::drawNodeText(QPainter* painter, QStringList nodeText) {
     QPainterPath textPath;
 
-    QFontMetrics metrics(g_settings->labelFont);
+    QFont font = g_settings->labelFont;
+    font.setPixelSize(14);
+    QFontMetrics metrics(font);
     double fontHeight = metrics.ascent();
 
     for (int i = 0; i < nodeText.size(); ++i)
@@ -130,7 +132,7 @@ void GraphicsItemFeatureNode::drawNodeText(QPainter* painter, QStringList nodeTe
         QString text = nodeText.at(i);
         int stepsUntilLast = nodeText.size() - 1 - i;
         double shiftLeft = -metrics.boundingRect(text).width() / 2.0;
-        textPath.addText(shiftLeft, -stepsUntilLast * fontHeight, g_settings->labelFont, text);
+        textPath.addText(shiftLeft, -stepsUntilLast * fontHeight, font, text);
     }
 
     drawTextPathAtLocation(painter, textPath);

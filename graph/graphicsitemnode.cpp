@@ -183,10 +183,13 @@ void GraphicsItemNode::paint(QPainter * painter, const QStyleOptionGraphicsItem 
     //Draw node labels if there are any to display.
     if (anyNodeDisplayText())
     {
-        QStringList nodeText = getNodeText();
+          QStringList nodeText = getNodeText();
           QPainterPath textPath;
 
-          QFontMetrics metrics(g_settings->labelFont);
+          QFont font = g_settings->labelFont;
+          font.setPixelSize(14);
+
+          QFontMetrics metrics(font);
           double fontHeight = metrics.ascent();
 
           for (int i = 0; i < nodeText.size(); ++i)
@@ -194,7 +197,7 @@ void GraphicsItemNode::paint(QPainter * painter, const QStyleOptionGraphicsItem 
               const QString& text = nodeText.at(i);
               int stepsUntilLast = nodeText.size() - 1 - i;
               double shiftLeft = -metrics.boundingRect(text).width() / 2.0;
-              textPath.addText(shiftLeft, -stepsUntilLast * fontHeight, g_settings->labelFont, text);
+              textPath.addText(shiftLeft, -stepsUntilLast * fontHeight, font, text);
           }
 
           std::vector<QPointF> centres;

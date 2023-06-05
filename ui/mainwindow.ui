@@ -61,7 +61,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-973</y>
          <width>292</width>
          <height>1839</height>
         </rect>
@@ -1749,7 +1749,7 @@ then colour which other nodes in the graph are likely to be contiguous
            <item row="5" column="0">
             <widget class="QCheckBox" name="featureIdCheckBox">
              <property name="text">
-              <string>Feature Id</string>
+              <string>Feature node ID</string>
              </property>
             </widget>
            </item>
