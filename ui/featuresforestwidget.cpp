@@ -41,7 +41,6 @@
 #include <QInputDialog>
 #include <QShortcut>
 #include "../ui/dialogs/aboutdialog.h"
-#include <QMainWindow>
 #include "../graph/assemblygraph.h"
 #include "bandagegraphicsview.h"
 #include "graphicsviewzoom.h"
@@ -66,14 +65,16 @@
 #include "../features_forest/featuretreenode.h"
 #include "../features_forest/graphicsitemfeaturenode.h"
 #include "../layout/treelayoutworker.h"
-#include "ui/mainwindow.h"
 
-FeaturesForestWidget::FeaturesForestWidget()
+FeaturesForestWidget::FeaturesForestWidget(MainWindow *parent) : QObject(parent)
 {
-    m_graphicsViewZoom = new GraphicsViewZoom(g_graphicsViewFeaturesForest);
+    mainWindow = parent;
+    g_absoluteZoomFeatures = 1.0;
+    m_graphicsViewZoom = new GraphicsViewZoom(g_graphicsViewFeaturesForest, &g_absoluteZoomFeatures);
     g_graphicsViewFeaturesForest->m_zoom = m_graphicsViewZoom;
     m_scene = new BandageGraphicsScene(this);
     g_graphicsViewFeaturesForest->setScene(m_scene);
+    connect(m_graphicsViewZoom, SIGNAL(zoomed()), mainWindow, SLOT(zoomedFeaturesWithMouseWheel()));
 }
 
 FeaturesForestWidget::~FeaturesForestWidget()
@@ -128,7 +129,7 @@ void FeaturesForestWidget::graphLayoutFinished(const FeaturesLayout &layout) {
     m_scene->addGraphicsItemsToScene(*g_assemblyFeaturesForest, layout);
     m_scene->setSceneRectangle();
 
-    //double averageNodeWidth = g_settings->averageNodeWidth / pow(g_absoluteZoom, 0.75);
+    //double averageNodeWidth = g_settings->averageNodeWidth / pow(g_absoluteZoomFeatures, 0.75);
     //ui->nodeWidthSpinBox->setValue(averageNodeWidth);
     //g_assemblyFeaturesForest->recalculateAllNodeWidths(averageNodeWidth, g_settings->depthPower, g_settings->depthEffectOnWidth);
     g_graphicsViewFeaturesForest->viewport()->update();

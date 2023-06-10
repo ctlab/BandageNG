@@ -46,6 +46,7 @@ class BandageGraphicsScene;
 class DeBruijnNode;
 class DeBruijnEdge;
 class GraphSearchDialog;
+class FeaturesForestWidget;
 namespace search {
     class GraphSearch;
 }
@@ -120,7 +121,8 @@ private:
     bool checkForFeaturesImageSave();
     void resetFeatureForestScene();
     void cleanUpFeatureForest();
-
+public slots:
+    void zoomedFeaturesWithMouseWheel();
 private slots:
     void loadGraph(QString fullFileName = "");
     void loadCSV(QString fullFileName = "");
@@ -207,12 +209,15 @@ private slots:
     void setFeatureNodeCustomLabel();
     void setFeatureTextDisplaySettings();
     void resetAllFeaturesNodeColours();
+    void zoomFeaturesSpinBoxChanged();
+    void setZoomFeaturesSpinBoxStep();
 
 protected:
       void showEvent(QShowEvent *ev) override;
 
 signals:
       void windowLoaded();
+      void graphLoaded();
 
 };
 

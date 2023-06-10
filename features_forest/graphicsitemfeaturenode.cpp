@@ -52,6 +52,9 @@ QPainterPath GraphicsItemFeatureNode::shapeRect() const
 void GraphicsItemFeatureNode::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*)
 {
     int width = g_settings->averageFeatureNodeWidth;
+    if (width % 2 == 0) {
+        width += 1;
+    }
     int x = m_linePoints[0].x();
     int y = m_linePoints[0].y();
 
@@ -71,6 +74,13 @@ void GraphicsItemFeatureNode::paint(QPainter* painter, const QStyleOptionGraphic
     painter->setBrush(m_colour);
     if (g_settings->displayFeatureClassLikeFigure) {
         if (m_featureNode->getClassInd() == 0) {
+            QPainterPath outlinePath = shape();
+            QRect r(x, y, width, width);
+            r.moveCenter(m_linePoints[0].toPoint());
+            painter->fillPath(outlinePath, brush);
+            painter->drawEllipse(r);
+        }
+        else if (m_featureNode->getClassInd() == 1) {
             QRect r(x, y, width, width);
             r.moveCenter(m_linePoints[0].toPoint());
             
@@ -79,7 +89,7 @@ void GraphicsItemFeatureNode::paint(QPainter* painter, const QStyleOptionGraphic
             painter->fillPath(outlinePath, brush);
             painter->drawRect(r);
         }
-        else if (m_featureNode->getClassInd() == 1) {
+        else if (m_featureNode->getClassInd() == 2) {
             QRect r(x, y, width, width);
             r.moveCenter(m_linePoints[0].toPoint());
 
@@ -91,13 +101,30 @@ void GraphicsItemFeatureNode::paint(QPainter* painter, const QStyleOptionGraphic
 
             painter->fillPath(outlinePath, brush);
             painter->drawPath(outlinePath);
-        }
-        else {
-            QPainterPath outlinePath = shape();
+        } else if (m_featureNode->getClassInd() == 3) {
             QRect r(x, y, width, width);
             r.moveCenter(m_linePoints[0].toPoint());
+
+            QPainterPath outlinePath;
+            outlinePath.moveTo(r.left() + (r.width() / 2), r.bottom());
+            outlinePath.lineTo(r.topLeft());
+            outlinePath.lineTo(r.topRight());
+            outlinePath.lineTo(r.left() + (r.width() / 2), r.bottom());
+
             painter->fillPath(outlinePath, brush);
-            painter->drawEllipse(r);
+            painter->drawPath(outlinePath);
+        } else if (m_featureNode->getClassInd() == 4) {
+            QRect r(x, y, width, width);
+            r.moveCenter(m_linePoints[0].toPoint());
+            QPainterPath outlinePath;
+            outlinePath.moveTo(r.center().x(), r.top());
+            outlinePath.lineTo(r.right(), r.center().y());
+            outlinePath.lineTo(r.center().x(), r.bottom());
+            outlinePath.lineTo(r.left(), r.center().y());
+            outlinePath.lineTo(r.center().x(), r.top());
+
+            painter->fillPath(outlinePath, brush);
+            painter->drawPath(outlinePath);
         }
     }
     else {
@@ -131,7 +158,7 @@ void GraphicsItemFeatureNode::drawNodeText(QPainter* painter, QStringList nodeTe
     {
         QString text = nodeText.at(i);
         int stepsUntilLast = nodeText.size() - 1 - i;
-        double shiftLeft = -metrics.boundingRect(text).width() / 2.0;
+        double shiftLeft = -metrics.boundingRect(text).width() / 2.0 - 1.0;
         textPath.addText(shiftLeft, -stepsUntilLast * fontHeight, font, text);
     }
 
@@ -145,7 +172,7 @@ void GraphicsItemFeatureNode::drawTextPathAtLocation(QPainter* painter, QPainter
     QPointF offset(0.0, textHeight / 2.0);
     QPointF centre(m_linePoints[0].x() - textBoundingRect.width() / 2.0 - m_width / 2.0 - 1.0, m_linePoints[0].y());
 
-    double zoom = g_absoluteZoom;
+    double zoom = g_absoluteZoomFeatures;
     if (zoom == 0.0)
         zoom = 1.0;
 

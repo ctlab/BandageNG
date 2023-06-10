@@ -64,11 +64,12 @@ class GraphicsViewZoom : public QObject
 {
     Q_OBJECT
 public:
-    explicit GraphicsViewZoom(BandageGraphicsView * view);
+    explicit GraphicsViewZoom(BandageGraphicsView * view, double* absoluteZoom);
     void gentleZoom(double factor, ZoomSource zoomSource);
     void setModifiers(Qt::KeyboardModifiers modifiers);
     void setZoomFactorBase(double value);
     double m_zoomFactorBase;
+    double *m_absoluteZoom;
 
 private:
     BandageGraphicsView * m_view;

@@ -9,13 +9,11 @@
 
 BlastFeaturesNodesMatcher::BlastFeaturesNodesMatcher() { }
 
-void BlastFeaturesNodesMatcher::matchFeaturesNode(GraphSearchDialog* graphSearchDialog, std::vector<FeatureTreeNode*> selectedNodes, search::GraphSearch* graphSearch) {
+void BlastFeaturesNodesMatcher::matchFeaturesNode(GraphSearchDialog* graphSearchDialog, QList<FeatureTreeNode*> selectedNodes, search::GraphSearch* graphSearch) {
     bool isQueriesAdded = false;
     for(FeatureTreeNode* selectedNode : selectedNodes) {
         std::vector<QString> querySequences = selectedNode->getQuerySequences();
         if ((querySequences.size()!= 0) && (selectedNode->getBlastColourInd() == - 1)) {
-            //add blast query
-            //g_blastSearch->cleanUp();
             QString featureNodeName = selectedNode->getName() + "_";
             size_t indexColour = graphSearch->getQueryCount();
             for (size_t i = 0; i < querySequences.size(); ++i)

@@ -82,9 +82,8 @@ void AssemblyFeaturesForest::recalculateAllNodeWidths()
     while (i.hasNext())
     {
         i.next();
-        GraphicsItemFeatureNode* graphicsItemNode = i.value()->getGraphicsItemFeatureNode();
-        if (graphicsItemNode != 0)
-            graphicsItemNode->m_width = g_settings->averageFeatureNodeWidth;
+        if (i.value()->hasGraphicsItemFeature())
+            i.value()->getGraphicsItemFeatureNode()->m_width = g_settings->averageFeatureNodeWidth;
     }
 }
 
@@ -162,16 +161,24 @@ QString AssemblyFeaturesForest::getClassFigureInfo() {
     for (QString className : m_classes.keys()) {
         res = res + className + ": ";
         if (m_classes[className] == 0) {
+            res += QChar(0x2B24);
+            res += " (circle)\n";
+        }
+        else if (m_classes[className] == 1) {
             res += QChar(0x2B1B);
             res += " (cube)\n";
         } 
-        else if (m_classes[className] == 1) {
+        else if (m_classes[className] == 2) {
             res += QChar(0x25B2);
             res += " (triangle)\n";
         }
-        else {
-            res += QChar(0x2B24);
-            res += " (circle)\n";
+        else if (m_classes[className] == 3) {
+            res += QChar(0x25BC);
+            res += " (reverse triangle)\n";
+        }
+        else if (m_classes[className] == 4) {
+            res += QChar(0x25C6);
+            res += " (rhombus)\n";
         }
     }
     return res;

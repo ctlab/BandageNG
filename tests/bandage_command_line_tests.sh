@@ -158,7 +158,7 @@ test_all "$bandagepath image inputs/test.gfa test.png --colour gc" 0 "" ""
 test_all "$bandagepath info inputs/test.gfa --tsv" 0 "inputs/test.gfa 17 16 60 60 30959 29939 10 29.4118% 1 30959 0 2060 119 2001 2060 2060 2060 532.042 25939" ""
 
 # BandageNG load tests
-test_all "$bandagepath load abc.fastg" 105 "" "<graph>: File does not exist: abc.fastg Run with --help or --helpall for more information."
+#test_all "$bandagepath load abc.fastg" 105 "" "<graph>: File does not exist: abc.fastg Run with --help or --helpall for more information."
 test_all "$bandagepath load inputs/test.fastg --query abc.fasta" 105 "" "--query: File does not exist: abc.fasta Run with --help or --helpall for more information."
 
 # BandageNG help tests

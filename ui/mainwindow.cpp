@@ -72,6 +72,7 @@
 #include <QStringListModel>
 #include <QtConcurrent>
 #include <QFutureWatcher>
+#include <QList>
 
 #include <iterator>
 #include <algorithm>
@@ -109,6 +110,9 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     ui->zoomSpinBox->setMinimum(g_settings->minZoom * 100.0);
     ui->zoomSpinBox->setMaximum(g_settings->maxZoom * 100.0);
 
+    ui->zoomFeaturesSpinBox->setMinimum(g_settings->minZoom * 100.0);
+    ui->zoomFeaturesSpinBox->setMaximum(g_settings->maxZoom * 100.0);
+
     //The normal height of the QPlainTextEdit objects is a bit much,
     //so fix them at a smaller height.
     ui->selectedNodesTextEdit->setFixedHeight(ui->selectedNodesTextEdit->sizeHint().height() / 2.5);
@@ -117,7 +121,9 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     setUiState(NO_GRAPH_LOADED);
     setFeaturesUiState(NO_FEATURES_LOADED);
 
-    m_graphicsViewZoom = new GraphicsViewZoom(g_graphicsView);
+    g_absoluteZoom = 1.0;
+    g_absoluteZoomFeatures = 1.0;
+    m_graphicsViewZoom = new GraphicsViewZoom(g_graphicsView, &g_absoluteZoom);
     g_graphicsView->m_zoom = m_graphicsViewZoom;
 
     m_scene = new BandageGraphicsScene(this);
@@ -129,8 +135,9 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     allViewsSplitter->addWidget(g_graphicsViewFeaturesForest);
 
     ui->graphicsViewWidget->layout()->addWidget(allViewsSplitter);
-    m_featuresForestWidget = new FeaturesForestWidget();
+    m_featuresForestWidget = new FeaturesForestWidget(this);
 
+    m_featuresForestWidget -> m_previousFeaturesZoomSpinBoxValue = ui->zoomFeaturesSpinBox->value();
     //Nothing is selected yet, so this will hide the appropriate labels.
     selectionChanged();
 
@@ -237,6 +244,8 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     connect(ui->featureClassCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
     connect(ui->featureCustomCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
     connect(ui->featureClassLikeFigureCheckBox, SIGNAL(toggled(bool)), this, SLOT(setFeatureTextDisplaySettings()));
+    connect(ui->zoomFeaturesSpinBox, SIGNAL(valueChanged(double)), this, SLOT(zoomFeaturesSpinBoxChanged()));
+    connect(g_graphicsViewFeaturesForest->m_zoom, SIGNAL(zoomed()), this, SLOT(zoomedFeaturesWithMouseWheel()));
 
     connect(this, SIGNAL(windowLoaded()), this, SLOT(afterMainWindowShow()), Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 }
@@ -275,8 +284,10 @@ void MainWindow::afterMainWindowShow() {
     // If the draw option was used and the graph appears to have loaded (i.e. there
     // is at least one node), then draw the graph.
     // FIXME: This does not work as graph loading is asynchronous now. We need to wait until it is loaded
-    if (!m_fileToLoadOnStartup.isEmpty() && m_drawGraphAfterLoad && !g_assemblyGraph->m_deBruijnGraphNodes.empty())
-        drawGraph();
+    if (!m_fileToLoadOnStartup.isEmpty() && m_drawGraphAfterLoad && !g_assemblyGraph->m_deBruijnGraphNodes.empty()) {
+        connect(this, SIGNAL(graphLoaded()), this, SLOT(drawGraph()));
+
+    }
     // If the features forest draw option was used and the features forest appears to have loaded (i.e. there
     // is at least one node), then draw the graph.
     // FIXME: This does not work as graph loading is asynchronous now. We need to wait until it is loaded
@@ -427,6 +438,7 @@ void MainWindow::loadGraph(QString fullFileName) {
 
             setupPathSelectionLineEdit(ui->pathSelectionLineEdit);
             setupPathSelectionLineEdit(ui->pathSelectionLineEdit2);
+            emit graphLoaded();
         }  catch (const AssemblyGraphError &err) {
             QString errorTitle = "Error loading graph";
             QString errorMessage = "There was an error when attempting to load\n"
@@ -893,27 +905,29 @@ void MainWindow::drawGraph() {
     QString errorMessage;
     g_settings->doubleMode = ui->doubleNodesRadioButton->isChecked();
 
-    auto scope =
-            graph::scope(g_settings->graphScope,
-                         ui->startingNodesLineEdit->text(),
-                         ui->minDepthSpinBox->value(), ui->maxDepthSpinBox->value(),
-                         m_blastSearchDialog ? &m_blastSearchDialog->search()->queries() : nullptr,
-                         ui->blastQueryComboBox->currentText(),
-                         ui->pathSelectionLineEdit->displayText(),
-                         ui->nodeDistanceSpinBox->value());
+    if (m_uiState == GRAPH_LOADED) {
+        auto scope =
+                graph::scope(g_settings->graphScope,
+                             ui->startingNodesLineEdit->text(),
+                             ui->minDepthSpinBox->value(), ui->maxDepthSpinBox->value(),
+                             m_blastSearchDialog ? &m_blastSearchDialog->search()->queries() : nullptr,
+                             ui->blastQueryComboBox->currentText(),
+                             ui->pathSelectionLineEdit->displayText(),
+                             ui->nodeDistanceSpinBox->value());
 
-    auto startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
-                                                 *g_assemblyGraph, scope);
+        auto startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
+                                                     *g_assemblyGraph, scope);
 
-    if (!errorMessage.isEmpty()) {
-        QMessageBox::information(this, errorTitle, errorMessage);
-        return;
+        if (!errorMessage.isEmpty()) {
+            QMessageBox::information(this, errorTitle, errorMessage);
+            return;
+        }
+
+        resetScene();
+        g_assemblyGraph->resetNodes();
+        g_assemblyGraph->markNodesToDraw(scope, startingNodes);
+        layoutGraph();
     }
-
-    resetScene();
-    g_assemblyGraph->resetNodes();
-    g_assemblyGraph->markNodesToDraw(scope, startingNodes);
-    layoutGraph();
 }
 
 
@@ -997,9 +1011,6 @@ void MainWindow::layoutGraph()
     watcher->setFuture(res);
 }
 
-
-
-
 void MainWindow::zoomSpinBoxChanged()
 {
     double newValue = ui->zoomSpinBox->value();
@@ -1007,7 +1018,6 @@ void MainWindow::zoomSpinBoxChanged()
     setZoomSpinBoxStep();
 
     m_graphicsViewZoom->gentleZoom(zoomFactor, SPIN_BOX);
-
     m_previousZoomSpinBoxValue = newValue;
 }
 
@@ -1021,7 +1031,6 @@ void MainWindow::setZoomSpinBoxStep()
     ui->zoomSpinBox->setSingleStep(newSingleStep);
 }
 
-
 void MainWindow::zoomedWithMouseWheel()
 {
     ui->zoomSpinBox->blockSignals(true);
@@ -1031,8 +1040,6 @@ void MainWindow::zoomedWithMouseWheel()
     m_previousZoomSpinBoxValue = newSpinBoxValue;
     ui->zoomSpinBox->blockSignals(false);
 }
-
-
 
 void MainWindow::zoomToFitScene()
 {
@@ -1901,7 +1908,6 @@ void MainWindow::setUiState(UiState uiState)
         ui->blastSearchWidget->setEnabled(true);
         ui->bedWidget->setEnabled(true);
         ui->annotationSelectorWidget->setEnabled(true);
-        ui->selectionScrollAreaWidgetContents->setEnabled(false);
         ui->actionLoad_CSV->setEnabled(true);
         ui->actionLoad_layout->setEnabled(true);
         ui->actionLoad_paths->setEnabled(true);
@@ -2629,7 +2635,7 @@ void MainWindow::resetFeatureForestScene() {
     g_assemblyFeaturesForest->resetNodes();
     m_featuresForestWidget->cleanUp();
 
-    m_featuresForestWidget = new FeaturesForestWidget();
+    m_featuresForestWidget = new FeaturesForestWidget(this);
 
     //connect(m_featuresforestScene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
     //selectionChanged();
@@ -2701,6 +2707,9 @@ void MainWindow::setFeaturesUiState(UiState uiState) {
         break;
     case FEATURES_LOADED:
         ui->featuresForestWidget->setEnabled(true);
+        if (g_assemblyFeaturesForest->m_classes.size() > 5) {
+            ui->featureClassLikeFigureCheckBox->setEnabled(false);
+        }
         break;
     case FEATURES_DRAWN:
         ui->featuresForestWidget->setEnabled(true);
@@ -2906,10 +2915,13 @@ void MainWindow::featureNodeWidthChanged()
 
 void MainWindow::matchSelectedFeatureNodes() {
     std::vector<FeatureTreeNode*> selectedNodes = m_featuresForestWidget->m_scene->getSelectedFeatureNodes();
-
+    QList<FeatureTreeNode*> selectedNodesQList;
     if (selectedNodes.size() == 0)
     {
-        return;
+        selectedNodesQList = (g_assemblyFeaturesForest->m_nodes).values();
+    } else {
+        selectedNodesQList.reserve(selectedNodes.size());
+        std::copy(selectedNodes.begin(), selectedNodes.end(), std::back_inserter(selectedNodesQList));
     }
 
     if (!m_blastSearchDialog) {
@@ -2924,7 +2936,9 @@ void MainWindow::matchSelectedFeatureNodes() {
     }
 
     m_blastSearchDialog->buildDatabase(false);
-    m_blastFeaturesNodesMatcher->matchFeaturesNode(m_blastSearchDialog, selectedNodes, search);
+
+    m_blastFeaturesNodesMatcher->matchFeaturesNode(m_blastSearchDialog, selectedNodesQList, search);
+
 
     ui->blastQueryComboBox->setEnabled(true);
     ui->blastQueryComboBox->setCurrentText("all");
@@ -2946,4 +2960,35 @@ bool MainWindow::checkForFeaturesImageSave()
         return false;
     }
     return true;
+}
+
+
+void MainWindow::zoomFeaturesSpinBoxChanged()
+{
+    double newValue = ui->zoomFeaturesSpinBox->value();
+    double zoomFactor = newValue / m_featuresForestWidget->m_previousFeaturesZoomSpinBoxValue;
+    setZoomFeaturesSpinBoxStep();
+
+    g_graphicsViewFeaturesForest->m_zoom->gentleZoom(zoomFactor, SPIN_BOX);
+
+    m_featuresForestWidget->m_previousFeaturesZoomSpinBoxValue = newValue;
+}
+
+void MainWindow::setZoomFeaturesSpinBoxStep()
+{
+    double newSingleStep = ui->zoomFeaturesSpinBox->value() * (g_settings->zoomFactor - 1.0) * 100.0;
+
+    //Round up to nearest 0.1
+    newSingleStep = int((newSingleStep + 0.1) * 10.0) / 10.0;
+
+    ui->zoomFeaturesSpinBox->setSingleStep(newSingleStep);
+}
+void MainWindow::zoomedFeaturesWithMouseWheel()
+{
+    ui->zoomFeaturesSpinBox->blockSignals(true);
+    double newSpinBoxValue = g_absoluteZoomFeatures * 100.0;
+    ui->zoomFeaturesSpinBox->setValue(newSpinBoxValue);
+    setZoomFeaturesSpinBoxStep();
+    m_featuresForestWidget->m_previousFeaturesZoomSpinBoxValue = newSpinBoxValue;
+    ui->zoomFeaturesSpinBox->blockSignals(false);
 }

@@ -25,6 +25,7 @@ QSharedPointer<Memory> g_memory;
 BandageGraphicsView * g_graphicsView;
 BandageGraphicsView * g_graphicsViewFeaturesForest;
 double g_absoluteZoom;
+double g_absoluteZoomFeatures;
 QSharedPointer<search::BlastSearch> g_blastSearch;
 QSharedPointer<AssemblyGraph> g_assemblyGraph;
 QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;

@@ -61,7 +61,7 @@ private:
     FeatureTreeNode * m_parent = NULL;
     //std::vector<QString> m_querySequences;
 
-    GraphicsItemFeatureNode * m_graphicsItemFeatureNode;
+    GraphicsItemFeatureNode * m_graphicsItemFeatureNode = NULL;
     QString m_featureName;
     double m_threshold = 0;
     QString m_class;

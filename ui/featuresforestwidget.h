@@ -31,18 +31,20 @@
 #include "program/globals.h"
 #include <QThread>
 #include "layout/featureslayout.h"
+#include "ui/mainwindow.h"
 
 class GraphicsViewZoom;
 class BandageGraphicsScene;
 class FeatureTreeNode;
 class DeBruijnNode;
+class MainWindow;
 
-class FeaturesForestWidget : QObject
+class FeaturesForestWidget : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit FeaturesForestWidget();
+    explicit FeaturesForestWidget(MainWindow *parent);
     ~FeaturesForestWidget();
 
     void cleanUp();
@@ -51,17 +53,18 @@ public:
     BandageGraphicsScene * m_scene;
 
     GraphicsViewZoom * m_graphicsViewZoom;
-    double m_previousZoomSpinBoxValue;
     QThread * m_layoutThread;
     QString m_imageFilter;
     QString m_fileToLoadOnStartup;
     bool m_drawGraphAfterLoad;
     bool m_alreadyShown;
+    double m_previousFeaturesZoomSpinBoxValue;
 
     void resetScene();
     void layoutGraph();
     void getSelectedNodeInfo(int & selectedNodeCount, QString & selectedFeatureNodeText);
-
+private:
+    MainWindow * mainWindow;
 private slots:
 
     void graphLayoutFinished(const FeaturesLayout &layout);

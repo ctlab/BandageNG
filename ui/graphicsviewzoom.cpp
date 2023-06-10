@@ -24,10 +24,9 @@
 #include "program/settings.h"
 #include "bandagegraphicsview.h"
 
-GraphicsViewZoom::GraphicsViewZoom(BandageGraphicsView * view) :
-    QObject(view), m_view(view)
+GraphicsViewZoom::GraphicsViewZoom(BandageGraphicsView * view, double *absoluteZoom) :
+    QObject(view), m_view(view), m_absoluteZoom(absoluteZoom)
 {
-    g_absoluteZoom = 1.0;
     m_view->viewport()->installEventFilter(this);
     m_view->setMouseTracking(true);
     m_modifiers = Qt::ControlModifier;
@@ -37,12 +36,11 @@ GraphicsViewZoom::GraphicsViewZoom(BandageGraphicsView * view) :
 void GraphicsViewZoom::gentleZoom(double factor, ZoomSource zoomSource)
 {
 
-    if (g_absoluteZoom * factor >= g_settings->maxZoom)
-        factor = g_settings->maxZoom / g_absoluteZoom;
-    if (g_absoluteZoom * factor <= g_settings->minZoom)
-        factor = g_settings->minZoom / g_absoluteZoom;
-
-    g_absoluteZoom *= factor;
+    if ((*m_absoluteZoom) * factor >= g_settings->maxZoom)
+        factor = g_settings->maxZoom / (*m_absoluteZoom);
+    if ((*m_absoluteZoom) * factor <= g_settings->minZoom)
+        factor = g_settings->minZoom / (*m_absoluteZoom);
+    *m_absoluteZoom = (*m_absoluteZoom) * factor;
     m_view->scale(factor, factor);
 
     if (zoomSource == MOUSE_WHEEL)

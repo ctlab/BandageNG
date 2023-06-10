@@ -43,6 +43,7 @@ extern QSharedPointer<Memory> g_memory;
 extern BandageGraphicsView * g_graphicsView;
 extern BandageGraphicsView * g_graphicsViewFeaturesForest;
 extern double g_absoluteZoom;
+extern double g_absoluteZoomFeatures;
 extern QSharedPointer<search::BlastSearch> g_blastSearch;
 extern QSharedPointer<AssemblyGraph> g_assemblyGraph;
 extern QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;
