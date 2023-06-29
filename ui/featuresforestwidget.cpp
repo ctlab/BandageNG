@@ -96,12 +96,12 @@ void FeaturesForestWidget::getSelectedNodeInfo(int & selectedNodeCount, QString 
     for (int i = 0; i < selectedNodeCount; ++i)
     {
         QString nodeName = selectedNodes[i]->getName();
-
+        selectedFeatureNodeText += "Id: ";
         selectedFeatureNodeText += nodeName;
         selectedFeatureNodeText += '\n';
         if (selectedNodes[i]->getFeatureName() != nullptr) {
             QString threshold = QString::number(selectedNodes[i]->getThreshold(), 'g', 2);
-            selectedFeatureNodeText += "Feature_" + selectedNodes[i]->getFeatureName() + " <= " + threshold + "\n";
+            selectedFeatureNodeText += "Rule: Feature " + selectedNodes[i]->getFeatureName() + " <= " + threshold + "\n";
         }
         if (selectedNodes[i]->getClass() != nullptr) {
             selectedFeatureNodeText += "Class: " + selectedNodes[i]->getClass() + "\n";
@@ -109,6 +109,7 @@ void FeaturesForestWidget::getSelectedNodeInfo(int & selectedNodeCount, QString 
         if (selectedNodes[i]->getDetails() != nullptr) {
             selectedFeatureNodeText += "Details:\n" + selectedNodes[i]->getDetails() + "\n";
         }
+        selectedFeatureNodeText += "Sequence(s):\n";
         for (QString seq : selectedNodes[i]->getQuerySequences()) {
             selectedFeatureNodeText += "Seq: ";
             selectedFeatureNodeText += seq;

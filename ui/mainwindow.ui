@@ -61,7 +61,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-724</y>
+         <y>0</y>
          <width>292</width>
          <height>1748</height>
         </rect>
@@ -1912,8 +1912,8 @@ then colour which other nodes in the graph are likely to be contiguous
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
-         <width>299</width>
+         <y>-144</y>
+         <width>285</width>
          <height>1024</height>
         </rect>
        </property>
@@ -2528,7 +2528,7 @@ then colour which other nodes in the graph are likely to be contiguous
         <item>
          <widget class="QPushButton" name="connectSelectedFeatureNodes">
           <property name="text">
-           <string>Connect fetaure node(s) with de bruijn nodes</string>
+           <string>Map features to De Bruijn graph</string>
           </property>
          </widget>
         </item>

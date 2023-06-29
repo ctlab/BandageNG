@@ -115,7 +115,7 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
 
     //The normal height of the QPlainTextEdit objects is a bit much,
     //so fix them at a smaller height.
-    ui->selectedNodesTextEdit->setFixedHeight(ui->selectedNodesTextEdit->sizeHint().height() / 2.5);
+    ui->selectedNodesTextEdit->setFixedHeight(ui->selectedNodesTextEdit->sizeHint().height());
     ui->selectedEdgesTextEdit->setFixedHeight(ui->selectedEdgesTextEdit->sizeHint().height() / 2.5);
 
     setUiState(NO_GRAPH_LOADED);
