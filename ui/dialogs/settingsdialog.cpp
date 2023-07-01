@@ -221,6 +221,7 @@ void SettingsDialog::loadOrSaveSettingsToOrFromWidgets(bool setWidgets, Settings
     intFunctionPointer(&settings->minLengthBaseDiscrepancy, ui->minLengthBaseDiscrepancySpinBox);
     checkBoxFunctionPointer(&settings->maxLengthBaseDiscrepancy.on, ui->maxLengthBaseDiscrepancyCheckBox);
     intFunctionPointer(&settings->maxLengthBaseDiscrepancy, ui->maxLengthBaseDiscrepancySpinBox);
+    intFunctionPointer(&settings->textSize, ui->textSizeSpinBox);
 
     //A couple of settings are not in a spin box, check box or colour button, so
     //they have to be done manually, not with those function pointers.

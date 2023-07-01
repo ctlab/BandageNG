@@ -149,6 +149,8 @@ Settings::Settings()
     displayFeatureClassLabels = false;
     displayFeatureCustomLabels = false;
     displayFeatureClassLikeFigure = false;
+
+    textSize = IntSetting(12, 1, 50);
 }
 
 

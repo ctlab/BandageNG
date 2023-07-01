@@ -242,6 +242,7 @@ public:
     std::shared_ptr<IFeatureNodeColorer> featureNodeColorer;
 
     bool isHiCLoaded = false;
+    IntSetting textSize;
 };
 
 #endif // SETTINGS_H

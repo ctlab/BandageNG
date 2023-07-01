@@ -41,9 +41,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
-        <width>373</width>
-        <height>3388</height>
+        <y>-626</y>
+        <width>380</width>
+        <height>2985</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -51,6 +51,7 @@
         <widget class="QLabel" name="graphSizeHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -551,6 +552,7 @@ per megabase:</string>
         <widget class="QLabel" name="graphLayoutQualityHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -913,6 +915,7 @@ per megabase:</string>
         <widget class="QLabel" name="graphAppearanceHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -1370,6 +1373,7 @@ single node style:</string>
         <widget class="QLabel" name="textAppearanceHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -1413,8 +1417,37 @@ single node style:</string>
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item row="1" column="1">
-           <widget class="InfoTextWidget" name="textOutlineThicknessInfoText" native="true">
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_47">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Text outline colour:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <spacer name="horizontalSpacer_10">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="3" column="1">
+           <widget class="InfoTextWidget" name="textOutlineColourInfoText" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1428,8 +1461,29 @@ single node style:</string>
              </size>
             </property>
             <property name="toolTip">
-             <string>This is the thickness of the outline drawn around node labels when the 'Text outline' option is ticked.&lt;br&gt;&lt;br&gt;
-                                                  Large values can make text easier to read, but may obscure more of the graph.</string>
+             <string>If the text outline thickness setting has a nonzero value, then a text outline will be displayed with this colour.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QDoubleSpinBox" name="textOutlineThicknessSpinBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::StrongFocus</enum>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="maximum">
+             <double>2.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
             </property>
            </widget>
           </item>
@@ -1452,62 +1506,7 @@ single node style:</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_26">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Text colour:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <spacer name="horizontalSpacer_8">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Expanding</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>0</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="label_47">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Text outline colour:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_7">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Text outline thickness:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
+          <item row="3" column="3">
            <widget class="ColourButton" name="textOutlineColourButton">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1523,8 +1522,21 @@ single node style:</string>
             </property>
            </widget>
           </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="label_7">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Text outline thickness:</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1">
-           <widget class="InfoTextWidget" name="textOutlineColourInfoText" native="true">
+           <widget class="InfoTextWidget" name="textOutlineThicknessInfoText" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1538,29 +1550,8 @@ single node style:</string>
              </size>
             </property>
             <property name="toolTip">
-             <string>If the text outline thickness setting has a nonzero value, then a text outline will be displayed with this colour.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QDoubleSpinBox" name="textOutlineThicknessSpinBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::StrongFocus</enum>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-            <property name="maximum">
-             <double>2.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.100000000000000</double>
+             <string>This is the thickness of the outline drawn around node labels when the 'Text outline' option is ticked.&lt;br&gt;&lt;br&gt;
+                                                  Large values can make text easier to read, but may obscure more of the graph.</string>
             </property>
            </widget>
           </item>
@@ -1586,8 +1577,8 @@ single node style:</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <spacer name="horizontalSpacer_10">
+          <item row="2" column="4">
+           <spacer name="horizontalSpacer_8">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -1601,6 +1592,33 @@ single node style:</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_26">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Text colour:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Text size:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QSpinBox" name="textSizeSpinBox">
+            <property name="value">
+             <number>12</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1673,7 +1691,7 @@ single node style:</string>
            <widget class="QWidget" name="widget_15" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <property name="spacing">
-              <number>-1</number>
+              <number>6</number>
              </property>
              <property name="leftMargin">
               <number>0</number>
@@ -1752,6 +1770,7 @@ single node style:</string>
         <widget class="QLabel" name="nodeWidthHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -2128,6 +2147,7 @@ single node style:</string>
         <widget class="QLabel" name="randomColourSchemeHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -2619,6 +2639,7 @@ single node style:</string>
         <widget class="QLabel" name="uniformColourSchemeHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -2851,6 +2872,7 @@ single node style:</string>
         <widget class="QLabel" name="depthColourSchemeHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -3330,6 +3352,7 @@ single node style:</string>
         <widget class="QLabel" name="blastColourSchemeHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -3476,6 +3499,7 @@ single node style:</string>
         <widget class="QLabel" name="contiguityColourSchemeHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -3841,6 +3865,7 @@ single node style:</string>
         <widget class="QLabel" name="blastQueryPathsHeadingLabel">
          <property name="font">
           <font>
+           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
