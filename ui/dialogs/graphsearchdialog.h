@@ -128,7 +128,7 @@ public slots:
     void buildGraphDatabaseInThread();
     void runGraphSearchesInThread();
     void buildDatabase(bool separateThread);
-    void runGraphSearches(bool separateThread);
+    void runGraphSearches(bool separateThread, QString extraParameters = "");
 private slots:
     void afterWindowShow();
     void loadQueriesFromFileButtonClicked();

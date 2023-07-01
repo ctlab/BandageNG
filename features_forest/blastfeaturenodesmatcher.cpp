@@ -26,7 +26,7 @@ void BlastFeaturesNodesMatcher::matchFeaturesNode(GraphSearchDialog* graphSearch
         }
     }
     if (isQueriesAdded) {
-        graphSearchDialog->runGraphSearches(false);
+        graphSearchDialog->runGraphSearches(false, QString("-word_size 20 -dust no"));
     }
 
 }

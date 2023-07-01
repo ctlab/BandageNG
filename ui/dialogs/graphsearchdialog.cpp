@@ -349,7 +349,7 @@ void GraphSearchDialog::runGraphSearchesInThread() {
     runGraphSearches(true);
 }
 
-void GraphSearchDialog::runGraphSearches(bool separateThread) {
+void GraphSearchDialog::runGraphSearches(bool separateThread, QString extraParameters) {
     setUiStep(GRAPH_SEARCH_IN_PROGRESS);
 
     clearHits();
@@ -366,7 +366,11 @@ void GraphSearchDialog::runGraphSearches(bool separateThread) {
     connect(m_graphSearch.get(), SIGNAL(finishedSearch(QString)), this, SLOT(graphSearchFinished(QString)));
     connect(progress, SIGNAL(halt()), m_graphSearch.get(), SLOT(cancelSearch()));
 
-    auto searcher = [&]() { m_graphSearch->doSearch(ui->parametersLineEdit->text().simplified()); };
+    if (extraParameters.isEmpty()) {
+        extraParameters = ui->parametersLineEdit->text().simplified();
+    }
+
+    auto searcher = [&]() { m_graphSearch->doSearch(extraParameters); };
     if (separateThread) {
         QFuture<void> res = QtConcurrent::run(searcher);
     } else
