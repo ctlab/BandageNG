@@ -8,14 +8,14 @@
 ## IMPORTANT: This is a fork of original Bandage repo. It may contain new features, new bugs and otherwise be not compatible with the Bandage by Ryan Wick. The documentation, instructions, etc. might be incomplete, missed and inaccurate as well
 
 ## Table of Contents
-* [Intro](https://github.com/asl/BandageNG#intro)
-* [Help](https://github.com/asl/BandageNG#help)
-* [Pre-built binaries](https://github.com/asl/BandageNG#pre-built-binaries)
-* [Building from source](https://github.com/asl/BandageNG#building-from-source)
-* [Contributing](https://github.com/asl/BandageNG#contributing)
-* [Citation](https://github.com/asl/BandageNG#citation)
-* [Credits](https://github.com/asl/BandageNG#credits)
-* [License](https://github.com/asl/BandageNG#license)
+* [Intro](https://github.com/ctlab/BandageNG#intro)
+* [Help](https://github.com/ctlab/BandageNG#help)
+* [Pre-built binaries](https://github.com/ctlab/BandageNG#pre-built-binaries)
+* [Building from source](https://github.com/ctlab/BandageNG#building-from-source)
+* [Contributing](https://github.com/ctlab/BandageNG#contributing)
+* [Citation](https://github.com/ctlab/BandageNG#citation)
+* [Credits](https://github.com/ctlab/BandageNG#credits)
+* [License](https://github.com/ctlab/BandageNG#license)
 
 
 ## Intro
