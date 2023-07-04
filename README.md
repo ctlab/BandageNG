@@ -1,7 +1,7 @@
 [![License](https://img.shields.io/badge/licence-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/asl/BandageNG?include_prereleases)
-[![GitHub Downloads](https://img.shields.io/github/downloads/asl/BandageNG/total.svg?style=social&logo=github&label=Download)](https://github.com/asl/BandageNG/releases)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/asl/BandageNG/test.yml?branch=dev)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/ctlab/BandageNG?include_prereleases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/ctlab/BandageNG/total.svg?style=social&logo=github&label=Download)](https://github.com/ctlab/BandageNG/releases)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ctlab/BandageNG/test.yml?branch=dev)
 
 # <img src="http://rrwick.github.io/Bandage/images/logo.png" alt="Bandage" width="115" height="115" align="middle">Bandage-NG
 
@@ -26,7 +26,7 @@ Bandage-NG is a GUI program that allows users to interact with the assembly grap
 
 ## Help
 
-Bandage-NG documentation is available on the <a href="https://github.com/asl/BandageNG/wiki" target="_blank">Bandage-NG GitHub wiki</a>.
+Bandage-NG documentation is available on the <a href="https://github.com/ctlab/BandageNG/wiki" target="_blank">Bandage-NG GitHub wiki</a>.
 
 Bandage-NG help tips are also built into the program. Throughout the UI, you will find these icons next to controls and settings: <img src="http://rrwick.github.io/Bandage/images/helptext.png" alt="help text icon" width="16" height="16">. Click them to see a description of that element of Bandage.
 
@@ -37,7 +37,7 @@ Bandage-NG help tips are also built into the program. Throughout the UI, you wil
 
 ## Pre-built binaries
 
-Pre-built Linux and Mac binaries are available from [Releases](https://github.com/asl/BandageNG/releases) page.
+Pre-built Linux and Mac binaries are available from [Releases](https://github.com/ctlab/BandageNG/releases) page.
 
 ## Building from source
 
