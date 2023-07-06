@@ -156,7 +156,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+            cp **/BandageNG-Linux-*.AppImage **/BandageNG-Linux.AppImage
+            cp **/BandageNG-macOS-*.dmg **/BandageNG-macOS.dmg
             wget -q https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
             chmod +x pyuploadtool-x86_64.AppImage
-            ./pyuploadtool-x86_64.AppImage **/BandageNG-Linux-*.AppImage
-            ./pyuploadtool-x86_64.AppImage **/BandageNG-macOS-*.dmg
+            ./pyuploadtool-x86_64.AppImage **/BandageNG-Linux.AppImage
+            ./pyuploadtool-x86_64.AppImage **/BandageNG-macOS.dmg
