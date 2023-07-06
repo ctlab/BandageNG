@@ -60,7 +60,7 @@ jobs:
           export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqminimal.so"
 
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
-          mv BandageNG*.AppImage BandageNG-Linux-${{steps.commit.outputs.short}}.AppImage
+          mv BandageNG*.AppImage BandageNG-Linux.AppImage
         shell: bash
 
       - name: '📤 Upload artifact: AppImage'
@@ -98,7 +98,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: |
           macdeployqt BandageNG.app -dmg
-          mv *.dmg BandageNG-macOS-${{steps.commit.outputs.short}}.dmg
+          mv *.dmg BandageNG-macOS.dmg
 
       - name: '📤 Upload artifact: DMG'
         uses: actions/upload-artifact@v3
@@ -151,12 +151,7 @@ jobs:
       - name: '📥 Download artifacts'
         uses: actions/download-artifact@v3
       - name: '🗂 Inspect directory after downloading artifacts'
-        run: |
-            ls -alFR
-            cp **/BandageNG-Linux-*.AppImage BandageNG-Linux.AppImage
-            ls -alFR
-            cp **/BandageNG-macOS-*.dmg BandageNG-macOS.dmg
-            ls -alFR
+        run: ls -alFR
       - name: '🚀 Create release and upload artifacts'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
