@@ -66,7 +66,7 @@ jobs:
       - name: '📤 Upload artifact: AppImage'
         uses: actions/upload-artifact@v3
         with:
-          name: BandageNG-Linux-${{steps.commit.outputs.short}}.AppImage
+          name: BandageNG-Linux.AppImage
           path: ${{github.workspace}}/build/BandageNG*.AppImage
 
   build-mac:
@@ -103,7 +103,7 @@ jobs:
       - name: '📤 Upload artifact: DMG'
         uses: actions/upload-artifact@v3
         with:
-          name: BandageNG-macOS-${{steps.commit.outputs.short}}.dmg
+          name: BandageNG-macOS.dmg
           path: ${{github.workspace}}/build/BandageNG*.dmg
 
   build-windows:
@@ -151,14 +151,17 @@ jobs:
       - name: '📥 Download artifacts'
         uses: actions/download-artifact@v3
       - name: '🗂 Inspect directory after downloading artifacts'
-        run: ls -alFR
+        run: |
+            ls -alFR
+            cp **/BandageNG-Linux-*.AppImage BandageNG-Linux.AppImage
+            ls -alFR
+            cp **/BandageNG-macOS-*.dmg BandageNG-macOS.dmg
+            ls -alFR
       - name: '🚀 Create release and upload artifacts'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            cp **/BandageNG-Linux-*.AppImage **/BandageNG-Linux.AppImage
-            cp **/BandageNG-macOS-*.dmg **/BandageNG-macOS.dmg
             wget -q https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
             chmod +x pyuploadtool-x86_64.AppImage
-            ./pyuploadtool-x86_64.AppImage **/BandageNG-Linux.AppImage
-            ./pyuploadtool-x86_64.AppImage **/BandageNG-macOS.dmg
+            ./pyuploadtool-x86_64.AppImage **/BandageNG-Linux*.AppImage
+            ./pyuploadtool-x86_64.AppImage **/BandageNG-macOS*.dmg
