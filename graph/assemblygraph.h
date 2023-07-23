@@ -31,6 +31,8 @@
 #include "parallel_hashmap/phmap.h"
 #include "tsl/htrie_map.h"
 
+#include "hic/hicedge.h"
+
 #include <QString>
 #include <QPair>
 #include <QObject>
@@ -38,6 +40,7 @@
 
 class DeBruijnNode;
 class DeBruijnEdge;
+class HiCEdge;
 class MyProgressDialog;
 class BandageGraphicsScene;
 
@@ -71,6 +74,7 @@ public:
     // Edges are stored in a map with a key of the starting and ending node
     // pointers.
     phmap::parallel_flat_hash_map<DeBruijnLink, DeBruijnEdge*> m_deBruijnGraphEdges;
+    phmap::parallel_flat_hash_map<DeBruijnLink, HiCEdge*>m_hicGraphEdges;
 
     // Custom colors
     phmap::parallel_flat_hash_map<const DeBruijnNode*, QColor> m_nodeColors;

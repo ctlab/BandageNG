@@ -151,6 +151,8 @@ Settings::Settings()
     displayFeatureClassLikeFigure = false;
 
     textSize = IntSetting(12, 1, 50);
+    hicEdgeWidth = FloatSetting(1.5, 0.1, 100);
+    hicEdgeLength = FloatSetting(200.0, 0.1, 1000.0);
 }
 
 

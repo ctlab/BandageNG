@@ -30,6 +30,7 @@ QSharedPointer<search::BlastSearch> g_blastSearch;
 QSharedPointer<AssemblyGraph> g_assemblyGraph;
 QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;
 std::shared_ptr<AnnotationsManager> g_annotationsManager;
+QSharedPointer<HiCManager> g_hicManager;
 
 
 QString formatIntForDisplay(int num) {

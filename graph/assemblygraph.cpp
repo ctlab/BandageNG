@@ -20,7 +20,7 @@
 #include "debruijnedge.h"
 #include "path.h"
 #include "io.h"
-#include "graphicsitemedge.h"
+#include "graphicsitemedgecommon.h"
 #include "graphicsitemnode.h"
 #include "sequenceutils.h"
 
@@ -98,6 +98,13 @@ void AssemblyGraph::cleanUp() {
             delete entry.second;
         }
         m_deBruijnGraphEdges.clear();
+    }
+
+    {
+        for (auto &entry : m_hicGraphEdges) {
+            delete entry.second;
+        }
+        m_hicGraphEdges.clear();
     }
 
     m_nodeTags.clear();
@@ -187,6 +194,9 @@ void AssemblyGraph::resetNodes()
 void AssemblyGraph::resetEdges()
 {
     for (auto &entry : m_deBruijnGraphEdges) {
+        entry.second->reset();
+    }
+    for (auto &entry : m_hicGraphEdges) {
         entry.second->reset();
     }
 }
@@ -553,6 +563,9 @@ void AssemblyGraph::markNodesToDraw(const graph::Scope &scope,
 
     // Then loop through each edge determining its drawn status
     for (auto &entry : m_deBruijnGraphEdges)
+        entry.second->determineIfDrawn();
+
+    for (auto &entry : m_hicGraphEdges)
         entry.second->determineIfDrawn();
 }
 

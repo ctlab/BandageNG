@@ -21,13 +21,15 @@
 #include "graph/debruijnnode.h"
 #include "graph/debruijnedge.h"
 #include "graph/graphicsitemnode.h"
-#include "graph/graphicsitemedge.h"
+#include "graph/graphicsitemedgecommon.h"
 #include "layout/graphlayout.h"
 #include "program/settings.h"
 #include "features_forest/assemblyfeaturesforest.h"
 #include "features_forest/featuretreenode.h"
 #include "features_forest/featuretreeedge.h"
 #include "features_forest/graphicsitemfeaturenode.h"
+#include "hic/hicedge.h"
+#include "hic/hicmanager.h"
 
 #include <unordered_set>
 
@@ -251,6 +253,19 @@ void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
             continue;
 
         auto * graphicsItemEdge = new GraphicsItemEdge(edge);
+        edge->setGraphicsItemEdge(graphicsItemEdge);
+        graphicsItemEdge->setFlag(QGraphicsItem::ItemIsSelectable);
+        addItem(graphicsItemEdge);
+    }
+
+    // Then make the GraphicsItemHiCEdge objects and add them to the scene first,
+    // so they are drawn underneath
+    for (auto &entry : graph.m_hicGraphEdges) {
+        HiCEdge * edge = entry.second;
+        if (!edge->isDrawn())
+            continue;
+
+        auto * graphicsItemEdge = new GraphicsItemHiCEdge(g_hicManager->getMaxWeight(), edge);
         edge->setGraphicsItemEdge(graphicsItemEdge);
         graphicsItemEdge->setFlag(QGraphicsItem::ItemIsSelectable);
         addItem(graphicsItemEdge);

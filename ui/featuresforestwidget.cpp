@@ -48,7 +48,7 @@
 #include "../graph/debruijnnode.h"
 #include "../graph/debruijnedge.h"
 #include "../graph/graphicsitemnode.h"
-#include "../graph/graphicsitemedge.h"
+#include "../graph/graphicsitemedgecommon.h"
 #include "../ui/dialogs/myprogressdialog.h"
 #include <limits>
 #include <QDesktopServices>

@@ -21,6 +21,8 @@
 #include "graph/debruijnnode.h"
 #include "graph/debruijnedge.h"
 
+#include "hic/hicedge.h"
+
 #include "program/settings.h"
 
 #include "ogdf/basic/GraphCopy.h"
@@ -213,6 +215,47 @@ static void addToOgdfGraph(const DeBruijnEdge *edge,
     edgeArray[newEdge] = g_settings->edgeLength;
 }
 
+static void addToOgdfGraph(const HiCEdge *edge,
+                    ogdf::Graph &ogdfGraph, ogdf::EdgeArray<double> &edgeArray,
+                    const OGDFGraphLayout &layout)
+{
+    ogdf::node firstEdgeOgdfNode;
+    ogdf::node secondEdgeOgdfNode;
+
+    const auto *startingNode = edge->getStartingNode();
+    if (layout.contains(startingNode)) {
+        auto middleIndex = layout.segments(startingNode).size()/2;
+        firstEdgeOgdfNode = layout.segments(startingNode)[middleIndex];
+    } else if (layout.contains(startingNode->getReverseComplement())) {
+        auto middleIndex = layout.segments(startingNode->getReverseComplement()).size()/2;
+        firstEdgeOgdfNode = layout.segments(startingNode->getReverseComplement())[middleIndex];
+    } else
+        return; //Ending node or its reverse complement isn't in OGDF
+
+    const auto *endingNode = edge->getEndingNode();
+    if (layout.contains(endingNode)) {
+        auto middleIndex = layout.segments(endingNode).size()/2;
+        secondEdgeOgdfNode = layout.segments(endingNode)[middleIndex];
+    } else if (layout.contains(endingNode->getReverseComplement())) {
+        auto middleIndex = layout.segments(endingNode->getReverseComplement()).size()/2;
+        secondEdgeOgdfNode = layout.segments(endingNode->getReverseComplement())[middleIndex];
+    } else
+        return; //Ending node or its reverse complement isn't in OGDF
+
+    // If this in an edge connected a single-segment node to itself, then we
+    // don't want to put it in the OGDF graph, because it would be redundant
+    // with the node segment (and created conflict with the node/edge length).
+    if (startingNode == endingNode &&
+        getNumberOfOgdfGraphEdges(getDrawnNodeLength(startingNode)) == 1)
+        return;
+
+    ogdf::edge newEdge = ogdfGraph.newEdge(firstEdgeOgdfNode, secondEdgeOgdfNode);
+    edgeArray[newEdge] = g_settings->hicEdgeLength;
+    if (startingNode->isNodeUnion() || endingNode->isNodeUnion()) {
+        edgeArray[newEdge] += (g_settings->averageNodeWidth / 2.0);
+    }
+}
+
 void determineLinearNodePositions(ogdf::Graph &ogdfGraph,
                                   ogdf::GraphAttributes &ogdfGraphAttributes,
                                   ogdf::EdgeArray<double> &ogdfEdgeLengths,
@@ -314,6 +357,15 @@ static void buildGraph(ogdf::Graph &ogdfGraph,
             continue;
 
         if (edge->getOverlapType() == JUMP)
+            continue;
+
+        addToOgdfGraph(edge,ogdfGraph, ogdfEdgeLengths, layout);
+    }
+
+    // Then loop through each hi-c edge determining its drawn status and adding it to OGDF if it is drawn.
+    for (const auto &entry : graph.m_hicGraphEdges) {
+        const HiCEdge *edge = entry.second;
+        if (!edge->isDrawn())
             continue;
 
         addToOgdfGraph(edge,ogdfGraph, ogdfEdgeLengths, layout);

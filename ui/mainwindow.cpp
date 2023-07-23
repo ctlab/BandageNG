@@ -38,7 +38,7 @@
 #include "graph/debruijnnode.h"
 #include "graph/debruijnedge.h"
 #include "graph/graphicsitemnode.h"
-#include "graph/graphicsitemedge.h"
+#include "graph/graphicsitemedgecommon.h"
 #include "graph/path.h"
 #include "graph/sequenceutils.h"
 #include "graph/io.h"
@@ -52,6 +52,8 @@
 #include "program/globals.h"
 #include "program/memory.h"
 #include "program/settings.h"
+
+#include "hic/hicmanager.h"
 
 #include <QFileDialog>
 #include <QLatin1String>
@@ -149,6 +151,7 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     graphScopeChanged();
     switchColourScheme();
     switchFeatureColourScheme();
+    hicInclusionFilterChanged();
 
     ui->bedButton->setContent(ui->bedLoadWidget);
     ui->annotationsButton->setContent(ui->annotationsListWidget);
@@ -248,6 +251,8 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     connect(g_graphicsViewFeaturesForest->m_zoom, SIGNAL(zoomed()), this, SLOT(zoomedFeaturesWithMouseWheel()));
 
     connect(this, SIGNAL(windowLoaded()), this, SLOT(afterMainWindowShow()), Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+    connect(ui->actionLoad_HiC_data, SIGNAL(triggered()), this, SLOT(loadHiC()));
+    connect(ui->hicInclusionFilterComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(hicInclusionFilterChanged()));
 }
 
 
@@ -366,7 +371,6 @@ void MainWindow::loadCSV(QString fullFileName) {
         QMessageBox::warning(this, errorTitle, errorMessage);
     }
 }
-
 
 void MainWindow::loadGraph(QString fullFileName) {
     QString selectedFilter = "Any supported graph (*)";
@@ -697,8 +701,6 @@ QString MainWindow::getSelectedEdgeListText()
     return edgeText;
 }
 
-
-
 //This function shows/hides UI elements depending on which
 //graph scope is currently selected.  It also reorganises
 //the widgets in the layout to prevent gaps when widgets
@@ -904,8 +906,10 @@ void MainWindow::drawGraph() {
     QString errorTitle;
     QString errorMessage;
     g_settings->doubleMode = ui->doubleNodesRadioButton->isChecked();
+    g_hicManager->setMinWeight(ui->hicWeightSpinBox->value());
+    g_hicManager->setMinLength(ui->hicSeqLenSpinBox->value());
 
-    if (m_uiState == GRAPH_LOADED) {
+    if (m_uiState == GRAPH_LOADED || m_uiState == GRAPH_DRAWN) {
         auto scope =
                 graph::scope(g_settings->graphScope,
                              ui->startingNodesLineEdit->text(),
@@ -1899,6 +1903,7 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_layout->setEnabled(false);
         ui->actionLoad_paths->setEnabled(false);
         ui->actionExport_layout->setEnabled(false);
+        ui->actionLoad_HiC_data->setEnabled(false);
         break;
     case GRAPH_LOADED:
         ui->graphDetailsWidget->setEnabled(true);
@@ -1912,6 +1917,7 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_layout->setEnabled(true);
         ui->actionLoad_paths->setEnabled(true);
         ui->actionExport_layout->setEnabled(false);
+        ui->actionLoad_HiC_data->setEnabled(true);
         break;
     case GRAPH_DRAWN:
         ui->graphDetailsWidget->setEnabled(true);
@@ -1927,6 +1933,7 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_layout->setEnabled(true);
         ui->actionLoad_paths->setEnabled(true);
         ui->actionExport_layout->setEnabled(true);
+        ui->actionLoad_HiC_data->setEnabled(true);
         break;
     }
 }
@@ -2185,12 +2192,6 @@ void MainWindow::openBandageUrl() {
     QDesktopServices::openUrl(QUrl("https://github.com/asl/Bandage-NG/wiki"));
 }
 
-
-
-
-
-
-
 void MainWindow::setWidgetsFromSettings()
 {
     ui->singleNodesRadioButton->setChecked(!g_settings->doubleMode);
@@ -2212,6 +2213,7 @@ void MainWindow::setWidgetsFromSettings()
 
     ui->minDepthSpinBox->setValue(g_settings->minDepthRange);
     ui->maxDepthSpinBox->setValue(g_settings->maxDepthRange);
+    setHiCInclusionFilterComboBox(g_hicManager->getHiCInclusionFilter());
 }
 
 void MainWindow::setGraphScopeComboBox(GraphScope graphScope) {
@@ -2991,4 +2993,72 @@ void MainWindow::zoomedFeaturesWithMouseWheel()
     setZoomFeaturesSpinBoxStep();
     m_featuresForestWidget->m_previousFeaturesZoomSpinBoxValue = newSpinBoxValue;
     ui->zoomFeaturesSpinBox->blockSignals(false);
+}
+
+void MainWindow::loadHiC(QString fullFileName) {
+    QString selectedFilter = "Comma separated value (*.txt)";
+    if (fullFileName == "")
+    {
+        fullFileName = QFileDialog::getOpenFileName(this, "Load Hi-C", g_memory->rememberedPath,
+            "Comma separated value (*.txt)",
+            &selectedFilter);
+    }
+
+    if (fullFileName == "")
+        return; // user clicked on cancel
+    QString errormsg;
+    QStringList columns;
+
+    try
+    {
+        MyProgressDialog progress(this, "Loading Hi-C...", false);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.show();
+
+        bool success = g_hicManager->load(*g_assemblyGraph.get(), fullFileName, &errormsg);
+
+        if (success)
+        {
+            setHiCWidgetVisibility(true);
+            g_settings->isHiCLoaded = true;
+        }
+    }
+    catch (...)
+    {
+        QString errorTitle = "Error loading HiC";
+        QString errorMessage = "There was an error when attempting to load:\n"
+            + fullFileName + "\n\n"
+            "Please verify that this file has the correct format.";
+        QMessageBox::warning(this, errorTitle, errorMessage);
+    }
+
+}
+
+void MainWindow::setHiCWidgetVisibility(bool visible)
+{
+    //ui->hicSeqLenInfoText->setVisible(visible);
+    ui->hicSeqLenSpinBox->setVisible(visible);
+    //ui->hicWeightInfoText->setVisible(visible);
+    ui->hicWeightSpinBox->setVisible(visible);
+}
+
+void MainWindow::hicInclusionFilterChanged() {
+    switch(ui->hicInclusionFilterComboBox->currentIndex()) {
+    case 0:
+        g_hicManager->setHiCInclusionFilter(HiCInclusionFilter::ALL);
+        break;
+    case 1:
+        g_hicManager->setHiCInclusionFilter(HiCInclusionFilter::ALL_BETWEEN_GRAPH_COMPONENTS);
+        break;
+    case 2:
+        g_hicManager->setHiCInclusionFilter(HiCInclusionFilter::ONE_BETWEEN_GRAPH_COMPONENT);
+        break;
+    case 3:
+        g_hicManager->setHiCInclusionFilter(HiCInclusionFilter::ONE_FROM_TARGET_COMPONENT);
+        break;
+    }
+}
+
+void MainWindow::setHiCInclusionFilterComboBox(HiCInclusionFilter filter) {
+    ui->hicInclusionFilterComboBox->setCurrentIndex(int(filter));
 }

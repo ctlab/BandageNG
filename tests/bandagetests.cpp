@@ -19,7 +19,7 @@
 #include "graph/assemblygraph.h"
 #include "graph/debruijnnode.h"
 #include "graph/debruijnedge.h"
-#include "graph/graphicsitemedge.h"
+#include "graph/graphicsitemedgecommon.h"
 #include "graph/graphicsitemnode.h"
 #include "graph/annotationsmanager.h"
 #include "graph/gfawriter.h"

@@ -243,6 +243,9 @@ public:
 
     bool isHiCLoaded = false;
     IntSetting textSize;
+    FloatSetting hicEdgeWidth;
+    FloatSetting hicEdgeLength;
+    bool roundMode = false;
 };
 
 #endif // SETTINGS_H

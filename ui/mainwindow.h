@@ -26,6 +26,8 @@
 #include "graph/contiguity.h"
 #include "graph/graphscope.h"
 
+#include "hic/hicmanager.h"
+
 #include "layout/graphlayout.h"
 #include "program/globals.h"
 
@@ -121,6 +123,7 @@ private:
     bool checkForFeaturesImageSave();
     void resetFeatureForestScene();
     void cleanUpFeatureForest();
+    void setHiCInclusionFilterComboBox(HiCInclusionFilter filter);
 public slots:
     void zoomedFeaturesWithMouseWheel();
 private slots:
@@ -211,7 +214,9 @@ private slots:
     void resetAllFeaturesNodeColours();
     void zoomFeaturesSpinBoxChanged();
     void setZoomFeaturesSpinBoxStep();
-
+    void loadHiC(QString fullFileName = "");
+    void setHiCWidgetVisibility(bool visible);
+    void hicInclusionFilterChanged();
 protected:
       void showEvent(QShowEvent *ev) override;
 

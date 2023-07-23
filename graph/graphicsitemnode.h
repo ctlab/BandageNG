@@ -71,6 +71,7 @@ public:
     QRectF boundingRect() const override;
     void fixEdgePaths(std::vector<GraphicsItemNode *> * nodes = nullptr) const;
     double indexToFraction(int64_t pos) const;
+    void fixHiCEdgePaths(std::vector<GraphicsItemNode *> * nodes) const;
 
 private:
     void exactPathHighlightNode(QPainter * painter);

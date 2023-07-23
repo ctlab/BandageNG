@@ -17,7 +17,7 @@
 
 
 #include "graphicsitemnode.h"
-#include "graphicsitemedge.h"
+#include "graphicsitemedgecommon.h"
 #include "debruijnnode.h"
 #include "debruijnedge.h"
 #include "assemblygraph.h"
@@ -350,25 +350,51 @@ void GraphicsItemNode::mousePressEvent(QGraphicsSceneMouseEvent * event)
 //graphics items will need to be adjusted accordingly.
 void GraphicsItemNode::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QPointF difference = event->pos() - event->lastPos();
+    if (g_settings->roundMode) {
+            QPointF lastPos = event->lastPos();
+            QPointF newPos = event->pos();
+            QPointF centralPos;
+            if (m_grabIndex > m_linePoints.size() / 2) {
+                centralPos = m_linePoints[0];
+            }
+            else {
+                centralPos = m_linePoints[m_linePoints.size() - 1];
+            }
 
-    //If this node is selected, then move all of the other selected nodes too.
-    //If it is not selected, then only move this node.
-    std::vector<GraphicsItemNode *> nodesToMove;
-    auto *graphicsScene = dynamic_cast<BandageGraphicsScene *>(scene());
-    if (isSelected())
-        nodesToMove = graphicsScene->getSelectedGraphicsItemNodes();
-    else
-        nodesToMove.push_back(this);
+            BandageGraphicsScene* graphicsScene = dynamic_cast<BandageGraphicsScene*>(scene());
 
-    for (auto &node : nodesToMove)
-    {
-        node->shiftPoints(difference);
-        node->remakePath();
+            std::vector<GraphicsItemNode*> nodesToMove;
+            nodesToMove.push_back(this);
+            double alpha = angleBetweenTwoLines(centralPos, lastPos, centralPos, newPos);
+            roundPoints(centralPos, alpha);
+            remakePath();
+            graphicsScene->possiblyExpandSceneRectangle(&nodesToMove);
+
+            fixEdgePaths(&nodesToMove);
+            fixHiCEdgePaths(&nodesToMove);
+        }
+    else {
+        QPointF difference = event->pos() - event->lastPos();
+
+        //If this node is selected, then move all of the other selected nodes too.
+        //If it is not selected, then only move this node.
+        std::vector<GraphicsItemNode *> nodesToMove;
+        auto *graphicsScene = dynamic_cast<BandageGraphicsScene *>(scene());
+        if (isSelected())
+            nodesToMove = graphicsScene->getSelectedGraphicsItemNodes();
+        else
+            nodesToMove.push_back(this);
+
+        for (auto &node : nodesToMove)
+        {
+            node->shiftPoints(difference);
+            node->remakePath();
+        }
+        graphicsScene->possiblyExpandSceneRectangle(&nodesToMove);
+
+        fixEdgePaths(&nodesToMove);
+        fixHiCEdgePaths(&nodesToMove);
     }
-    graphicsScene->possiblyExpandSceneRectangle(&nodesToMove);
-
-    fixEdgePaths(&nodesToMove);
 }
 
 
@@ -403,6 +429,31 @@ void GraphicsItemNode::fixEdgePaths(std::vector<GraphicsItemNode *> * nodes) con
         }
     }
 }
+
+// This function remakes edge paths.  If nodes is passed, it will remake the
+// edge paths for all of the nodes.  If nodes isn't passed, then it will just
+// do it for this node.
+void GraphicsItemNode::fixHiCEdgePaths(std::vector<GraphicsItemNode *> * nodes) const {
+    std::set<HiCEdge *> edgesToFix;
+
+    if (nodes == nullptr) {
+        for (auto *edge : m_deBruijnNode->hicEdges())
+            edgesToFix.insert(edge);
+    } else {
+        for (auto &graphicNode : *nodes) {
+            DeBruijnNode * node = graphicNode->m_deBruijnNode;
+            for (auto *edge : node->hicEdges())
+                edgesToFix.insert(edge);
+        }
+    }
+
+    for (auto *hicEdge : edgesToFix) {
+        //If this edge has a graphics item, adjust it now.
+        if (GraphicsItemHiCEdge *graphicsItemEdge = hicEdge->getGraphicsItemEdge())
+            graphicsItemEdge->remakePath();
+    }
+}
+
 
 bool GraphicsItemNode::usePositiveNodeColour() const
 {

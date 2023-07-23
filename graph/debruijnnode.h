@@ -27,6 +27,7 @@
 
 class DeBruijnEdge;
 class GraphicsItemNode;
+class HiCEdge;
 
 class DeBruijnNode
 {
@@ -67,6 +68,10 @@ public:
     auto edges() { return llvm::make_range(edgeBegin(), edgeEnd()); }
     const auto edges() const { return llvm::make_range(edgeBegin(), edgeEnd()); }
 
+    const auto hicEdgeBegin() const { return m_hicEdges.begin(); }
+    const auto hicEdgeEnd() const { return m_hicEdges.end(); }
+    const auto hicEdges() const { return llvm::make_range(hicEdgeBegin(), hicEdgeEnd()); }
+
     std::vector<DeBruijnEdge *> getEnteringEdges() const;
     std::vector<DeBruijnEdge *> getLeavingEdges() const;
     std::vector<DeBruijnNode *> getDownstreamNodes() const;
@@ -101,12 +106,17 @@ public:
     void labelNeighbouringNodesAsDrawn(int nodeDistance);
     void setDepth(double newDepth) {m_depth = newDepth;}
     void setName(QString newName) {m_name = std::move(newName);}
+    void addHiCEdge(HiCEdge * edge);
+    void setComponentId(int componentId) {m_componentId = componentId;}
+    int getComponentId() {return m_componentId;}
+    bool isNodeUnion() const {return false;}
 
 private:
     QString m_name;
     Sequence m_sequence;
     DeBruijnNode * m_reverseComplement;
     adt::SmallPODVector<DeBruijnEdge *> m_edges;
+    adt::SmallPODVector<HiCEdge *> m_hicEdges;
 
     GraphicsItemNode * m_graphicsItemNode;
 
@@ -115,6 +125,7 @@ private:
     unsigned m_length : 30;
     bool m_specialNode : 1;
     bool m_drawn : 1;
+    int m_componentId = 0;
 
     QByteArray getNodeNameForFasta(bool sign) const;
     QByteArray getUpstreamSequence(int upstreamSequenceLength) const;

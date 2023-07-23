@@ -21,6 +21,8 @@
 #include "assemblygraph.h"
 #include "sequenceutils.h"
 
+#include "hic/hicedge.h"
+
 #include "program/settings.h"
 
 #include <thirdparty/seq/aa.hpp>
@@ -54,6 +56,10 @@ void DeBruijnNode::addEdge(DeBruijnEdge * edge) {
         m_edges.push_back(edge);
 }
 
+void DeBruijnNode::addHiCEdge(HiCEdge * edge) {
+    if (std::find(m_hicEdges.begin(), m_hicEdges.end(), edge) == m_hicEdges.end())
+        m_hicEdges.push_back(edge);
+}
 
 //This function deletes an edge from the node, if it exists.
 void DeBruijnNode::removeEdge(DeBruijnEdge * edge) {
@@ -194,6 +200,12 @@ void DeBruijnNode::labelNeighbouringNodesAsDrawn(int nodeDistance) {
             for (auto *m_edge : node->m_edges) {
                 DeBruijnNode * otherNode = m_edge->getOtherNode(node);
                 if (!otherNode->thisNodeOrReverseComplementIsDrawn())
+                    seen.insert(otherNode);
+            }
+
+            for (auto *m_edge : node->m_hicEdges) {
+                DeBruijnNode * otherNode = m_edge->getOtherNode(node);
+                if (!otherNode->thisNodeOrReverseComplementIsDrawn() && m_edge->isVisible())
                     seen.insert(otherNode);
             }
         }

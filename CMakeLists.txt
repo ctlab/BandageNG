@@ -26,7 +26,6 @@ set(LIB_SOURCES
     graph/annotationsmanager.cpp
     graph/debruijnedge.cpp
     graph/debruijnnode.cpp
-    graph/graphicsitemedge.cpp
     graph/graphicsitemnode.cpp
     graph/graphlocation.cpp
     graph/path.cpp
@@ -65,18 +64,21 @@ set(LIB_SOURCES
     graph/fastawriter.cpp
     graph/io.cpp
     graph/graphscope.cpp
-        graphsearch/graphsearch.cpp
-        features_forest/assemblyfeaturesforest.cpp
-        features_forest/blastfeaturenodesmatcher.cpp
-        features_forest/featurenodecolorer.cpp
-        features_forest/featuretreeedge.cpp
-        features_forest/featuretreenode.cpp
-        features_forest/graphicsitemfeatureedge.cpp
-        features_forest/graphicsitemfeaturenode.cpp
-        painting/commongraphicsitemnode.cpp
-        ui/featuresforestwidget.cpp
-        painting/commongraphicsitemnode.cpp
-        )
+    graphsearch/graphsearch.cpp
+    features_forest/assemblyfeaturesforest.cpp
+    features_forest/blastfeaturenodesmatcher.cpp
+    features_forest/featurenodecolorer.cpp
+    features_forest/featuretreeedge.cpp
+    features_forest/featuretreenode.cpp
+    features_forest/graphicsitemfeatureedge.cpp
+    features_forest/graphicsitemfeaturenode.cpp
+    painting/commongraphicsitemnode.cpp
+    ui/featuresforestwidget.cpp
+    painting/commongraphicsitemnode.cpp
+    hic/hicmanager.cpp
+    hic/hicedge.cpp
+    graph/graphicsitemedgecommon.cpp
+    )
 
 set(FORMS
         ui/dialogs/aboutdialog.ui

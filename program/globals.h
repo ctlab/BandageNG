@@ -30,6 +30,7 @@ class BandageGraphicsView;
 class AssemblyGraph;
 class AssemblyFeaturesForest;
 class AnnotationsManager;
+class HiCManager;
 
 namespace search {
 class BlastSearch;
@@ -48,6 +49,7 @@ extern QSharedPointer<search::BlastSearch> g_blastSearch;
 extern QSharedPointer<AssemblyGraph> g_assemblyGraph;
 extern QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;
 extern std::shared_ptr<AnnotationsManager> g_annotationsManager;
+extern QSharedPointer<HiCManager> g_hicManager;
 
 
 //Functions for formatting numbers are used in many places, and are made global.

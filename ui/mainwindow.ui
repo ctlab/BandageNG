@@ -62,8 +62,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>292</width>
-         <height>1748</height>
+         <width>348</width>
+         <height>1858</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -295,71 +295,6 @@
               <property name="rightMargin">
                <number>0</number>
               </property>
-              <item row="2" column="0">
-               <widget class="InfoTextWidget" name="startingNodesMatchTypeInfoText" native="true">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>When 'Exact' match is used, the graph will only be drawn around nodes that exactly match your above input.&lt;br&gt;&lt;br&gt;
-When 'Partial' match is used, the graph will be drawn around nodes where any part of their name matches your above input.</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="InfoTextWidget" name="startingNodesInfoText" native="true">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Enter a comma-delimited list of node names here. This will define which regions of the graph will be drawn.&lt;br&gt;&lt;br&gt;
-When in double mode, you can include '+' or '-' at the end of the node name to specify which strand to draw. If you do not include '+' or '-', then nodes for both strands will be drawn.</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="InfoTextWidget" name="graphScopeInfoText" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This controls how much of the assembly graph will be drawn: &lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;'Entire graph': all nodes in the graph will be drawn. This is appropriate for smaller graphs, but large graphs may take longer and use large amounts of memory to draw in their entirety.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;'Around nodes': you can specify nodes and a distance to limit the drawing to a smaller region of the graph.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;'Around BLAST hits': if you have conducted a BLAST search on this graph, this option will draw the region(s) of the graph around nodes that contain hits.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="2">
                <widget class="QWidget" name="startingNodesMatchTypeWidget" native="true">
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -416,11 +351,72 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                 </layout>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="InfoTextWidget" name="pathSelectionInfoText" native="true">
+              <item row="2" column="1">
+               <widget class="QLabel" name="startingNodesMatchTypeLabel">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Match:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QComboBox" name="graphScopeComboBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Entire graph</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Around nodes</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Around paths</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Around query hits</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Depth range</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="12" column="1" colspan="2">
+               <widget class="QPushButton" name="drawGraphButton">
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+                <property name="text">
+                 <string>Draw graph</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="InfoTextWidget" name="graphScopeInfoText" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -432,6 +428,9 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                   <width>16</width>
                   <height>16</height>
                  </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This controls how much of the assembly graph will be drawn: &lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;'Entire graph': all nodes in the graph will be drawn. This is appropriate for smaller graphs, but large graphs may take longer and use large amounts of memory to draw in their entirety.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;'Around nodes': you can specify nodes and a distance to limit the drawing to a smaller region of the graph.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;'Around BLAST hits': if you have conducted a BLAST search on this graph, this option will draw the region(s) of the graph around nodes that contain hits.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -445,24 +444,37 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                 </property>
                </widget>
               </item>
-              <item row="3" column="2">
-               <widget class="QLineEdit" name="pathSelectionLineEdit">
-                <property name="enabled">
-                 <bool>true</bool>
+              <item row="10" column="2">
+               <widget class="QSpinBox" name="hicSeqLenSpinBox">
+                <property name="minimum">
+                 <number>1</number>
                 </property>
+                <property name="maximum">
+                 <number>1000000000</number>
+                </property>
+                <property name="singleStep">
+                 <number>100</number>
+                </property>
+                <property name="value">
+                 <number>100</number>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1">
+               <widget class="QLabel" name="maxDepthLabel">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="focusPolicy">
-                 <enum>Qt::StrongFocus</enum>
+                <property name="text">
+                 <string>Max:</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
-               <widget class="InfoTextWidget" name="nodeDistanceInfoText" native="true">
+              <item row="1" column="0">
+               <widget class="InfoTextWidget" name="startingNodesInfoText" native="true">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -478,15 +490,9 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                   <height>16</height>
                  </size>
                 </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QLabel" name="nodeDistanceLabel">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>Distance:</string>
+                <property name="toolTip">
+                 <string>Enter a comma-delimited list of node names here. This will define which regions of the graph will be drawn.&lt;br&gt;&lt;br&gt;
+When in double mode, you can include '+' or '-' at the end of the node name to specify which strand to draw. If you do not include '+' or '-', then nodes for both strands will be drawn.</string>
                 </property>
                </widget>
               </item>
@@ -512,8 +518,8 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                 </property>
                </widget>
               </item>
-              <item row="7" column="0">
-               <widget class="InfoTextWidget" name="nodeStyleInfoText" native="true">
+              <item row="5" column="0">
+               <widget class="InfoTextWidget" name="minDepthInfoText" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -527,8 +533,163 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>'Single' mode will only one node for each positive/negative pair. This produces a simpler graph visualisation, but strand-specific sequences and directionality will be less clear.&lt;br&gt;&lt;br&gt;
-'Double' mode will draw both nodes and their complement nodes. The nodes will show directionality with an arrow head. They will initially be drawn on top of each other, but can be manually moved to separate them.</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the lower bound for the depth range. Nodes with a read &lt;/p&gt;&lt;p&gt;depth less than this value will not be drawn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="1">
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string>Min contigs length:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="11" column="2">
+               <widget class="QComboBox" name="hicInclusionFilterComboBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>All edges</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>All edges link groups</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>One edge link groups</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>One edge from target</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="startingNodesLabel">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Node(s):</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QLineEdit" name="pathSelectionLineEdit">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="2">
+               <widget class="QSpinBox" name="hicWeightSpinBox">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="maximum">
+                 <number>1000000</number>
+                </property>
+                <property name="singleStep">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="InfoTextWidget" name="startingNodesMatchTypeInfoText" native="true">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>When 'Exact' match is used, the graph will only be drawn around nodes that exactly match your above input.&lt;br&gt;&lt;br&gt;
+When 'Partial' match is used, the graph will be drawn around nodes where any part of their name matches your above input.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="2">
+               <widget class="QDoubleSpinBox" name="minDepthSpinBox">
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <double>1000000.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="InfoTextWidget" name="nodeDistanceInfoText" native="true">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="1">
+               <widget class="QLabel" name="nodeStyleLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Style:</string>
                 </property>
                </widget>
               </item>
@@ -588,195 +749,6 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                 </layout>
                </widget>
               </item>
-              <item row="9" column="1" colspan="2">
-               <widget class="QPushButton" name="drawGraphButton">
-                <property name="focusPolicy">
-                 <enum>Qt::StrongFocus</enum>
-                </property>
-                <property name="text">
-                 <string>Draw graph</string>
-                </property>
-               </widget>
-              </item>
-              <item row="7" column="1">
-               <widget class="QLabel" name="nodeStyleLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Style:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="startingNodesLabel">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Node(s):</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLineEdit" name="startingNodesLineEdit">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="focusPolicy">
-                 <enum>Qt::StrongFocus</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QComboBox" name="graphScopeComboBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="focusPolicy">
-                 <enum>Qt::StrongFocus</enum>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Entire graph</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Around nodes</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Around paths</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Around query hits</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Depth range</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="graphScopeLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Scope:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="startingNodesMatchTypeLabel">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Match:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="2">
-               <widget class="QDoubleSpinBox" name="minDepthSpinBox">
-                <property name="focusPolicy">
-                 <enum>Qt::StrongFocus</enum>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-                <property name="decimals">
-                 <number>1</number>
-                </property>
-                <property name="maximum">
-                 <double>1000000.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0">
-               <widget class="InfoTextWidget" name="minDepthInfoText" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the lower bound for the depth range. Nodes with a read &lt;/p&gt;&lt;p&gt;depth less than this value will not be drawn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="9" column="0">
-               <widget class="InfoTextWidget" name="drawGraphInfoText" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>16</width>
-                  <height>16</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clicking this button will conduct the graph layout and draw the graph to the screen. This process is fast for small graphs but can be resource-intensive for large graphs.&lt;br/&gt;&lt;br/&gt;The layout algorithm uses a random seed, so each time this button is clicked you will give different layouts of the same graph.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="1">
-               <widget class="QLabel" name="minDepthLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Min:</string>
-                </property>
-               </widget>
-              </item>
               <item row="6" column="0">
                <widget class="InfoTextWidget" name="maxDepthInfoText" native="true">
                 <property name="sizePolicy">
@@ -796,8 +768,34 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                 </property>
                </widget>
               </item>
-              <item row="6" column="1">
-               <widget class="QLabel" name="maxDepthLabel">
+              <item row="9" column="1">
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string>Min weight:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="InfoTextWidget" name="pathSelectionInfoText" native="true">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QLabel" name="minDepthLabel">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -805,7 +803,14 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Max:</string>
+                 <string>Min:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="11" column="1">
+               <widget class="QLabel" name="label_20">
+                <property name="text">
+                 <string>Inclusion edges filter:</string>
                 </property>
                </widget>
               </item>
@@ -822,6 +827,97 @@ When in double mode, you can include '+' or '-' at the end of the node name to s
                 </property>
                 <property name="maximum">
                  <double>1000000.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QLabel" name="nodeDistanceLabel">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>Distance:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="0">
+               <widget class="InfoTextWidget" name="nodeStyleInfoText" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>'Single' mode will only one node for each positive/negative pair. This produces a simpler graph visualisation, but strand-specific sequences and directionality will be less clear.&lt;br&gt;&lt;br&gt;
+'Double' mode will draw both nodes and their complement nodes. The nodes will show directionality with an arrow head. They will initially be drawn on top of each other, but can be manually moved to separate them.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="graphScopeLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Scope:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="12" column="0">
+               <widget class="InfoTextWidget" name="drawGraphInfoText" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clicking this button will conduct the graph layout and draw the graph to the screen. This process is fast for small graphs but can be resource-intensive for large graphs.&lt;br/&gt;&lt;br/&gt;The layout algorithm uses a random seed, so each time this button is clicked you will give different layouts of the same graph.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QLineEdit" name="startingNodesLineEdit">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="1" colspan="2">
+               <widget class="QLabel" name="label_21">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Hi-C edges setting:</string>
                 </property>
                </widget>
               </item>
@@ -1912,8 +2008,8 @@ then colour which other nodes in the graph are likely to be contiguous
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-144</y>
-         <width>285</width>
+         <y>0</y>
+         <width>237</width>
          <height>1024</height>
         </rect>
        </property>
@@ -2569,6 +2665,7 @@ then colour which other nodes in the graph are likely to be contiguous
     <addaction name="actionLoad_layout"/>
     <addaction name="actionLoad_paths"/>
     <addaction name="actionLoad_features_forest"/>
+    <addaction name="actionLoad_HiC_data"/>
     <addaction name="separator"/>
     <addaction name="actionSave_image_current_view"/>
     <addaction name="actionSave_image_entire_scene"/>
@@ -3088,6 +3185,15 @@ then colour which other nodes in the graph are likely to be contiguous
    </property>
    <property name="text">
     <string>Save image features (entire scene)</string>
+   </property>
+  </action>
+  <action name="actionLoad_HiC_data">
+   <property name="icon">
+    <iconset resource="../images/images.qrc">
+     <normaloff>:/icons/load-256.png</normaloff>:/icons/load-256.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load HiC Data</string>
    </property>
   </action>
  </widget>

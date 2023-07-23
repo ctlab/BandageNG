@@ -47,6 +47,23 @@ public:
         if (m_linePoints.size() > 1) return m_linePoints[m_linePoints.size() - 2];
         else return m_linePoints.front();
     }
+    bool isBig() const { return m_linePoints.size() >= 3; }
+    bool isOne() const { return m_linePoints.size() == 1; }
+    QPointF getMiddle() const { return m_linePoints[m_linePoints.size() / 2]; }
+    QPointF getBeforeMiddle() const
+    {
+        if (m_linePoints.size() >= 3)
+            return m_linePoints[(m_linePoints.size() / 2) - 1];
+        else
+            return m_linePoints[0];
+    }
+    QPointF getAfterMiddle() const
+    {
+        if (m_linePoints.size() >= 3)
+            return m_linePoints[(m_linePoints.size() / 2) + 1];
+        else
+            return m_linePoints[m_linePoints.size() - 1];
+    }
     std::vector<QPointF> getCentres() const;
 
     QPainterPath makePartialPath(double startFraction, double endFraction);
