@@ -60,13 +60,13 @@ jobs:
           export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqminimal.so"
 
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
-          mv BandageNG*.AppImage BandageNG-Linux-${{steps.commit.outputs.short}}.AppImage
+          mv BandageNG*.AppImage BandageNG-Linux.AppImage
         shell: bash
 
       - name: '📤 Upload artifact: AppImage'
         uses: actions/upload-artifact@v3
         with:
-          name: BandageNG-Linux-${{steps.commit.outputs.short}}.AppImage
+          name: BandageNG-Linux.AppImage
           path: ${{github.workspace}}/build/BandageNG*.AppImage
 
   build-mac:
@@ -98,12 +98,12 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: |
           macdeployqt BandageNG.app -dmg
-          mv *.dmg BandageNG-macOS-${{steps.commit.outputs.short}}.dmg
+          mv *.dmg BandageNG-macOS.dmg
 
       - name: '📤 Upload artifact: DMG'
         uses: actions/upload-artifact@v3
         with:
-          name: BandageNG-macOS-${{steps.commit.outputs.short}}.dmg
+          name: BandageNG-macOS.dmg
           path: ${{github.workspace}}/build/BandageNG*.dmg
 
   build-windows:
@@ -158,5 +158,5 @@ jobs:
         run: |
             wget -q https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
             chmod +x pyuploadtool-x86_64.AppImage
-            ./pyuploadtool-x86_64.AppImage **/BandageNG-Linux-*.AppImage
-            ./pyuploadtool-x86_64.AppImage **/BandageNG-macOS-*.dmg
+            ./pyuploadtool-x86_64.AppImage **/BandageNG-Linux*.AppImage
+            ./pyuploadtool-x86_64.AppImage **/BandageNG-macOS*.dmg
