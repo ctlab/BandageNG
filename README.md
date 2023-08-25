@@ -18,8 +18,9 @@
 ## Intro
 
 New features:
-1. [Rotate contig](https://github.com/ctlab/BandageNG/wiki#rotate-contig)
-2. [Hi-C links](https://github.com/ctlab/BandageNG/wiki#rotate-contig)
+1. [Rotate contig](https://github.com/ctlab/BandageNG/wiki#contigs-rotation)
+2. [Hi-C links](https://github.com/ctlab/BandageNG/wiki#hi-c-links-visualization)
+3. [ML model](https://github.com/ctlab/BandageNG/wiki#predictive-model-visualization)
 
 Bandage-NG documentation is available on the <a href="https://github.com/ctlab/BandageNG/wiki" target="_blank">Bandage-NG GitHub wiki</a>.
 
