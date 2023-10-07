@@ -110,6 +110,7 @@ public:
     ~GraphSearchDialog() override;
     const search::GraphSearch *search() const { return m_graphSearch.get(); }
     search::GraphSearch *search() { return m_graphSearch.get(); }
+    bool isDbBuild();
 
 private:
     Ui::GraphSearchDialog *ui;
@@ -127,8 +128,8 @@ private:
 public slots:
     void buildGraphDatabaseInThread();
     void runGraphSearchesInThread();
-    void buildDatabase(bool separateThread);
-    void runGraphSearches(bool separateThread, QString extraParameters = "");
+    void buildDatabase(bool separateThread, bool showProgress = true);
+    void runGraphSearches(bool separateThread, QString extraParameters = "",bool showProgress = true);
 private slots:
     void afterWindowShow();
     void loadQueriesFromFileButtonClicked();

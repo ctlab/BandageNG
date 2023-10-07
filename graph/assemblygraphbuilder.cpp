@@ -205,6 +205,7 @@ namespace io {
                 case makeTag("L2"):
                 case makeTag("CB"):
                 case makeTag("C2"):
+                case makeTag("CL"):
                     return true;
             }
 
@@ -345,6 +346,7 @@ namespace io {
 
             hasCustomColours_ |= maybeAddCustomColor(nodePtr, record.tags, "CB", graph);
             hasCustomColours_ |= maybeAddCustomColor(oppositeNodePtr, record.tags, "C2", graph);
+            hasCustomColours_ |= maybeAddCustomColor(nodePtr, record.tags, "CL", graph);
 
             maybeAddTags(nodePtr, graph.m_nodeTags, record.tags);
             maybeAddTags(oppositeNodePtr, graph.m_nodeTags, record.tags);

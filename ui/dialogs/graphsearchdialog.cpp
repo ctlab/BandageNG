@@ -125,8 +125,7 @@ GraphSearchDialog::GraphSearchDialog(QWidget *parent, const QString& autoQuery)
     }
 
     // If a BLAST database already exists, move to step 2.
-    QFile databaseFile = m_graphSearch->temporaryDir().filePath("all_nodes.fasta");
-    if (databaseFile.exists())
+    if (isDbBuild())
         setUiStep(GRAPH_DB_BUILT_BUT_NO_QUERIES);
     //If there isn't a BLAST database, clear the entire temporary directory
     //and move to step 1.
@@ -205,6 +204,11 @@ GraphSearchDialog::~GraphSearchDialog() {
     delete ui;
 }
 
+bool GraphSearchDialog::isDbBuild() {
+    QFile databaseFile = m_graphSearch->temporaryDir().filePath("all_nodes.fasta");
+    return databaseFile.exists();
+}
+
 void GraphSearchDialog::afterWindowShow() {
     updateTables();
 }
@@ -233,7 +237,7 @@ void GraphSearchDialog::buildGraphDatabaseInThread() {
     buildDatabase(true);
 }
 
-void GraphSearchDialog::buildDatabase(bool separateThread) {
+void GraphSearchDialog::buildDatabase(bool separateThread, bool showProgress) {
     setUiStep(GRAPH_DB_BUILD_IN_PROGRESS);
 
     auto * progress = new MyProgressDialog(this, "Running " + m_graphSearch->name() + " database...",
@@ -242,13 +246,13 @@ void GraphSearchDialog::buildDatabase(bool separateThread) {
                                            "Cancelling build...",
                                            "Clicking this button will stop the " + m_graphSearch->name() + " database from being built.");
     progress->setWindowModality(Qt::WindowModal);
-    progress->show();
+    if (showProgress) progress->show();
 
     connect(m_graphSearch.get(), SIGNAL(finishedDbBuild(QString)), progress, SLOT(deleteLater()));
     connect(m_graphSearch.get(), SIGNAL(finishedDbBuild(QString)), this, SLOT(graphDatabaseBuildFinished(QString)));
     connect(progress, SIGNAL(halt()), m_graphSearch.get(), SLOT(cancelDatabaseBuild()));
 
-    auto builder = [this]() { m_graphSearch->buildDatabase(*g_assemblyGraph); };
+    auto builder = [&]() { m_graphSearch->buildDatabase(*g_assemblyGraph); };
     if (separateThread) {
         QFuture<void> res = QtConcurrent::run(builder);
     } else
@@ -297,7 +301,6 @@ void GraphSearchDialog::loadQueriesFromFile(const QString& fullFileName) {
         QMessageBox::information(this, "No queries loaded",
                                  "No queries could be loaded from the specified file: " + m_graphSearch->lastError());
 }
-
 
 void GraphSearchDialog::enterQueryManually() {
     EnterOneQueryDialog enterOneQueryDialog(this);
@@ -349,7 +352,7 @@ void GraphSearchDialog::runGraphSearchesInThread() {
     runGraphSearches(true);
 }
 
-void GraphSearchDialog::runGraphSearches(bool separateThread, QString extraParameters) {
+void GraphSearchDialog::runGraphSearches(bool separateThread, QString extraParameters, bool showProgress) {
     setUiStep(GRAPH_SEARCH_IN_PROGRESS);
 
     clearHits();
@@ -360,7 +363,7 @@ void GraphSearchDialog::runGraphSearches(bool separateThread, QString extraParam
                                            "Cancelling search...",
                                            "Clicking this button will stop the " + m_graphSearch->name() + " search.");
     progress->setWindowModality(Qt::WindowModal);
-    progress->show();
+    if (showProgress) progress->show();
 
     connect(m_graphSearch.get(), SIGNAL(finishedSearch(QString)), progress, SLOT(deleteLater()));
     connect(m_graphSearch.get(), SIGNAL(finishedSearch(QString)), this, SLOT(graphSearchFinished(QString)));

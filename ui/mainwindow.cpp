@@ -1771,7 +1771,6 @@ void MainWindow::openBlastSearchDialog() {
     m_blastSearchDialog->show();
 }
 
-
 //This function is called whenever the user does something in the
 //GraphSearchDialog that should be reflected here in MainWindow.
 void MainWindow::blastChanged(QString chosenTypeName) {
@@ -1840,6 +1839,12 @@ void MainWindow::setupBlastQueryComboBox() {
     } else {
         ui->blastQueryComboBox->addItem("none");
         ui->blastQueryComboBox->setEnabled(false);
+
+        if (m_featuresUiState == FEATURES_DRAWN) {
+            for (auto &entry : g_assemblyFeaturesForest->m_nodes) {
+                entry->setBlastColourInd(-1);
+            }
+        }
     }
 }
 
@@ -2760,6 +2765,9 @@ void MainWindow::featureSelectionChanged() {
 }
 
 void MainWindow::drawFeaturesForest() {
+    double newSpinBoxValue = g_absoluteZoomFeatures * 100.0;
+    ui->zoomFeaturesSpinBox->setValue(newSpinBoxValue);
+
     g_settings->averageFeatureNodeWidth = ui->featureNodeWidthSpinBox->value();
     m_featuresForestWidget->drawGraph(this);
     setFeaturesUiState(FEATURES_DRAWN);
@@ -2926,6 +2934,8 @@ void MainWindow::matchSelectedFeatureNodes() {
         std::copy(selectedNodes.begin(), selectedNodes.end(), std::back_inserter(selectedNodesQList));
     }
 
+    ui->featuresColoursComboBox->setCurrentIndex(FEATURE_BLAST_SOLID_COLOURS);
+    switchColourScheme(GRAY_COLOR);
     if (!m_blastSearchDialog) {
         m_blastSearchDialog = new GraphSearchDialog(this);
         connect(m_blastSearchDialog, SIGNAL(changed()), this, SLOT(blastChanged()));
@@ -2937,16 +2947,19 @@ void MainWindow::matchSelectedFeatureNodes() {
         m_blastFeaturesNodesMatcher = new BlastFeaturesNodesMatcher();
     }
 
-    m_blastSearchDialog->buildDatabase(false);
-
+    auto * progressBlastSearch = new MyProgressDialog(this, "Features BLAST search ...", false);
+    progressBlastSearch->setWindowModality(Qt::WindowModal);
+    progressBlastSearch->show();
     m_blastFeaturesNodesMatcher->matchFeaturesNode(m_blastSearchDialog, selectedNodesQList, search);
 
+    progressBlastSearch->close();
+    progressBlastSearch->deleteLater();
 
+    FeatureNodeColorScheme scheme = (FeatureNodeColorScheme)ui->featuresColoursComboBox->currentIndex();
+    g_settings->initializeColorer(scheme);
+    resetAllFeaturesNodeColours();
     ui->blastQueryComboBox->setEnabled(true);
     ui->blastQueryComboBox->setCurrentText("all");
-    blastChanged(convertAnnotationToQString(SOLID_ANNOTATION));
-    switchColourScheme(GRAY_COLOR);
-    switchFeatureColourScheme(FEATURE_BLAST_SOLID_COLOURS);
 }
 
 bool MainWindow::checkForFeaturesImageSave()
