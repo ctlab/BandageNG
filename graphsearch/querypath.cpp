@@ -138,8 +138,8 @@ int QueryPath::getHitOverlap(const Hit * hit1, const Hit * hit2) const {
 
     // Overlap in connected nodes is a bit more complex - we need to express
     // the second hit's coordinates in terms of the first hit's node.
-    else if (g_assemblyGraph->m_deBruijnGraphEdges.contains(possibleEdge)) {
-        DeBruijnEdge * edge = g_assemblyGraph->m_deBruijnGraphEdges[possibleEdge];
+    else if (g_assemblyGraph.first()->m_deBruijnGraphEdges.contains(possibleEdge)) {
+        DeBruijnEdge * edge = g_assemblyGraph.first()->m_deBruijnGraphEdges[possibleEdge];
         int overlap = edge->getOverlap();
         hit1Start = hit1->m_nodeStart;
         hit1End = hit1->m_nodeEnd;

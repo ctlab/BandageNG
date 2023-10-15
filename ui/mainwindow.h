@@ -39,6 +39,7 @@
 #include <QLineEdit>
 #include <QRectF>
 #include <QThread>
+#include <QList>
 #include "ui/featuresforestwidget.h"
 
 Q_MOC_INCLUDE("graph/debruijnnode.h")
@@ -88,7 +89,7 @@ private:
     BlastFeaturesNodesMatcher* m_blastFeaturesNodesMatcher;
 
     void cleanUp();
-    void displayGraphDetails();
+    void displayGraphDetails(QSharedPointer<AssemblyGraph> assemblyGraph);
     void clearGraphDetails();
     void resetScene();
     void resetAllNodeColours();
@@ -159,7 +160,7 @@ private slots:
     void selectPathNodes();
     void showPathListDialog();
     void selectUserSpecifiedNodes();
-    void graphLayoutFinished(const GraphLayout &layout);
+    void graphLayoutFinished(QList<GraphLayout*> layout);
     void openBlastSearchDialog();
     void blastChanged(QString chosenTypeName = "");
     void blastQueryChanged(QString chosenTypeName = "");

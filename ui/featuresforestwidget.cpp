@@ -122,20 +122,15 @@ void FeaturesForestWidget::getSelectedNodeInfo(int & selectedNodeCount, QString 
 void FeaturesForestWidget::drawGraph(QWidget * parent) {
     resetScene();
     g_assemblyFeaturesForest->resetNodes();
-    //g_assemblyFeaturesForest->markNodesToDraw();
     layoutGraph();
 }
 
 void FeaturesForestWidget::graphLayoutFinished(const FeaturesLayout &layout) {
+    m_scene->clear();
     m_scene->addGraphicsItemsToScene(*g_assemblyFeaturesForest, layout);
     m_scene->setSceneRectangle();
 
-    //double averageNodeWidth = g_settings->averageNodeWidth / pow(g_absoluteZoomFeatures, 0.75);
-    //ui->nodeWidthSpinBox->setValue(averageNodeWidth);
-    //g_assemblyFeaturesForest->recalculateAllNodeWidths(averageNodeWidth, g_settings->depthPower, g_settings->depthEffectOnWidth);
     g_graphicsViewFeaturesForest->viewport()->update();
-
-    //Move the focus to the view so the user can use keyboard controls to navigate.
     g_graphicsViewFeaturesForest->setFocus();
     m_scene->selectionChanged();
 }

@@ -53,7 +53,7 @@ void ChangeNodeNameDialog::checkNodeNameValidity()
         return;
     }
 
-    NodeNameStatus nodeNameStatus = g_assemblyGraph->checkNodeNameValidity(potentialName);
+    NodeNameStatus nodeNameStatus = g_assemblyGraph.first()->checkNodeNameValidity(potentialName);
     switch (nodeNameStatus) {
         case NodeNameStatus::NODE_NAME_OKAY:
             ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);

@@ -208,7 +208,6 @@ void BandageGraphicsScene::possiblyExpandSceneRectangle(std::vector<GraphicsItem
 
 void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
                                                    const GraphLayout &layout) {
-    clear();
 
     double meanDrawnDepth = graph.getMeanDepth(true);
 
@@ -416,7 +415,6 @@ std::vector<FeatureTreeNode *> BandageGraphicsScene::getSelectedFeatureNodes()
 
 void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyFeaturesForest &graph,
                                                    const FeaturesLayout &layout) {
-    clear();
 
     // First make the GraphicsItemNode objects
     for (auto &entry : layout) {

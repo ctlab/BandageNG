@@ -384,26 +384,26 @@ buildHitsFromBlastOutput(QString blastOutput,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph->m_deBruijnGraphNodes.end()) {
-            // Only save BLAST hits that are on forward strands.
-            if (nodeStart > nodeEnd)
-                continue;
+            auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+            if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
+                // Only save BLAST hits that are on forward strands.
+                if (nodeStart > nodeEnd)
+                    continue;
 
-            nodeHits.emplace_back(query,
-                                  new Hit(query, nodeIt.value(),
-                                          percentIdentity, alignmentLength,
-                                          numberMismatches, numberGapOpens,
-                                          queryStart, queryEnd,
-                                          nodeStart, nodeEnd, eValue, bitScore));
-        }
+                nodeHits.emplace_back(query,
+                                      new Hit(query, nodeIt.value(),
+                                              percentIdentity, alignmentLength,
+                                              numberMismatches, numberGapOpens,
+                                              queryStart, queryEnd,
+                                              nodeStart, nodeEnd, eValue, bitScore));
+            }
 
-        auto pathIt = g_assemblyGraph->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
-        if (pathIt != g_assemblyGraph->m_deBruijnGraphPaths.end()) {
-            pathHits.emplace_back(query, pathIt.value(),
-                                  Path::MappingRange{queryStart, queryEnd,
-                                                     nodeStart, nodeEnd});
-        }
+            auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
+            if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
+                pathHits.emplace_back(query, pathIt.value(),
+                                      Path::MappingRange{queryStart, queryEnd,
+                                                         nodeStart, nodeEnd});
+            }
 
     }
 

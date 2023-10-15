@@ -27,7 +27,7 @@ BandageGraphicsView * g_graphicsViewFeaturesForest;
 double g_absoluteZoom;
 double g_absoluteZoomFeatures;
 QSharedPointer<search::BlastSearch> g_blastSearch;
-QSharedPointer<AssemblyGraph> g_assemblyGraph;
+QList<QSharedPointer<AssemblyGraph>> g_assemblyGraph;
 QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;
 std::shared_ptr<AnnotationsManager> g_annotationsManager;
 QSharedPointer<HiCManager> g_hicManager;

@@ -51,7 +51,7 @@ int handleReduceCmd(QApplication *app,
     if (!outputFilename.endsWith(".gfa"))
         outputFilename += ".gfa";
 
-    if (!g_assemblyGraph->loadGraphFromFile(cmd.m_graph.c_str())) {
+    if (!g_assemblyGraph.first()->loadGraphFromFile(cmd.m_graph.c_str())) {
         outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err);
         return 1;
     }
@@ -62,7 +62,7 @@ int handleReduceCmd(QApplication *app,
             return 1;
         }
 
-        QString blastError = g_blastSearch->doAutoGraphSearch(*g_assemblyGraph,
+        QString blastError = g_blastSearch->doAutoGraphSearch(*g_assemblyGraph.first(),
                                                               g_settings->blastQueryFilename,
                                                               false, /* include paths */
                                                               g_settings->blastSearchParameters);
@@ -80,15 +80,15 @@ int handleReduceCmd(QApplication *app,
                               &g_blastSearch->queries(), "all",
                               "", g_settings->nodeDistance);
     auto startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
-                                                 *g_assemblyGraph, scope);
+                                                 *g_assemblyGraph.first(), scope);
     if (!errorMessage.isEmpty()) {
         err << errorMessage << Qt::endl;
         return 1;
     }
 
-    g_assemblyGraph->markNodesToDraw(scope, startingNodes);
+    g_assemblyGraph.first()->markNodesToDraw(scope, startingNodes);
 
-    if (!gfa::saveVisibleGraph(outputFilename, *g_assemblyGraph)) {
+    if (!gfa::saveVisibleGraph(outputFilename, *g_assemblyGraph.first())) {
         err << "Bandage was unable to save the graph file." << Qt::endl;
         return 1;
     }

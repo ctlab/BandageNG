@@ -395,8 +395,8 @@ buildHitsFromTblOut(QString hmmerOutput,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph->m_deBruijnGraphNodes.end()) {
+        auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+        if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
             // Only save hits that are on forward strands.
             if (nodeStart > nodeEnd)
                 continue;
@@ -410,8 +410,8 @@ buildHitsFromTblOut(QString hmmerOutput,
                                           eValue, bitScore));
         }
 
-        auto pathIt = g_assemblyGraph->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
-        if (pathIt != g_assemblyGraph->m_deBruijnGraphPaths.end()) {
+        auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
+        if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
             pathHits.emplace_back(query, pathIt.value(),
                                   Path::MappingRange{queryStart, queryEnd,
                                                      nodeStart, nodeEnd});
@@ -476,8 +476,8 @@ buildHitsFromDomTblOut(QString hmmerOutput,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph->m_deBruijnGraphNodes.end()) {
+        auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+        if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
             // Only save hits that are on forward strands.
             if (nodeStart > nodeEnd)
                 continue;
@@ -499,8 +499,8 @@ buildHitsFromDomTblOut(QString hmmerOutput,
                                           eValue, bitScore));
         }
 
-        auto pathIt = g_assemblyGraph->m_deBruijnGraphPaths.find(nodeLabel.chopped(2).toStdString());
-        if (pathIt != g_assemblyGraph->m_deBruijnGraphPaths.end()) {
+        auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.chopped(2).toStdString());
+        if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
             bool ok = false;
             unsigned shift = nodeLabel.last(1).toInt(&ok);
             if (!ok || shift > 2)
@@ -514,6 +514,7 @@ buildHitsFromDomTblOut(QString hmmerOutput,
                                   Path::MappingRange{queryStart, queryEnd,
                                                      nodeStart, nodeEnd});
         }
+
 
     }
 

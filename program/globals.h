@@ -21,6 +21,7 @@
 
 #include <QString>
 #include <QSharedPointer>
+#include <QList>
 
 #include <utility>
 
@@ -46,7 +47,7 @@ extern BandageGraphicsView * g_graphicsViewFeaturesForest;
 extern double g_absoluteZoom;
 extern double g_absoluteZoomFeatures;
 extern QSharedPointer<search::BlastSearch> g_blastSearch;
-extern QSharedPointer<AssemblyGraph> g_assemblyGraph;
+extern QList<QSharedPointer<AssemblyGraph>> g_assemblyGraph;
 extern QSharedPointer<AssemblyFeaturesForest> g_assemblyFeaturesForest;
 extern std::shared_ptr<AnnotationsManager> g_annotationsManager;
 extern QSharedPointer<HiCManager> g_hicManager;

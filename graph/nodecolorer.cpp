@@ -34,7 +34,7 @@
 #include <QApplication>
 
 INodeColorer::INodeColorer(NodeColorScheme scheme)
-    : m_graph(g_assemblyGraph), m_scheme(scheme) {
+    : m_graphs(g_assemblyGraph), m_scheme(scheme) {
 }
 
 std::pair<QColor, QColor> INodeColorer::get(const GraphicsItemNode *node,
@@ -76,8 +76,8 @@ QColor DepthNodeColorer::get(const GraphicsItemNode *node) {
 
     double lowValue = g_settings->lowDepthValue, highValue = g_settings->highDepthValue;
     if (g_settings->autoDepthValue) {
-        lowValue = m_graph->m_firstQuartileDepth;
-        highValue = m_graph->m_thirdQuartileDepth;
+        lowValue = m_graphs.first()->m_firstQuartileDepth;
+        highValue = m_graphs.first()->m_thirdQuartileDepth;
     }
 
     float fraction = (depth - lowValue) / (highValue - lowValue);
@@ -147,7 +147,7 @@ QColor GrayNodeColorer::get(const GraphicsItemNode *node) {
 }
 
 QColor CustomNodeColorer::get(const GraphicsItemNode *node) {
-    return m_graph->getCustomColourForDisplay(node->m_deBruijnNode);;
+    return m_graphs.first()->getCustomColourForDisplay(node->m_deBruijnNode);;
 }
 
 // This function differs from the above by including all reverse complement
@@ -335,8 +335,8 @@ QColor GCNodeColorer::get(const GraphicsItemNode *node) {
 QColor TagValueNodeColorer::get(const GraphicsItemNode *node) {
     const DeBruijnNode *deBruijnNode = node->m_deBruijnNode;
 
-    auto tags = m_graph->m_nodeTags.find(deBruijnNode);
-    if (tags != m_graph->m_nodeTags.end()) {
+    auto tags = m_graphs.first()->m_nodeTags.find(deBruijnNode);
+    if (tags != m_graphs.first()->m_nodeTags.end()) {
         if (auto tag = gfa::getTag(m_tagName.c_str(), tags->second)) {
             std::stringstream stream;
             stream << *tag;
@@ -344,7 +344,7 @@ QColor TagValueNodeColorer::get(const GraphicsItemNode *node) {
         }
     }
 
-    return m_graph->getCustomColourForDisplay(deBruijnNode);
+    return m_graphs.first()->getCustomColourForDisplay(deBruijnNode);
 }
 
 void TagValueNodeColorer::reset() {
@@ -352,7 +352,7 @@ void TagValueNodeColorer::reset() {
     m_tagNames.clear();
 
     // Collect all tags and their corresponding values
-    for (const auto &entry : m_graph->m_nodeTags) {
+    for (const auto &entry : m_graphs.first()->m_nodeTags) {
         for (const auto &tag: entry.second) {
             std::stringstream stream;
             stream << tag;
@@ -381,14 +381,14 @@ void TagValueNodeColorer::reset() {
 QColor CSVNodeColorer::get(const GraphicsItemNode *node) {
     const DeBruijnNode *deBruijnNode = node->m_deBruijnNode;
 
-    auto val = m_graph->getCsvLine(deBruijnNode, m_colIdx);
+    auto val = m_graphs.first()->getCsvLine(deBruijnNode, m_colIdx);
     if (!val || m_colIdx >= m_colors.size())
-        return m_graph->getCustomColourForDisplay(deBruijnNode);
+        return m_graphs.first()->getCustomColourForDisplay(deBruijnNode);
 
     const auto &cols = m_colors[m_colIdx];
     auto col = cols.find(val->toStdString());
     if (col == cols.end())
-        return m_graph->getCustomColourForDisplay(deBruijnNode);
+        return m_graphs.first()->getCustomColourForDisplay(deBruijnNode);
 
     return *col;;
 }
@@ -396,10 +396,10 @@ QColor CSVNodeColorer::get(const GraphicsItemNode *node) {
 void CSVNodeColorer::reset() {
     m_colors.clear();
 
-    size_t columns = m_graph->m_csvHeaders.size();
+    size_t columns = m_graphs.first()->m_csvHeaders.size();
     m_colors.resize(columns);
     // Store all unique values into a map
-    for (const auto &entry : m_graph->m_nodeCSVData) {
+    for (const auto &entry : m_graphs.first()->m_nodeCSVData) {
         const auto &row = entry.second;
         for (size_t i = 0; i < row.size() && i < columns; ++i) {
             const auto &cell = row[i];

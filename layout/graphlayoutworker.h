@@ -58,7 +58,7 @@ public:
                       double aspectRatio = 1.333333);
     ~GraphLayoutWorker() override = default;
 
-    GraphLayout layoutGraph(const AssemblyGraph &graph);
+    QList<GraphLayout*> layoutGraph(QList<QSharedPointer<AssemblyGraph>> graphList);
 
 private:
     QFutureSynchronizer<void> m_taskSynchronizer;

@@ -168,8 +168,8 @@ buildHitsFromPAF(const QString &PAF,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph->m_deBruijnGraphNodes.end()) {
+        auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+        if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
             if (!strand)
                 continue;
 
@@ -181,8 +181,8 @@ buildHitsFromPAF(const QString &PAF,
                                           nodeStart, nodeEnd, 0, 0));
         }
 
-        auto pathIt = g_assemblyGraph->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
-        if (pathIt != g_assemblyGraph->m_deBruijnGraphPaths.end()) {
+        auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
+        if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
             pathHits.emplace_back(query, pathIt.value(),
                                   Path::MappingRange{queryStart, queryEnd,
                                                      nodeStart, nodeEnd});

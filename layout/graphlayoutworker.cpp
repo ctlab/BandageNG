@@ -584,90 +584,118 @@ static void reassembleDrawings(ogdf::GraphAttributes &GA,
     }
 }
 
-GraphLayout GraphLayoutWorker::layoutGraph(const AssemblyGraph &graph) {
-    ogdf::Graph G;
-    ogdf::EdgeArray<double> edgeLengths(G);
-    ogdf::GraphAttributes GA(G,
-                             ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics);
-    OGDFGraphLayout layout(graph);
-    buildGraph(G, GA, edgeLengths, layout, m_useLinearLayout);
-
-    //first we split the graph into its components
-    ogdf::NodeArray<int> componentNumber(G);
-    int numberOfComponents = connectedComponents(G, componentNumber);
-    if (numberOfComponents == 0)
-        return GraphLayout(graph);
-
-    ogdf::Array<ogdf::List<ogdf::node> > nodesInCC(numberOfComponents);
-    for (auto v : G.nodes)
-        nodesInCC[componentNumber[v]].pushBack(v);
-
-    for (size_t i= 0; i < numberOfComponents; ++i) {
-        m_state.emplace_back(new FMMGraphLayout(m_graphLayoutQuality,
-                                               m_useLinearLayout,
-                                               m_graphLayoutComponentSeparation,
-                                               m_aspectRatio));
-        m_state.back()->init();
-    }
-
-    for (int i = 0; i < numberOfComponents; i++) {
-        m_taskSynchronizer.addFuture(
-                QtConcurrent::run([&](GraphLayouter *layout,
-                        const ogdf::List<ogdf::node> &nodesInCC) {
-
-                    ogdf::GraphCopy GC;
-                    ogdf::EdgeArray<double> cedgeLengths(GC);
-                    ogdf::EdgeArray<ogdf::edge> auxCopy(G);
-
-                    GC.createEmpty(G);
-
-                    GC.initByNodes(nodesInCC, auxCopy);
-                    ogdf::GraphAttributes cGA(GC, GA.attributes());
-                    for (ogdf::node v : GC.nodes) {
-                        cGA.x(v) = GA.x(GC.original(v));
-                        cGA.y(v) = GA.y(GC.original(v));
-                        cGA.width(v) = GA.width(GC.original(v));
-                        cGA.height(v) = GA.height(GC.original(v));
-                    }
-
-                    for (ogdf::edge e : GC.edges)
-                        cedgeLengths(e) = edgeLengths(GC.original(e));
-
-                    layout->run(cGA, cedgeLengths);
-
-                    for (ogdf::node v : GC.nodes) {
-                        ogdf::node w = GC.original(v);
-                        if (w == nullptr)
-                            continue;
-
-                        GA.x(w) = cGA.x(v);
-                        GA.y(w) = cGA.y(v);
-                    }
-
-                }, m_state[i].get(), nodesInCC[i]));
-    }
-    m_taskSynchronizer.waitForFinished();
-
-    reassembleDrawings(GA,
-                       m_graphLayoutComponentSeparation, m_aspectRatio,
-                       nodesInCC);
-
-    GraphLayout res(graph);
-    for (const auto & entry : layout) {
-        for (ogdf::node node : entry.second) {
-            res.add(entry.first, { GA.x(node), GA.y(node) });
+QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QList<QSharedPointer<AssemblyGraph>> graphList) {
+    QList<GraphLayout*> resList;
+    double prevX = 0.0;
+    double prevY = 0.0;
+    double maxX = 0.0;
+    double maxY = 0.0;
+    double boardWidth = 200;
+    int maxNumInRow = std::round(std::sqrt(graphList.size()));
+    int curNumInRow = 0;
+    for(QSharedPointer<AssemblyGraph> graph : graphList) {
+        if (curNumInRow < maxNumInRow) {
+            curNumInRow++;
+            prevX = maxX;
+        } else {
+            curNumInRow = 1;
+            prevX = 0;
+            maxX = 0;
+            prevY = maxY;
         }
-    }
-    // In double mode add layout for the reverse-complement nodes (in opposite direction)
-    for (const auto & entry : layout) {
-        auto *rcNode = entry.first->getReverseComplement();
-        if (!rcNode->isDrawn())
+        const AssemblyGraph& refGraph = std::cref(*graph);
+        ogdf::Graph G;
+        ogdf::EdgeArray<double> edgeLengths(G);
+        ogdf::GraphAttributes GA(G,
+                                 ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics);
+        OGDFGraphLayout layout(refGraph);
+        buildGraph(G, GA, edgeLengths, layout, m_useLinearLayout);
+
+        //first we split the graph into its components
+        ogdf::NodeArray<int> componentNumber(G);
+        int numberOfComponents = connectedComponents(G, componentNumber);
+        if (numberOfComponents == 0) {
+            GraphLayout res(refGraph);
+            resList.append(&res);
             continue;
-        for (auto rIt = entry.second.rbegin(); rIt != entry.second.rend(); ++rIt)
-            res.add(rcNode, { GA.x(*rIt), GA.y(*rIt) });
+        }
+
+        ogdf::Array<ogdf::List<ogdf::node> > nodesInCC(numberOfComponents);
+        for (auto v : G.nodes)
+            nodesInCC[componentNumber[v]].pushBack(v);
+
+        for (size_t i= 0; i < numberOfComponents; ++i) {
+            m_state.emplace_back(new FMMGraphLayout(m_graphLayoutQuality,
+                                                   m_useLinearLayout,
+                                                   m_graphLayoutComponentSeparation,
+                                                   m_aspectRatio));
+            m_state.back()->init();
+        }
+
+        for (int i = 0; i < numberOfComponents; i++) {
+            m_taskSynchronizer.addFuture(
+                    QtConcurrent::run([&](GraphLayouter *layout,
+                            const ogdf::List<ogdf::node> &nodesInCC) {
+
+                        ogdf::GraphCopy GC;
+                        ogdf::EdgeArray<double> cedgeLengths(GC);
+                        ogdf::EdgeArray<ogdf::edge> auxCopy(G);
+
+                        GC.createEmpty(G);
+
+                        GC.initByNodes(nodesInCC, auxCopy);
+                        ogdf::GraphAttributes cGA(GC, GA.attributes());
+                        for (ogdf::node v : GC.nodes) {
+                            cGA.x(v) = GA.x(GC.original(v));
+                            cGA.y(v) = GA.y(GC.original(v));
+                            cGA.width(v) = GA.width(GC.original(v));
+                            cGA.height(v) = GA.height(GC.original(v));
+                        }
+
+                        for (ogdf::edge e : GC.edges)
+                            cedgeLengths(e) = edgeLengths(GC.original(e));
+
+                        layout->run(cGA, cedgeLengths);
+
+                        for (ogdf::node v : GC.nodes) {
+                            ogdf::node w = GC.original(v);
+                            if (w == nullptr)
+                                continue;
+
+                            GA.x(w) = cGA.x(v);
+                            GA.y(w) = cGA.y(v);
+                        }
+
+                    }, m_state[i].get(), nodesInCC[i]));
+        }
+        m_taskSynchronizer.waitForFinished();
+
+        reassembleDrawings(GA,
+                           m_graphLayoutComponentSeparation, m_aspectRatio,
+                           nodesInCC);
+
+        GraphLayout* res = new GraphLayout(refGraph);
+        for (const auto & entry : layout) {
+            for (ogdf::node node : entry.second) {
+                double curX = GA.x(node) + prevX + boardWidth;
+                double curY = GA.y(node) + prevY + boardWidth;
+                maxX = std::max(maxX, prevX + GA.x(node) + boardWidth);
+                maxY = std::max(maxY, curY);
+                res->add(entry.first, { curX, curY });
+            }
+        }
+        // In double mode add layout for the reverse-complement nodes (in opposite direction)
+        for (const auto & entry : layout) {
+            auto *rcNode = entry.first->getReverseComplement();
+            if (!rcNode->isDrawn())
+                continue;
+            for (auto rIt = entry.second.rbegin(); rIt != entry.second.rend(); ++rIt)
+                res->add(rcNode, { GA.x(*rIt), GA.y(*rIt) });
+        }
+        resList.append(res);
     }
 
-    return res;
+    return resList;
 }
 
 [[maybe_unused]] void GraphLayoutWorker::cancelLayout() {

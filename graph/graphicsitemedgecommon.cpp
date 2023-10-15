@@ -110,8 +110,10 @@ void GraphicsItemEdgeCommon::calculateAndSetPath(DeBruijnNode* startingNode, DeB
 
 GraphicsItemEdge::GraphicsItemEdge(DeBruijnEdge * deBruijnEdge, QGraphicsItem * parent)
     : GraphicsItemEdgeCommon(parent), m_deBruijnEdge(deBruijnEdge) {
-    m_edgeColor = g_assemblyGraph->getCustomColour(deBruijnEdge);
-    auto style = g_assemblyGraph->getCustomStyle(deBruijnEdge);
+    //m_edgeColor = g_assemblyGraph->getCustomColour(deBruijnEdge);
+    m_edgeColor = QColor();
+    //auto style = g_assemblyGraph->getCustomStyle(deBruijnEdge);
+    auto style = AssemblyGraph::EdgeStyle();
     m_penStyle = style.lineStyle;
     m_width = style.width;
 

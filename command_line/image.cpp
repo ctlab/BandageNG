@@ -72,7 +72,9 @@ int handleImageCmd(QApplication *app,
         return 1;
     }
 
-    bool loadSuccess = g_assemblyGraph->loadGraphFromFile(cmd.m_graph.c_str());
+    g_assemblyGraph.clear();
+    g_assemblyGraph.append(QSharedPointer<AssemblyGraph>(new AssemblyGraph()));
+    bool loadSuccess = g_assemblyGraph.first()->loadGraphFromFile(cmd.m_graph.c_str());
     if (!loadSuccess) {
         outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME
         return 1;
@@ -97,7 +99,7 @@ int handleImageCmd(QApplication *app,
             return 1;
         }
 
-        QString blastError = g_blastSearch->doAutoGraphSearch(*g_assemblyGraph,
+        QString blastError = g_blastSearch->doAutoGraphSearch(*g_assemblyGraph.first(),
                                                               g_settings->blastQueryFilename,
                                                               false, /* include paths */
                                                               g_settings->blastSearchParameters);
@@ -115,7 +117,7 @@ int handleImageCmd(QApplication *app,
                               &g_blastSearch->queries(), "all",
                               "", g_settings->nodeDistance);
     std::vector<DeBruijnNode *> startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
-                                                                        *g_assemblyGraph, scope);
+                                                                        *g_assemblyGraph.first(), scope);
     if (!errorMessage.isEmpty()) {
         err << errorMessage << Qt::endl;
         return 1;
@@ -126,7 +128,7 @@ int handleImageCmd(QApplication *app,
         QStringList columns;
         bool coloursLoaded = false;
 
-        if (!g_assemblyGraph->loadCSV(cmd.m_color.c_str(), &columns, &errormsg, &coloursLoaded)) {
+        if (!g_assemblyGraph.first()->loadCSV(cmd.m_color.c_str(), &columns, &errormsg, &coloursLoaded)) {
             err << errormsg << Qt::endl;
             return 1;
         }
@@ -139,15 +141,16 @@ int handleImageCmd(QApplication *app,
     }
 
 
-    g_assemblyGraph->markNodesToDraw(scope, startingNodes);
+    g_assemblyGraph.first()->markNodesToDraw(scope, startingNodes);
     BandageGraphicsScene scene;
     {
         GraphLayoutStorage layout =
-                GraphLayoutWorker(g_settings->graphLayoutQuality,
+                *GraphLayoutWorker(g_settings->graphLayoutQuality,
                                   g_settings->linearLayout,
-                                  g_settings->componentSeparation).layoutGraph(*g_assemblyGraph);
+                                  g_settings->componentSeparation).layoutGraph(g_assemblyGraph)[0];
 
-        scene.addGraphicsItemsToScene(*g_assemblyGraph, layout);
+        scene.clear();
+        scene.addGraphicsItemsToScene(*g_assemblyGraph.first(), layout);
         scene.setSceneRectangle();
     }
     double sceneRectAspectRatio = scene.sceneRect().width() / scene.sceneRect().height();

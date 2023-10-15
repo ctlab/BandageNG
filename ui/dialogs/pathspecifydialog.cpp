@@ -72,7 +72,7 @@ void PathSpecifyDialog::checkPathValidity()
     g_memory->userSpecifiedPath = Path();
 
     //If there is no graph loaded, then no path can be valid.
-    if (g_assemblyGraph->m_deBruijnGraphNodes.empty())
+    if (g_assemblyGraph.first()->m_deBruijnGraphNodes.empty())
     {
         ui->validPathLabel->setText("Invalid path: no graph is currently loaded");
         setPathValidityUiElements(false);
@@ -83,7 +83,7 @@ void PathSpecifyDialog::checkPathValidity()
     QString pathStringFailure;
     QString pathText = ui->pathTextEdit->toPlainText().simplified();
     g_memory->userSpecifiedPath = Path::makeFromString(pathText,
-                                                       *g_assemblyGraph,
+                                                       *g_assemblyGraph.first(),
                                                        ui->circularPathCheckBox->isChecked(),
                                                        &pathStringFailure);
 

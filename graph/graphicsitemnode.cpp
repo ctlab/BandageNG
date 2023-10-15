@@ -464,8 +464,8 @@ QStringList GraphicsItemNode::getNodeText() const
 {
     QStringList nodeText;
 
-    if (g_settings->displayNodeCustomLabels)
-        nodeText << g_assemblyGraph->getCustomLabelForDisplay(m_deBruijnNode);
+    if (g_settings->displayNodeCustomLabels && g_assemblyGraph.size() == 1)
+        nodeText << g_assemblyGraph.first()->getCustomLabelForDisplay(m_deBruijnNode);
     if (g_settings->displayNodeNames)
     {
         QString nodeName = m_deBruijnNode->getName();
@@ -477,8 +477,8 @@ QStringList GraphicsItemNode::getNodeText() const
         nodeText << formatIntForDisplay(m_deBruijnNode->getLength()) + " bp";
     if (g_settings->displayNodeDepth)
         nodeText << formatDepthForDisplay(m_deBruijnNode->getDepth());
-    if (g_settings->displayNodeCsvData) {
-        auto data = g_assemblyGraph->getCsvLine(m_deBruijnNode, g_settings->displayNodeCsvDataCol);
+    if (g_settings->displayNodeCsvData && g_assemblyGraph.size() == 1) {
+        auto data = g_assemblyGraph.first()->getCsvLine(m_deBruijnNode, g_settings->displayNodeCsvDataCol);
         if (data)
             nodeText << *data;
     }
