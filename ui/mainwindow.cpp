@@ -35,6 +35,7 @@
 
 #include "graph/annotation.h"
 #include "graph/assemblygraph.h"
+#include "graph/assemblygraphlist.h"
 #include "graph/debruijnnode.h"
 #include "graph/debruijnedge.h"
 #include "graph/graphicsitemnode.h"
@@ -165,6 +166,7 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
 
     connect(ui->drawGraphButton, SIGNAL(clicked()), this, SLOT(drawGraph()));
     connect(ui->actionLoad_graph, SIGNAL(triggered()), this, SLOT(loadGraph()));
+    connect(ui->actionLoad_graphs_from_dir, SIGNAL(triggered()), this, SLOT(loadGraphs()));
     connect(ui->actionLoad_CSV, SIGNAL(triggered(bool)), this, SLOT(loadCSV()));
     connect(ui->actionLoad_layout, SIGNAL(triggered()), this, SLOT(loadGraphLayout()));
     connect(ui->actionLoad_paths, SIGNAL(triggered()), this, SLOT(loadGraphPaths()));
@@ -289,7 +291,7 @@ void MainWindow::afterMainWindowShow() {
     // If the draw option was used and the graph appears to have loaded (i.e. there
     // is at least one node), then draw the graph.
     // FIXME: This does not work as graph loading is asynchronous now. We need to wait until it is loaded
-    if (!m_fileToLoadOnStartup.isEmpty() && m_drawGraphAfterLoad && !g_assemblyGraph.isEmpty() && !g_assemblyGraph.first()->m_deBruijnGraphNodes.empty()) {
+    if (!m_fileToLoadOnStartup.isEmpty() && m_drawGraphAfterLoad && !g_assemblyGraph->isEmpty() && !g_assemblyGraph->first()->m_deBruijnGraphNodes.empty()) {
         connect(this, SIGNAL(graphLoaded()), this, SLOT(drawGraph()));
 
     }
@@ -323,7 +325,7 @@ void MainWindow::cleanUp() {
         m_blastSearchDialog = nullptr;
     }
 
-    for (auto assemblyGraph : g_assemblyGraph)
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList)
         assemblyGraph->cleanUp();
     setWindowTitle("Bandage-NG");
 
@@ -339,7 +341,7 @@ void MainWindow::cleanUp() {
 }
 
 void MainWindow::loadCSV(QString fullFileName) {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return; //work only for one graph
 
     QString selectedFilter = "Comma separated value (*.csv)";
@@ -359,7 +361,7 @@ void MainWindow::loadCSV(QString fullFileName) {
 
         bool coloursLoaded = false;
         QStringList columns;
-        if (g_assemblyGraph[0]->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded)) {
+        if (g_assemblyGraph->m_graphList[0]->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded)) {
             ui->csvCheckBox->setChecked(true);
             ui->csvComboBox->setEnabled(true);
             ui->csvComboBox->clear();
@@ -376,7 +378,29 @@ void MainWindow::loadCSV(QString fullFileName) {
     }
 }
 
-void MainWindow::loadGraph(QString fullFileName) {
+void MainWindow::loadGraphs(QString fullDirName, QString basePath) {
+    if (fullDirName.isEmpty()) {
+        fullDirName =
+                QFileDialog::getExistingDirectory(this, "Load graphs from dir", g_memory->rememberedPath, QFileDialog::ShowDirsOnly);
+        basePath = fullDirName;
+    }
+
+    if (fullDirName.isEmpty()) //User did hit cancel
+        return;
+    for (const auto entry : std::filesystem::directory_iterator(fullDirName.toStdString())) {
+        const std::filesystem::path path = entry.path();
+        if(std::filesystem::is_directory(path)) {
+            loadGraphs(QString::fromStdString(path), basePath);
+        }
+        if (std::filesystem::is_regular_file(path)) {
+            QString qpath = QString::fromStdString(path);
+            loadGraph(qpath, qpath.right(qpath.size() - basePath.size()), false);
+        }
+    }
+}
+
+
+void MainWindow::loadGraph(QString fullFileName, QString graphName, bool printWarning) {
     QString selectedFilter = "Any supported graph (*)";
     if (fullFileName.isEmpty())
         fullFileName =
@@ -395,7 +419,8 @@ void MainWindow::loadGraph(QString fullFileName) {
     // We need to convert unique_ptr to shared_ptr in order to get builder shared between future and callback
     std::shared_ptr<io::AssemblyGraphBuilder> builder = io::AssemblyGraphBuilder::get(fullFileName);
     if (!builder) {
-        QMessageBox::warning(this,
+        if (printWarning)
+            QMessageBox::warning(this,
                              "Graph format not recognised",
                              "Cannot load file. The selected file's format was not recognised as any supported graph type.");
         return;
@@ -427,22 +452,22 @@ void MainWindow::loadGraph(QString fullFileName) {
             setUiState(GRAPH_LOADED);
             setWindowTitle("BandageNG - " + fullFileName);
 
-            g_assemblyGraph.last()->determineGraphInfo();
-            displayGraphDetails(g_assemblyGraph.last());
+            g_assemblyGraph->determineGraphInfo();
+            displayGraphDetails();
             g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
             g_memory->clearGraphSpecificMemory();
 
-            //bool customColours = builder->hasCustomColours(),
+            bool customColours = builder->hasCustomColours();
             //customLabels = builder->hasCustomLabels();
 
             // If the graph has custom colours, automatically switch the colour scheme to custom colours.
-            //if (customColours)
-            //    switchColourScheme(CUSTOM_COLOURS);
+            if (customColours)
+                switchColourScheme(CUSTOM_COLOURS);
 
             // If the graph doesn't have custom colours, but the colour scheme is on 'Custom', automatically switch it back
             // to the default of 'Random colours'.
-            //if (!customColours && ui->coloursComboBox->currentIndex() == 6)
-            //    ui->coloursComboBox->setCurrentIndex(0);
+            if (!customColours && ui->coloursComboBox->currentIndex() == 6)
+                ui->coloursComboBox->setCurrentIndex(0);
 
             setupPathSelectionLineEdit(ui->pathSelectionLineEdit);
             setupPathSelectionLineEdit(ui->pathSelectionLineEdit2);
@@ -473,14 +498,16 @@ void MainWindow::loadGraph(QString fullFileName) {
     connect(watcher, SIGNAL(finished()), progress, SLOT(deleteLater()));
     connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
 
-    g_assemblyGraph.append(QSharedPointer<AssemblyGraph>(new AssemblyGraph()));
-    auto res = QtConcurrent::run(&io::AssemblyGraphBuilder::build, builder, std::ref(*(g_assemblyGraph.last())));
+    auto assemblyGrpah = new AssemblyGraph();
+    g_assemblyGraph->m_graphList.append(assemblyGrpah);
+    g_assemblyGraph->last()->setGraphName(std::move(graphName));
+    auto res = QtConcurrent::run(&io::AssemblyGraphBuilder::build, builder, std::ref(*(g_assemblyGraph->last())));
     watcher->setFuture(res);
 }
 
 void MainWindow::loadGraphLayout(QString fullFileName) {
-    g_assemblyGraph.clear();
-    g_assemblyGraph.append(QSharedPointer<AssemblyGraph>(new AssemblyGraph()));
+    g_assemblyGraph->clear();
+    g_assemblyGraph->append(new AssemblyGraph());
     if (fullFileName.isEmpty())
         fullFileName = QFileDialog::getOpenFileName(this, "Load Bandage layout", "",
                                                     "Bandage layout (*.layout)");
@@ -488,7 +515,7 @@ void MainWindow::loadGraphLayout(QString fullFileName) {
     if (fullFileName.isEmpty())
         return; // user clicked on cancel
 
-    GraphLayout layout(*(g_assemblyGraph.first()));
+    GraphLayout layout(*(g_assemblyGraph->first()));
     try {
         layout::io::load(fullFileName, layout);
     } catch (std::runtime_error &err) {
@@ -501,14 +528,14 @@ void MainWindow::loadGraphLayout(QString fullFileName) {
         return;
     }
 
-    layout::apply(*(g_assemblyGraph.first()), layout);
+    layout::apply(*(g_assemblyGraph->first()), layout);
     QList<GraphLayout*> layouts;
     layouts.append(&layout);
     graphLayoutFinished(layouts);
 }
 
 void MainWindow::loadGraphPaths(QString fullFileName) {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return; //not work with more than one graph
     QString selectedFilter = "GAF paths (*.gaf)";
     if (fullFileName.isEmpty())
@@ -521,11 +548,11 @@ void MainWindow::loadGraphPaths(QString fullFileName) {
 
     try {
         if (selectedFilter == "GFA paths (*.gfa)")
-            io::loadGFAPaths(*(g_assemblyGraph.first()), fullFileName);
+            io::loadGFAPaths(*(g_assemblyGraph->first()), fullFileName);
         else if (selectedFilter == "SPAligner TSV paths (*.tsv)")
-            io::loadSPAlignerPaths(*(g_assemblyGraph.first()), fullFileName);
+            io::loadSPAlignerPaths(*(g_assemblyGraph->first()), fullFileName);
         else
-            io::loadGAFPaths(*(g_assemblyGraph.first()), fullFileName);
+            io::loadGAFPaths(*(g_assemblyGraph->first()), fullFileName);
     } catch (std::exception &e) {
         QString errorTitle = "Error loading graph paths";
         QString errorMessage = "There was an error when attempting to load:\n"
@@ -537,18 +564,18 @@ void MainWindow::loadGraphPaths(QString fullFileName) {
     }
 
     // FIXME: ugly!
-    (g_assemblyGraph.first())->determineGraphInfo();
-    displayGraphDetails(g_assemblyGraph.first());
+    g_assemblyGraph->determineGraphInfo();
+    displayGraphDetails();
     setupPathSelectionLineEdit(ui->pathSelectionLineEdit);
     setupPathSelectionLineEdit(ui->pathSelectionLineEdit2);
 }
 
-void MainWindow::displayGraphDetails(QSharedPointer<AssemblyGraph> graph)
+void MainWindow::displayGraphDetails()
 {
-    ui->nodeCountLabel->setText(formatIntForDisplay(graph->m_nodeCount));
-    ui->edgeCountLabel->setText(formatIntForDisplay(graph->m_edgeCount));
-    ui->pathCountLabel->setText(formatIntForDisplay(graph->m_pathCount));
-    ui->totalLengthLabel->setText(formatIntForDisplay(graph->m_totalLength));
+    ui->nodeCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getNodeCount()));
+    ui->edgeCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getEdgeCount()));
+    ui->pathCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getPathCount()));
+    ui->totalLengthLabel->setText(formatIntForDisplay(g_assemblyGraph->getTotalLength()));
 }
 
 void MainWindow::clearGraphDetails()
@@ -654,17 +681,17 @@ void MainWindow::getSelectedNodeInfo(int & selectedNodeCount, QString & selected
 
     selectedNodeLengthText = formatIntForDisplay(totalLength) + " bp";
 
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
 
-    selectedNodeDepthText = formatDepthForDisplay(g_assemblyGraph.first()->getMeanDepth(selectedNodes));
+    selectedNodeDepthText = formatDepthForDisplay(g_assemblyGraph->first()->getMeanDepth(selectedNodes));
 
     if (selectedNodeCount == 1) {
         // FIXME: Hack!
         selectedNodeDepthText += " GC: " + formatDoubleForDisplay(100 * selectedNodes[0]->getGC(), 1) + "%";
 
-        auto tags = g_assemblyGraph.first()->m_nodeTags.find(selectedNodes.front());
-        if (tags != g_assemblyGraph.first()->m_nodeTags.end()) {
+        auto tags = g_assemblyGraph->first()->m_nodeTags.find(selectedNodes.front());
+        if (tags != g_assemblyGraph->first()->m_nodeTags.end()) {
             std::stringstream txt;
             for (const auto &tag : tags->second)
                 txt << tag << ' ';
@@ -672,9 +699,6 @@ void MainWindow::getSelectedNodeInfo(int & selectedNodeCount, QString & selected
         }
     }
 }
-
-
-
 
 QString MainWindow::getSelectedEdgeListText()
 {
@@ -700,12 +724,12 @@ QString MainWindow::getSelectedEdgeListText()
             edgeText += ", ";
     }
 
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return edgeText;
 
     if (selectedEdges.size() == 1) {
-        auto tags = g_assemblyGraph.first()->m_edgeTags.find(selectedEdges.front());
-        if (tags != g_assemblyGraph.first()->m_edgeTags.end()) {
+        auto tags = g_assemblyGraph->first()->m_edgeTags.find(selectedEdges.front());
+        if (tags != g_assemblyGraph->first()->m_edgeTags.end()) {
             std::stringstream txt;
             for (const auto &tag : tags->second)
                 txt << tag << ' ';
@@ -886,7 +910,7 @@ void MainWindow::setPathSelectionWidgetVisibility(bool visible)
 void MainWindow::setupPathSelectionLineEdit(QLineEdit *lineEdit) {
     lineEdit->clear();
 
-    if (g_assemblyGraph.size() > 1 || g_assemblyGraph.first()->m_deBruijnGraphPaths.empty())
+    if (g_assemblyGraph->size() > 1 || g_assemblyGraph->first()->m_deBruijnGraphPaths.empty())
         return;
 
     auto *matchedPaths = new QStringListModel(this);
@@ -898,7 +922,7 @@ void MainWindow::setupPathSelectionLineEdit(QLineEdit *lineEdit) {
             [matchedPaths](const QString &text) {
                 QStringList res;
 
-                auto prefix_range = g_assemblyGraph.first()->m_deBruijnGraphPaths.equal_prefix_range(text.toStdString());
+                auto prefix_range = g_assemblyGraph->first()->m_deBruijnGraphPaths.equal_prefix_range(text.toStdString());
                 size_t sz = std::distance(prefix_range.first, prefix_range.second);
                 if (sz > 1000) {
                     res << "Too many paths to show";
@@ -928,7 +952,7 @@ void MainWindow::drawGraph() {
 
     if (m_uiState == GRAPH_LOADED || m_uiState == GRAPH_DRAWN) {
         resetScene();
-        for(auto& assemblyGraph : g_assemblyGraph) {
+        for(auto& assemblyGraph : g_assemblyGraph->m_graphList) {
             auto scope =
                     graph::scope(g_settings->graphScope,
                                  ui->startingNodesLineEdit->text(),
@@ -942,8 +966,9 @@ void MainWindow::drawGraph() {
                                                          *assemblyGraph, scope);
 
             if (!errorMessage.isEmpty()) {
-                QMessageBox::information(this, errorTitle, errorMessage);
-                return;
+                if (g_assemblyGraph->size() == 1)
+                    QMessageBox::information(this, errorTitle, errorMessage);
+                continue;
             }
             assemblyGraph->resetEdges();
             assemblyGraph->resetNodes();
@@ -958,13 +983,11 @@ void MainWindow::graphLayoutFinished(QList<GraphLayout*> layouts) {
     int i = 0;
     m_scene->clear();
     for(auto layout : layouts) {
-        m_scene->addGraphicsItemsToScene(*g_assemblyGraph[i], *layout);
-        m_scene->setSceneRectangle();
-        zoomToFitScene();
+        m_scene->addGraphicsItemsToScene(*g_assemblyGraph->m_graphList[i], *layout);
 
         double averageNodeWidth = g_settings->averageNodeWidth / pow(g_absoluteZoom, 0.75);
         ui->nodeWidthSpinBox->setValue(averageNodeWidth);
-        g_assemblyGraph[i]->recalculateAllNodeWidths(averageNodeWidth,
+        g_assemblyGraph->m_graphList[i]->recalculateAllNodeWidths(averageNodeWidth,
                                                 g_settings->depthPower,
                                                 g_settings->depthEffectOnWidth);
         g_graphicsView->viewport()->update();
@@ -972,11 +995,12 @@ void MainWindow::graphLayoutFinished(QList<GraphLayout*> layouts) {
         selectionChanged();
 
         setUiState(GRAPH_DRAWN);
-
-        //Move the focus to the view so the user can use keyboard controls to navigate.
-        g_graphicsView->setFocus();
         i += 1;
     }
+    m_scene->setSceneRectangle();
+    zoomToFitScene();
+    //Move the focus to the view so the user can use keyboard controls to navigate.
+    g_graphicsView->setFocus();
 }
 
 
@@ -997,9 +1021,12 @@ void MainWindow::resetScene() {
 std::vector<DeBruijnNode *> MainWindow::getNodesFromLineEdit(QLineEdit * lineEdit, bool exactMatch, std::vector<QString> * nodesNotInGraph)
 {
     std::vector<DeBruijnNode *> res;
-    if (g_assemblyGraph.size() > 1)
-        return res;
-    return g_assemblyGraph.first()->getNodesFromString(lineEdit->text(), exactMatch, nodesNotInGraph);
+    for (AssemblyGraph* graph : g_assemblyGraph->m_graphList) {
+        for (DeBruijnNode * node : graph->getNodesFromString(lineEdit->text(), exactMatch, nodesNotInGraph)) {
+            res.push_back(node);
+        }
+    }
+    return res;
 }
 
 void MainWindow::layoutGraph()
@@ -1249,7 +1276,7 @@ void MainWindow::saveSelectedPathToFile()
 
 
 void MainWindow::resetAllNodeColours() {
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         for (auto &entry : assemblyGraph->m_deBruijnGraphNodes) {
             auto *graphicsItemNode = entry->getGraphicsItemNode();
             if (!graphicsItemNode)
@@ -1312,8 +1339,8 @@ void MainWindow::switchColourScheme(int idx) {
     } else if (scheme == CSV_COLUMN) {
         ui->tagsComboBox->clear();
         auto *colorer = dynamic_cast<CSVNodeColorer*>(&*g_settings->nodeColorer);
-        ui->tagsComboBox->addItems(g_assemblyGraph.first()->m_csvHeaders);
-        if (!g_assemblyGraph.first()->m_csvHeaders.empty())
+        ui->tagsComboBox->addItems(g_assemblyGraph->first()->m_csvHeaders);
+        if (!g_assemblyGraph->first()->m_csvHeaders.empty())
             colorer->setColumnIdx(0);
         ui->tagsComboBox->setVisible(true);
     } else {
@@ -1550,8 +1577,6 @@ void MainWindow::fontButtonPressed()
 
 
 void MainWindow::setNodeCustomColour() {
-    if (g_assemblyGraph.size() > 1)
-        return;
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
     if (selectedNodes.empty()) {
         setFeatureNodeCustomColour();
@@ -1562,7 +1587,7 @@ void MainWindow::setNodeCustomColour() {
     if (selectedNodes.size() > 1)
         dialogTitle += "s";
 
-    QColor newColour = QColorDialog::getColor(g_assemblyGraph.first()->getCustomColourForDisplay(selectedNodes[0]), this, dialogTitle);
+    QColor newColour = QColorDialog::getColor(g_assemblyGraph->getCustomColourForDisplay(selectedNodes[0]), this, dialogTitle);
     if (!newColour.isValid())
         return;
 
@@ -1576,7 +1601,7 @@ void MainWindow::setNodeCustomColour() {
     ui->coloursComboBox->setCurrentIndex(g_settings->nodeColorer->scheme());
 
     for (auto & selectedNode : selectedNodes) {
-        g_assemblyGraph.first()->setCustomColour(selectedNode, newColour);
+        selectedNode -> setCustomColor(newColour);
         if (selectedNode->getGraphicsItemNode() != nullptr)
             selectedNode->getGraphicsItemNode()->setNodeColour(newColour);
     }
@@ -1586,8 +1611,6 @@ void MainWindow::setNodeCustomColour() {
 
 void MainWindow::setNodeCustomLabel()
 {
-    if (g_assemblyGraph.size() > 1)
-        return;
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
     if (selectedNodes.empty()) {
         setFeatureNodeCustomLabel();
@@ -1601,7 +1624,7 @@ void MainWindow::setNodeCustomLabel()
 
     bool ok;
     QString newLabel = QInputDialog::getText(this, "Custom label", dialogMessage, QLineEdit::Normal,
-                                             g_assemblyGraph.first()->getCustomLabel(selectedNodes[0]), &ok);
+                                             g_assemblyGraph->first()->getCustomLabel(selectedNodes[0]), &ok);
 
     if (ok)
     {
@@ -1609,7 +1632,7 @@ void MainWindow::setNodeCustomLabel()
         ui->nodeCustomLabelsCheckBox->setChecked(true);
 
         for (auto & selectedNode : selectedNodes)
-            g_assemblyGraph.first()->setCustomLabel(selectedNode, newLabel);
+            selectedNode->setCustomLabel(newLabel);
     }
 }
 
@@ -1635,7 +1658,7 @@ void MainWindow::openSettingsDialog() {
 
     settingsDialog.setSettingsFromWidgets();
 
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
                                                 g_settings->depthPower,
                                                 g_settings->depthEffectOnWidth);
@@ -1649,8 +1672,6 @@ void MainWindow::openSettingsDialog() {
 void MainWindow::doSelectNodes(const std::vector<DeBruijnNode *> &nodesToSelect,
                                const std::vector<QString> &nodesNotInGraph,
                                bool recolor) {
-    if (g_assemblyGraph.size() > 1)
-        return;
     m_scene->blockSignals(true);
     m_scene->clearSelection();
 
@@ -1691,10 +1712,10 @@ void MainWindow::doSelectNodes(const std::vector<DeBruijnNode *> &nodesToSelect,
     if (foundNodes > 0)
         zoomToSelection();
 
-    if (!nodesNotInGraph.empty() || !nodesNotFound.empty()) {
+    if (g_assemblyGraph->size() == 1 && (!nodesNotInGraph.empty() || !nodesNotFound.empty())) {
         QString errorMessage;
         if (!nodesNotInGraph.empty())
-            errorMessage += g_assemblyGraph.first()->generateNodesNotFoundErrorMessage(nodesNotInGraph,
+            errorMessage += g_assemblyGraph->generateNodesNotFoundErrorMessage(nodesNotInGraph,
                                                                                ui->selectionSearchNodesExactMatchRadioButton->isChecked());
         if (!nodesNotFound.empty()) {
             if (errorMessage.length() > 0)
@@ -1717,9 +1738,7 @@ void MainWindow::doSelectNodes(const std::vector<DeBruijnNode *> &nodesToSelect,
 
 void MainWindow::selectUserSpecifiedNodes()
 {
-    if (g_assemblyGraph.size() > 1)
-        return;
-    if (g_assemblyGraph.first()->checkIfStringHasNodes(ui->selectionSearchNodesLineEdit->text()))
+    if (g_assemblyGraph->checkIfStringHasNodes(ui->selectionSearchNodesLineEdit->text()))
     {
         QMessageBox::information(this, "No starting nodes",
                                  "Please enter at least one node when drawing the graph using the 'Around node(s)' scope. "
@@ -1743,14 +1762,14 @@ void MainWindow::selectUserSpecifiedNodes()
 
 void MainWindow::selectPathNodes()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     std::vector<QString> nodesNotInGraph;
     std::vector<DeBruijnNode *> nodesToSelect;
 
     QString pathName = ui->pathSelectionLineEdit2->displayText();
-    auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(pathName.toStdString());
-    if (pathIt == g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
+    auto pathIt = g_assemblyGraph->first()->m_deBruijnGraphPaths.find(pathName.toStdString());
+    if (pathIt == g_assemblyGraph->first()->m_deBruijnGraphPaths.end()) {
         QMessageBox::information(this, "Path not found", "Path named \"" + pathName + "\" is not found. Maybe you wanted to select nodes instead?");
         return;
     }
@@ -2074,7 +2093,7 @@ void MainWindow::selectNodesWithBlastHits() {
 
 void MainWindow::selectNodesWithDeadEnds()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     m_scene->blockSignals(true);
     m_scene->clearSelection();
@@ -2082,7 +2101,7 @@ void MainWindow::selectNodesWithDeadEnds()
     bool atLeastOneNodeHasDeadEnd = false;
     bool atLeastOneNodeSelected = false;
 
-    for (auto &entry : g_assemblyGraph.first()->m_deBruijnGraphNodes) {
+    for (auto &entry : g_assemblyGraph->first()->m_deBruijnGraphNodes) {
         DeBruijnNode * node = entry;
 
         bool nodeHasDeadEnd = node->getDeadEndCount() > 0;
@@ -2191,7 +2210,7 @@ void MainWindow::resetNodeContiguityStatus() {
 }
 
 void MainWindow::selectBasedOnContiguity(ContiguityStatus targetContiguityStatus) {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     auto *colorer = dynamic_cast<ContiguityNodeColorer*>(&*g_settings->nodeColorer);
     if (!colorer || colorer->empty()) {
@@ -2205,7 +2224,7 @@ void MainWindow::selectBasedOnContiguity(ContiguityStatus targetContiguityStatus
     m_scene->blockSignals(true);
     m_scene->clearSelection();
 
-    for (auto *node : g_assemblyGraph.first()->m_deBruijnGraphNodes) {
+    for (auto *node : g_assemblyGraph->first()->m_deBruijnGraphNodes) {
         GraphicsItemNode * graphicsItemNode = node->getGraphicsItemNode();
         if (graphicsItemNode == nullptr)
             continue;
@@ -2325,7 +2344,7 @@ void MainWindow::setSelectedEdgesWidgetsVisibility(bool visible)
 
 void MainWindow::nodeWidthChanged()
 {
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
                                               g_settings->depthPower, g_settings->depthEffectOnWidth);
     }
@@ -2342,7 +2361,7 @@ void MainWindow::saveEntireGraphToFasta() {
         return; //User did hit cancel
 
     int count = 0;
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
         fileInfo.baseName().append(QString("_") + QString::number(count));
@@ -2362,7 +2381,7 @@ void MainWindow::saveEntireGraphToFastaOnlyPositiveNodes() {
 
 
     int count = 0;
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
         fileInfo.baseName().append(QString("_") + QString::number(count));
@@ -2383,7 +2402,7 @@ void MainWindow::saveEntireGraphToGfa() {
 
 
     int count = 0;
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
         fileInfo.baseName().append(QString("_") + QString::number(count));
@@ -2403,7 +2422,7 @@ void MainWindow::saveVisibleGraphToGfa() {
 
 
     int count = 0;
-    for (auto assemblyGraph : g_assemblyGraph) {
+    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
         fileInfo.baseName().append(QString("_") + QString::number(count));
@@ -2479,7 +2498,7 @@ void MainWindow::hideNodes()
 //This function removes selected nodes/edges from the graph.
 void MainWindow::removeSelection()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     std::vector<DeBruijnEdge *> selectedEdges = m_scene->getSelectedEdges();
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
@@ -2487,11 +2506,11 @@ void MainWindow::removeSelection()
     m_scene->removeGraphicsItemEdges(selectedEdges, true);
     m_scene->removeGraphicsItemNodes(selectedNodes, true);
 
-    g_assemblyGraph.first()->deleteEdges(selectedEdges);
-    g_assemblyGraph.first()->deleteNodes(selectedNodes);
+    g_assemblyGraph->first()->deleteEdges(selectedEdges);
+    g_assemblyGraph->first()->deleteNodes(selectedNodes);
 
-    g_assemblyGraph.first()->determineGraphInfo();
-    displayGraphDetails(g_assemblyGraph.first());
+    g_assemblyGraph->determineGraphInfo();
+    displayGraphDetails();
 
     // Now that the graph has changed, we have to reset BLAST and contiguity
     // stuff, as they may no longer apply.
@@ -2505,7 +2524,7 @@ void MainWindow::removeSelection()
 
 void MainWindow::duplicateSelectedNodes()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
     if (selectedNodes.empty())
@@ -2526,10 +2545,10 @@ void MainWindow::duplicateSelectedNodes()
     }
 
     for (auto & i : nodesToDuplicate)
-        g_assemblyGraph.first()->duplicateNodePair(i, m_scene);
+        g_assemblyGraph->first()->duplicateNodePair(i, m_scene);
 
-    g_assemblyGraph.first()->determineGraphInfo();
-    displayGraphDetails(g_assemblyGraph.first());
+    g_assemblyGraph->determineGraphInfo();
+    displayGraphDetails();
 
     // Now that the graph has changed, we have to reset BLAST and contiguity
     // stuff, as they may no longer apply.
@@ -2539,7 +2558,7 @@ void MainWindow::duplicateSelectedNodes()
 }
 
 void MainWindow::mergeSelectedNodes() {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedNodes();
     if (selectedNodes.size() < 2) {
@@ -2563,13 +2582,13 @@ void MainWindow::mergeSelectedNodes() {
         return;
     }
 
-    if (!(g_assemblyGraph.first())->mergeNodes(nodesToMerge, m_scene)) {
+    if (!(g_assemblyGraph->first())->mergeNodes(nodesToMerge, m_scene)) {
         QMessageBox::information(this, "Nodes cannot be merged", "You can only merge nodes that are in a single, unbranching path with no extra edges.");
         return;
     }
 
-    g_assemblyGraph.first()->determineGraphInfo();
-    displayGraphDetails(g_assemblyGraph.first());
+    g_assemblyGraph->determineGraphInfo();
+    displayGraphDetails();
 
     // Now that the graph has changed, we have to reset BLAST and contiguity
     // stuff, as they may no longer apply.
@@ -2580,7 +2599,7 @@ void MainWindow::mergeSelectedNodes() {
 
 void MainWindow::mergeAllPossible()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     int merges;
     {
@@ -2592,19 +2611,19 @@ void MainWindow::mergeAllPossible()
         progress.setMaxValue(100);
         progress.show();
 
-        connect(g_assemblyGraph.first().data(), SIGNAL(setMergeTotalCount(int)), &progress, SLOT(setMaxValue(int)));
-        connect(g_assemblyGraph.first().data(), SIGNAL(setMergeCompletedCount(int)), &progress, SLOT(setValue(int)));
+        connect(g_assemblyGraph->first(), SIGNAL(setMergeTotalCount(int)), &progress, SLOT(setMaxValue(int)));
+        connect(g_assemblyGraph->first(), SIGNAL(setMergeCompletedCount(int)), &progress, SLOT(setValue(int)));
 
 
         g_graphicsView->viewport()->setUpdatesEnabled(false);
-        merges = (g_assemblyGraph.first())->mergeAllPossible(m_scene, &progress);
+        merges = (g_assemblyGraph->first())->mergeAllPossible(m_scene, &progress);
         g_graphicsView->viewport()->setUpdatesEnabled(true);
     }
 
     if (merges > 0)
     {
-        g_assemblyGraph.first()->determineGraphInfo();
-        displayGraphDetails(g_assemblyGraph.first());
+        g_assemblyGraph->determineGraphInfo();
+        displayGraphDetails();
 
         //Now that the graph has changed, we have to reset BLAST and contiguity
         //stuff, as they may no longer apply.
@@ -2635,7 +2654,7 @@ void MainWindow::cleanUpAllBlast() {
 
 void MainWindow::changeNodeName()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     DeBruijnNode * selectedNode = m_scene->getOnePositiveSelectedNode();
     if (selectedNode == nullptr) {
@@ -2648,7 +2667,7 @@ void MainWindow::changeNodeName()
 
     if (changeNodeNameDialog.exec()) //The user clicked OK
     {
-        g_assemblyGraph.first()->changeNodeName(oldName, changeNodeNameDialog.getNewName());
+        g_assemblyGraph->first()->changeNodeName(oldName, changeNodeNameDialog.getNewName());
         selectionChanged();
         cleanUpAllBlast();
     }
@@ -2656,7 +2675,7 @@ void MainWindow::changeNodeName()
 
 void MainWindow::changeNodeDepth()
 {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     std::vector<DeBruijnNode *> selectedNodes = m_scene->getSelectedPositiveNodes();
     if (selectedNodes.empty()) {
@@ -2664,17 +2683,17 @@ void MainWindow::changeNodeDepth()
         return;
     }
 
-    double oldDepth = g_assemblyGraph.first()->getMeanDepth(selectedNodes);
+    double oldDepth = g_assemblyGraph->first()->getMeanDepth(selectedNodes);
     ChangeNodeDepthDialog changeNodeDepthDialog(this, &selectedNodes,
                                                 oldDepth);
 
     if (!changeNodeDepthDialog.exec())
         return;
 
-    g_assemblyGraph.first()->changeNodeDepth(selectedNodes,
+    g_assemblyGraph->first()->changeNodeDepth(selectedNodes,
                                      changeNodeDepthDialog.getNewDepth());
     selectionChanged();
-    g_assemblyGraph.first()->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
+    g_assemblyGraph->first()->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
                                               g_settings->depthPower, g_settings->depthEffectOnWidth);
     g_graphicsView->viewport()->update();
 }
@@ -2687,7 +2706,7 @@ void MainWindow::openGraphInfoDialog()
 }
 
 void MainWindow::exportGraphLayout() {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     QString filter = "Bandage layout (*.layout)";
     QString fullFileName = QFileDialog::getSaveFileName(this, "Export graph layout",
@@ -2699,7 +2718,7 @@ void MainWindow::exportGraphLayout() {
         return;
 
     bool isTSV = filter == "TSV (*.tsv)";
-    GraphLayout layout = layout::fromGraph(*g_assemblyGraph.first(),
+    GraphLayout layout = layout::fromGraph(*g_assemblyGraph->first(),
                                            /* simplified */ isTSV);
     if (isTSV)
         layout::io::saveTSV(fullFileName, layout);
@@ -2708,7 +2727,7 @@ void MainWindow::exportGraphLayout() {
 }
 
 void MainWindow::showPathListDialog() {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     std::vector<DeBruijnNode*> selectedNodes;
     for (auto *node : m_scene->getSelectedNodes()) {
@@ -2718,7 +2737,7 @@ void MainWindow::showPathListDialog() {
             selectedNodes.push_back(node->getReverseComplement());
     }
 
-    PathListDialog pathListDialog(*g_assemblyGraph.first(), selectedNodes, this);
+    PathListDialog pathListDialog(*g_assemblyGraph->first(), selectedNodes, this);
     pathListDialog.exec();
 }
 
@@ -3096,7 +3115,7 @@ void MainWindow::zoomedFeaturesWithMouseWheel()
 }
 
 void MainWindow::loadHiC(QString fullFileName) {
-    if (g_assemblyGraph.size() > 1)
+    if (g_assemblyGraph->size() > 1)
         return;
     QString selectedFilter = "Comma separated value (*.txt)";
     if (fullFileName == "")
@@ -3117,7 +3136,7 @@ void MainWindow::loadHiC(QString fullFileName) {
         progress.setWindowModality(Qt::WindowModal);
         progress.show();
 
-        bool success = g_hicManager->load(*g_assemblyGraph.first(), fullFileName, &errormsg);
+        bool success = g_hicManager->load(*g_assemblyGraph->first(), fullFileName, &errormsg);
 
         if (success)
         {

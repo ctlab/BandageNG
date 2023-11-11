@@ -21,6 +21,7 @@
 
 #include "features_forest/blastfeaturenodesmatcher.h"
 
+#include "graph/assemblygraphlist.h"
 #include "graph/debruijnnode.h"
 #include "graph/nodecolorer.h"
 #include "graph/contiguity.h"
@@ -89,7 +90,7 @@ private:
     BlastFeaturesNodesMatcher* m_blastFeaturesNodesMatcher;
 
     void cleanUp();
-    void displayGraphDetails(QSharedPointer<AssemblyGraph> assemblyGraph);
+    void displayGraphDetails();
     void clearGraphDetails();
     void resetScene();
     void resetAllNodeColours();
@@ -128,7 +129,8 @@ private:
 public slots:
     void zoomedFeaturesWithMouseWheel();
 private slots:
-    void loadGraph(QString fullFileName = "");
+    void loadGraph(QString fullFileName = "",  QString graphName = "", bool printWarning = true);
+    void loadGraphs(QString fullDirName = "", QString basePath = "");
     void loadCSV(QString fullFileName = "");
     void loadGraphLayout(QString fullFileName = "");
     void loadGraphPaths(QString fullFileName = "");

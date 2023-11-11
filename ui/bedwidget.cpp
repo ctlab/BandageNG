@@ -2,7 +2,7 @@
 
 #include "io/bedloader.h"
 #include "graph/annotationsmanager.h"
-#include "graph/assemblygraph.h"
+#include "graph/assemblygraphlist.h"
 #include "graph/debruijnnode.h"
 
 #include "program/memory.h"
@@ -34,9 +34,9 @@ BedWidget::BedWidget(QWidget *parent) : QWidget(parent) {
             auto bedLines = bed::load(bedFileName.toStdString());
             auto &annotationGroup = g_annotationsManager->createAnnotationGroup(g_settings->bedAnnotationGroupName);
             for (const auto &bedLine : bedLines) {
-                auto nodeName = g_assemblyGraph.first()->getNodeNameFromString(bedLine.chrom.c_str());
-                auto it = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(nodeName.toStdString());
-                if (it != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
+                auto nodeName = g_assemblyGraph->first()->getNodeNameFromString(bedLine.chrom.c_str());
+                auto it = g_assemblyGraph->first()->m_deBruijnGraphNodes.find(nodeName.toStdString());
+                if (it != g_assemblyGraph->first()->m_deBruijnGraphNodes.end()) {
                     DeBruijnNode *node = it.value();
                     if (bedLine.strand == bed::Strand::REVERSE_COMPLEMENT)
                         node = node->getReverseComplement();

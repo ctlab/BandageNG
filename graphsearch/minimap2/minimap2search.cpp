@@ -43,7 +43,7 @@ bool Minimap2Search::findTools() {
     return true;
 }
 
-QString Minimap2Search::buildDatabase(const AssemblyGraph &graph, bool includePaths) {
+QString Minimap2Search::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, bool includePaths) {
     DbBuildFinishedRAII watcher(this);
     m_lastError = "";
     if (!findTools())
@@ -60,7 +60,8 @@ QString Minimap2Search::buildDatabase(const AssemblyGraph &graph, bool includePa
 
     {
         QTextStream out(&file);
-        for (const auto *node : graph.m_deBruijnGraphNodes) {
+        for (AssemblyGraph* graph: graphList->m_graphList) {
+        for (const auto *node : graph->m_deBruijnGraphNodes) {
             if (m_cancelBuildDatabase)
                 return (m_lastError = "Build cancelled.");
 
@@ -68,22 +69,25 @@ QString Minimap2Search::buildDatabase(const AssemblyGraph &graph, bool includePa
         }
 
         if (includePaths) {
-            for (auto it = graph.m_deBruijnGraphPaths.begin(); it != graph.m_deBruijnGraphPaths.end(); ++it) {
+            for (auto it = graph->m_deBruijnGraphPaths.begin(); it != graph->m_deBruijnGraphPaths.end(); ++it) {
                 if (m_cancelBuildDatabase)
                     return (m_lastError = "Build cancelled.");
 
                 out << it.value()->getFasta(it.key().c_str());
             }
         }
+        }
     }
 
     // Make sure the graph has sequences
     bool atLeastOneSequence = false;
-    for (const auto *node : graph.m_deBruijnGraphNodes) {
+    for (AssemblyGraph* graph: graphList->m_graphList) {
+    for (const auto *node : graph->m_deBruijnGraphNodes) {
         if (!node->sequenceIsMissing()) {
             atLeastOneSequence = true;
             break;
         }
+    }
     }
 
     if (!atLeastOneSequence)
@@ -168,8 +172,8 @@ buildHitsFromPAF(const QString &PAF,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
+        auto nodeIt = g_assemblyGraph->first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+        if (nodeIt != g_assemblyGraph->first()->m_deBruijnGraphNodes.end()) {
             if (!strand)
                 continue;
 
@@ -181,8 +185,8 @@ buildHitsFromPAF(const QString &PAF,
                                           nodeStart, nodeEnd, 0, 0));
         }
 
-        auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
-        if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
+        auto pathIt = g_assemblyGraph->first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
+        if (pathIt != g_assemblyGraph->first()->m_deBruijnGraphPaths.end()) {
             pathHits.emplace_back(query, pathIt.value(),
                                   Path::MappingRange{queryStart, queryEnd,
                                                      nodeStart, nodeEnd});
@@ -259,12 +263,12 @@ QString Minimap2Search::doSearch(Queries &queries, QString extraParameters) {
     return m_lastError;
 }
 
-QString Minimap2Search::doAutoGraphSearch(const AssemblyGraph &graph, QString queriesFilename,
+QString Minimap2Search::doAutoGraphSearch(QSharedPointer<AssemblyGraphList> graphList, QString queriesFilename,
                                           bool includePaths,
                                           QString extraParameters) {
     cleanUp();
 
-    QString maybeError = buildDatabase(graph, includePaths); // It is expected that buildDatabase will setup last error as well
+    QString maybeError = buildDatabase(graphList, includePaths); // It is expected that buildDatabase will setup last error as well
     if (!maybeError.isEmpty())
         return maybeError;
 

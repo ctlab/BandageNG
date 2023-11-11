@@ -252,7 +252,7 @@ void GraphSearchDialog::buildDatabase(bool separateThread, bool showProgress) {
     connect(m_graphSearch.get(), SIGNAL(finishedDbBuild(QString)), this, SLOT(graphDatabaseBuildFinished(QString)));
     connect(progress, SIGNAL(halt()), m_graphSearch.get(), SLOT(cancelDatabaseBuild()));
 
-    auto builder = [&]() { m_graphSearch->buildDatabase(*g_assemblyGraph.first()); };
+    auto builder = [&]() { m_graphSearch->buildDatabase(g_assemblyGraph); };
     if (separateThread) {
         QFuture<void> res = QtConcurrent::run(builder);
     } else

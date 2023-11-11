@@ -22,7 +22,7 @@
 #include "program/scinot.h"
 #include "program/settings.h"
 
-#include "graph/assemblygraph.h"
+#include "graph/assemblygraphlist.h"
 #include "graph/nodecolorer.h"
 
 #include <QMessageBox>
@@ -239,8 +239,8 @@ void SettingsDialog::loadOrSaveSettingsToOrFromWidgets(bool setWidgets, Settings
         ui->depthValueManualRadioButton->setChecked(!settings->autoDepthValue);
         nodeLengthPerMegabaseManualChanged();
         ui->nodeLengthPerMegabaseAutoLabel->setText(formatDoubleForDisplay(settings->autoNodeLengthPerMegabase, 1));
-        ui->lowDepthAutoValueLabel2->setText(formatDoubleForDisplay(g_assemblyGraph.first()->m_firstQuartileDepth, 2));
-        ui->highDepthAutoValueLabel2->setText(formatDoubleForDisplay(g_assemblyGraph.first()->m_thirdQuartileDepth, 2));
+        ui->lowDepthAutoValueLabel2->setText(formatDoubleForDisplay(g_assemblyGraph->first()->m_firstQuartileDepth, 2));
+        ui->highDepthAutoValueLabel2->setText(formatDoubleForDisplay(g_assemblyGraph->first()->m_thirdQuartileDepth, 2));
         ui->nodeLengthPerMegabaseAutoRadioButton->setChecked(settings->nodeLengthMode == AUTO_NODE_LENGTH);
         ui->nodeLengthPerMegabaseManualRadioButton->setChecked(settings->nodeLengthMode != AUTO_NODE_LENGTH);
         ui->positionVisibleRadioButton->setChecked(!settings->positionTextNodeCentre);

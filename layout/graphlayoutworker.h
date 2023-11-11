@@ -18,17 +18,18 @@
 #pragma once
 
 #include "graphlayout.h"
+#include "graph/assemblygraph.h"
+#include "graph/assemblygraphlist.h"
 
 #include <QObject>
 #include <QFutureSynchronizer>
+#include <QSharedPointer>
 
 namespace ogdf {
     class Graph;
     class GraphAttributes;
     template<class T> class EdgeArray;
 }
-
-class AssemblyGraph;
 
 class GraphLayouter {
 public:
@@ -58,7 +59,8 @@ public:
                       double aspectRatio = 1.333333);
     ~GraphLayoutWorker() override = default;
 
-    QList<GraphLayout*> layoutGraph(QList<QSharedPointer<AssemblyGraph>> graphList);
+    QList<GraphLayout*> layoutGraph(QSharedPointer<AssemblyGraphList> graphList);
+    //void layoutGraph(QSharedPointer<AssemblyGraphList> graphList);
 
 private:
     QFutureSynchronizer<void> m_taskSynchronizer;

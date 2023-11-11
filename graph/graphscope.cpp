@@ -32,7 +32,7 @@ namespace graph {
             default:
                 return {};
             case AROUND_NODE: {
-                if (AssemblyGraph::checkIfStringHasNodes(graphScope.nodeList())) {
+                if (AssemblyGraphList::checkIfStringHasNodes(graphScope.nodeList())) {
                     *errorTitle = "No starting nodes";
                     *errorMessage = "Please enter at least one node when drawing the graph using the 'Around node(s)' scope. "
                                     "Separate multiple nodes with commas.";
@@ -46,7 +46,7 @@ namespace graph {
                                                                                     &nodesNotInGraph);
                 if (!nodesNotInGraph.empty()) {
                     *errorTitle = "Nodes not found";
-                    *errorMessage = AssemblyGraph::generateNodesNotFoundErrorMessage(nodesNotInGraph,
+                    *errorMessage = AssemblyGraphList::generateNodesNotFoundErrorMessage(nodesNotInGraph,
                                                                                      g_settings->startingNodesExactMatch);
                 }
 

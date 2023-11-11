@@ -35,11 +35,11 @@ public:
     virtual ~HmmerSearch() = default;
 
 
-    QString doAutoGraphSearch(const AssemblyGraph &graph, QString queriesFilename,
+    QString doAutoGraphSearch(QSharedPointer<AssemblyGraphList> graphList, QString queriesFilename,
                               bool includePaths = false,
                               QString extraParameters = "") override;
     int loadQueriesFromFile(QString fullFileName) override;
-    QString buildDatabase(const AssemblyGraph &graph,
+    QString buildDatabase(QSharedPointer<AssemblyGraphList> graphList,
                               bool includePaths = true) override;
     QString doSearch(QString extraParameters) override;
     QString doSearch(search::Queries &queries, QString extraParameters) override;

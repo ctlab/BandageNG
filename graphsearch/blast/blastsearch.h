@@ -20,6 +20,7 @@
 
 #include "graphsearch/graphsearch.h"
 #include "features_forest/assemblyfeaturesforest.h"
+#include "graph/assemblygraphlist.h"
 
 #include <QDir>
 #include <QString>
@@ -40,11 +41,11 @@ public:
     virtual ~BlastSearch() = default;
 
 
-    QString doAutoGraphSearch(const AssemblyGraph &graph, QString queriesFilename,
+    QString doAutoGraphSearch(QSharedPointer<AssemblyGraphList> graphList, QString queriesFilename,
                               bool includePaths = false,
                               QString extraParameters = "") override;
     int loadQueriesFromFile(QString fullFileName) override;
-    QString buildDatabase(const AssemblyGraph &graph,
+    QString buildDatabase(QSharedPointer<AssemblyGraphList> graphList,
                           bool includePaths = true) override;
     QString buildDatabase(const AssemblyFeaturesForest &graph);
 

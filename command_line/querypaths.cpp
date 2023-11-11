@@ -87,7 +87,7 @@ int handleQueryPathsCmd(QApplication *app,
 
     out << Qt::endl << "(" << QDateTime::currentDateTime().toString("dd MMM yyyy hh:mm:ss") << ") Loading graph...        " << Qt::flush;
 
-    if (!g_assemblyGraph.first()->loadGraphFromFile(cmd.m_graph.c_str())) {
+    if (!g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str())) {
         err << "Bandage-NG error: could not load " << cmd.m_graph.c_str() << Qt::endl;
         return 1;
     }
@@ -98,7 +98,7 @@ int handleQueryPathsCmd(QApplication *app,
     }
 
     out << "(" << QDateTime::currentDateTime().toString("dd MMM yyyy hh:mm:ss") << ") Running BLAST search... " << Qt::flush;
-    QString blastError = g_blastSearch->doAutoGraphSearch(*g_assemblyGraph.first(),
+    QString blastError = g_blastSearch->doAutoGraphSearch(g_assemblyGraph,
                                                           g_settings->blastQueryFilename,
                                                           false, /* include paths */
                                                           g_settings->blastSearchParameters);

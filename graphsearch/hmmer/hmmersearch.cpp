@@ -53,7 +53,7 @@ bool HmmerSearch::findTools() {
     return true;
 }
 
-QString HmmerSearch::buildDatabase(const AssemblyGraph &graph, bool includePaths) {
+QString HmmerSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, bool includePaths) {
     DbBuildFinishedRAII watcher(this);
 
     m_lastError = "";
@@ -73,34 +73,36 @@ QString HmmerSearch::buildDatabase(const AssemblyGraph &graph, bool includePaths
         // in order to mitigate this, emit the largest (=more diverse) node first
         const DeBruijnNode *longest = nullptr;
         size_t length = 0;
-        for (const auto *node : graph.m_deBruijnGraphNodes) {
-            if (!node->sequenceIsMissing() && node->getLength() > length) {
-                length = node->getLength();
-                longest = node;
+        for (AssemblyGraph* graph: graphList->m_graphList) {
+            for (const auto *node : graph->m_deBruijnGraphNodes) {
+                if (!node->sequenceIsMissing() && node->getLength() > length) {
+                    length = node->getLength();
+                    longest = node;
+                }
             }
-        }
 
-        if (!longest)
-            return (m_lastError = "Cannot build the hmmer input set as this graph contains no sequences");
+            if (!longest)
+                return (m_lastError = "Cannot build the hmmer input set as this graph contains no sequences");
 
-        out << longest->getFasta(true, false, false);
+            out << longest->getFasta(true, false, false);
 
-        for (const auto *node : graph.m_deBruijnGraphNodes) {
-            if (m_cancelBuildDatabase)
-                return (m_lastError = "Build cancelled.");
-
-            if (node == longest)
-                continue;;
-
-            out << node->getFasta(true, false, false);
-        }
-
-        if (includePaths) {
-            for (auto it = graph.m_deBruijnGraphPaths.begin(); it != graph.m_deBruijnGraphPaths.end(); ++it) {
+            for (const auto *node : graph->m_deBruijnGraphNodes) {
                 if (m_cancelBuildDatabase)
                     return (m_lastError = "Build cancelled.");
 
-                out << it.value()->getFasta(it.key().c_str());
+                if (node == longest)
+                    continue;;
+
+                out << node->getFasta(true, false, false);
+            }
+
+            if (includePaths) {
+                for (auto it = graph->m_deBruijnGraphPaths.begin(); it != graph->m_deBruijnGraphPaths.end(); ++it) {
+                    if (m_cancelBuildDatabase)
+                        return (m_lastError = "Build cancelled.");
+
+                    out << it.value()->getFasta(it.key().c_str());
+                }
             }
         }
     }
@@ -113,21 +115,23 @@ QString HmmerSearch::buildDatabase(const AssemblyGraph &graph, bool includePaths
 
         QTextStream out(&file);
 
-        for (const auto *node : graph.m_deBruijnGraphNodes) {
-            if (m_cancelBuildDatabase)
-                return (m_lastError = "Build cancelled.");
-
-            for (unsigned shift = 0; shift < 3; ++shift)
-                out << node->getAAFasta(shift, true, false, false);
-        }
-
-        if (includePaths) {
-            for (auto it = graph.m_deBruijnGraphPaths.begin(); it != graph.m_deBruijnGraphPaths.end(); ++it) {
+        for (AssemblyGraph* graph: graphList->m_graphList) {
+            for (const auto *node : graph->m_deBruijnGraphNodes) {
                 if (m_cancelBuildDatabase)
                     return (m_lastError = "Build cancelled.");
 
                 for (unsigned shift = 0; shift < 3; ++shift)
-                    out << it.value()->getAAFasta(shift, it.key().c_str());
+                    out << node->getAAFasta(shift, true, false, false);
+            }
+
+            if (includePaths) {
+                for (auto it = graph->m_deBruijnGraphPaths.begin(); it != graph->m_deBruijnGraphPaths.end(); ++it) {
+                    if (m_cancelBuildDatabase)
+                        return (m_lastError = "Build cancelled.");
+
+                    for (unsigned shift = 0; shift < 3; ++shift)
+                        out << it.value()->getAAFasta(shift, it.key().c_str());
+                }
             }
         }
 
@@ -280,12 +284,12 @@ QString HmmerSearch::doOneSearch(search::QuerySequenceType sequenceType,
     return hmmerOutput;
 }
 
-QString HmmerSearch::doAutoGraphSearch(const AssemblyGraph &graph, QString queriesFilename,
+QString HmmerSearch::doAutoGraphSearch(QSharedPointer<AssemblyGraphList> graphList, QString queriesFilename,
                                        bool includePaths,
                                        QString extraParameters) {
     cleanUp();
 
-    QString maybeError = buildDatabase(graph, includePaths); // It is expected that buildDatabase will setup last error as well
+    QString maybeError = buildDatabase(graphList, includePaths); // It is expected that buildDatabase will setup last error as well
     if (!maybeError.isEmpty())
         return maybeError;
 
@@ -395,8 +399,8 @@ buildHitsFromTblOut(QString hmmerOutput,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
+        auto nodeIt = g_assemblyGraph->first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+        if (nodeIt != g_assemblyGraph->first()->m_deBruijnGraphNodes.end()) {
             // Only save hits that are on forward strands.
             if (nodeStart > nodeEnd)
                 continue;
@@ -410,8 +414,8 @@ buildHitsFromTblOut(QString hmmerOutput,
                                           eValue, bitScore));
         }
 
-        auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
-        if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
+        auto pathIt = g_assemblyGraph->first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
+        if (pathIt != g_assemblyGraph->first()->m_deBruijnGraphPaths.end()) {
             pathHits.emplace_back(query, pathIt.value(),
                                   Path::MappingRange{queryStart, queryEnd,
                                                      nodeStart, nodeEnd});
@@ -476,8 +480,8 @@ buildHitsFromDomTblOut(QString hmmerOutput,
                 continue;
         }
 
-        auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-        if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
+        auto nodeIt = g_assemblyGraph->first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+        if (nodeIt != g_assemblyGraph->first()->m_deBruijnGraphNodes.end()) {
             // Only save hits that are on forward strands.
             if (nodeStart > nodeEnd)
                 continue;
@@ -499,8 +503,8 @@ buildHitsFromDomTblOut(QString hmmerOutput,
                                           eValue, bitScore));
         }
 
-        auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.chopped(2).toStdString());
-        if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
+        auto pathIt = g_assemblyGraph->first()->m_deBruijnGraphPaths.find(nodeLabel.chopped(2).toStdString());
+        if (pathIt != g_assemblyGraph->first()->m_deBruijnGraphPaths.end()) {
             bool ok = false;
             unsigned shift = nodeLabel.last(1).toInt(&ok);
             if (!ok || shift > 2)

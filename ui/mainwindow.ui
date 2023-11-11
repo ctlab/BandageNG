@@ -62,7 +62,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>348</width>
+         <width>336</width>
          <height>1858</height>
         </rect>
        </property>
@@ -2661,6 +2661,7 @@ then colour which other nodes in the graph are likely to be contiguous
      <string>File</string>
     </property>
     <addaction name="actionLoad_graph"/>
+    <addaction name="actionLoad_graphs_from_dir"/>
     <addaction name="actionLoad_CSV"/>
     <addaction name="actionLoad_layout"/>
     <addaction name="actionLoad_paths"/>
@@ -3194,6 +3195,15 @@ then colour which other nodes in the graph are likely to be contiguous
    </property>
    <property name="text">
     <string>Load HiC Data</string>
+   </property>
+  </action>
+  <action name="actionLoad_graphs_from_dir">
+   <property name="icon">
+    <iconset resource="../images/images.qrc">
+     <normaloff>:/icons/load-256.png</normaloff>:/icons/load-256.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load graphs from dir</string>
    </property>
   </action>
  </widget>

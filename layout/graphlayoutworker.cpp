@@ -25,6 +25,8 @@
 
 #include "program/settings.h"
 
+#include "painting/textgraphicsitemnode.h"
+
 #include "ogdf/basic/GraphCopy.h"
 #include "ogdf/basic/simple_graph_alg.h"
 #include "ogdf/energybased/FMMMLayout.h"
@@ -34,6 +36,9 @@
 
 #include <QFutureSynchronizer>
 #include <QtConcurrent>
+
+#include <QFont>
+#include <QFontMetrics>
 
 #include <ctime>
 
@@ -584,25 +589,11 @@ static void reassembleDrawings(ogdf::GraphAttributes &GA,
     }
 }
 
-QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QList<QSharedPointer<AssemblyGraph>> graphList) {
+QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphList> graphList) {
     QList<GraphLayout*> resList;
-    double prevX = 0.0;
-    double prevY = 0.0;
-    double maxX = 0.0;
-    double maxY = 0.0;
-    double boardWidth = 200;
-    int maxNumInRow = std::round(std::sqrt(graphList.size()));
-    int curNumInRow = 0;
-    for(QSharedPointer<AssemblyGraph> graph : graphList) {
-        if (curNumInRow < maxNumInRow) {
-            curNumInRow++;
-            prevX = maxX;
-        } else {
-            curNumInRow = 1;
-            prevX = 0;
-            maxX = 0;
-            prevY = maxY;
-        }
+
+    double boardWidth = 400;
+    for(AssemblyGraph* graph : graphList->m_graphList) {
         const AssemblyGraph& refGraph = std::cref(*graph);
         ogdf::Graph G;
         ogdf::EdgeArray<double> edgeLengths(G);
@@ -616,7 +607,7 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QList<QSharedPointer<Assembly
         int numberOfComponents = connectedComponents(G, componentNumber);
         if (numberOfComponents == 0) {
             GraphLayout res(refGraph);
-            resList.append(&res);
+            graph->setLayout(&res);
             continue;
         }
 
@@ -677,10 +668,8 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QList<QSharedPointer<Assembly
         GraphLayout* res = new GraphLayout(refGraph);
         for (const auto & entry : layout) {
             for (ogdf::node node : entry.second) {
-                double curX = GA.x(node) + prevX + boardWidth;
-                double curY = GA.y(node) + prevY + boardWidth;
-                maxX = std::max(maxX, prevX + GA.x(node) + boardWidth);
-                maxY = std::max(maxY, curY);
+                double curX = GA.x(node);
+                double curY = GA.y(node);
                 res->add(entry.first, { curX, curY });
             }
         }
@@ -692,9 +681,50 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QList<QSharedPointer<Assembly
             for (auto rIt = entry.second.rbegin(); rIt != entry.second.rend(); ++rIt)
                 res->add(rcNode, { GA.x(*rIt), GA.y(*rIt) });
         }
-        resList.append(res);
+
+        graph->setLayout(res);
     }
 
+    qreal prevX = 0.0;
+    qreal prevY = 0.0;
+    qreal maxX = 0.0;
+    qreal maxY = -boardWidth;
+    double textWidth = 0.0;
+    int maxNumInRow = std::round(std::sqrt(graphList->size()));
+    int curNumInRow = maxNumInRow;
+
+    std::sort(graphList->m_graphList.begin(), graphList->m_graphList.end(), [](AssemblyGraph* a, AssemblyGraph* b)->bool{return layout::getMaxY(*a->m_layout) > layout::getMaxY(*b->m_layout);});
+
+    for(AssemblyGraph* graph : graphList->m_graphList) {
+        if (curNumInRow < maxNumInRow) {
+            curNumInRow++;
+            maxX = std::max(maxX, prevX + textWidth) + boardWidth;
+            prevX = maxX;
+        } else {
+            curNumInRow = 1;
+            prevX = 0;
+            maxX = 0;
+            prevY = maxY + boardWidth;
+        }
+
+        if (!graph->m_graphName.isEmpty()) {
+            auto textGraphicsItemNode = new TextGraphicsItemNode(graph->m_graphName, QPointF(prevX, prevY));
+            graph->setTextGraphicsItemNode(textGraphicsItemNode);
+            auto textBoard = textGraphicsItemNode->boundingRect();
+            textWidth = textBoard.right() - textBoard.left();
+        }
+
+        for (auto & entry : (*graph->m_layout)) {
+            for (QPointF & point : entry.second) {
+                point.setX(point.x() + prevX);
+                point.setY(point.y() + prevY);
+                maxX = std::max(maxX, point.x());
+                maxY = std::max(maxY, point.y());
+            }
+        }
+        resList.append(graph->m_layout);
+
+    }
     return resList;
 }
 

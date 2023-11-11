@@ -54,4 +54,8 @@ using GraphLayout = GraphLayoutStorage<QPointF>;
 namespace layout {
     GraphLayout fromGraph(const AssemblyGraph &graph, bool simplified = false);
     void apply(AssemblyGraph &graph, const GraphLayout &layout);
+    qreal getMinX(const GraphLayout &layout);
+    qreal getMaxX(const GraphLayout &layout);
+    qreal getMinY(const GraphLayout &layout);
+    qreal getMaxY(const GraphLayout &layout);
 }

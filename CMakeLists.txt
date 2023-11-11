@@ -78,6 +78,8 @@ set(LIB_SOURCES
     hic/hicmanager.cpp
     hic/hicedge.cpp
     graph/graphicsitemedgecommon.cpp
+    graph/assemblygraphlist.cpp
+    painting/textgraphicsitemnode.cpp
     )
 
 set(FORMS
@@ -120,7 +122,7 @@ FetchContent_MakeAvailable(lexy)
 FetchContent_Declare(cli11 GIT_REPOSITORY https://github.com/CLIUtils/CLI11 GIT_TAG main)
 FetchContent_MakeAvailable(cli11)
 
-add_library(BandageLayout STATIC layout/graphlayoutworker.cpp layout/io.cpp layout/graphlayout.cpp layout/customogdftreelayout.cpp layout/featureslayout.cpp layout/treelayoutworker.cpp)
+add_library(BandageLayout STATIC layout/graphlayoutworker.cpp layout/io.cpp layout/graphlayout.cpp layout/customogdftreelayout.cpp layout/featureslayout.cpp layout/treelayoutworker.cpp painting/textgraphicsitemnode.cpp)
 target_link_libraries(BandageLayout PRIVATE OGDF Qt6::Concurrent Qt6::Gui Qt6::Widgets)
 
 add_library(BandageIo STATIC

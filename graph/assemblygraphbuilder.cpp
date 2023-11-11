@@ -230,7 +230,7 @@ namespace io {
                 return placeholder;
             }
 
-            return (graph.m_deBruijnGraphNodes[nodeName] = new DeBruijnNode(nodeName.c_str(), nodeDepth, sequence));
+            return (graph.m_deBruijnGraphNodes[nodeName] = new DeBruijnNode(&graph, nodeName.c_str(), nodeDepth, sequence));
         }
 
         static auto
@@ -565,7 +565,7 @@ namespace io {
             Sequence nodeSequence{};
             if (!node->sequenceIsMissing())
                 nodeSequence = node->getSequence();
-            auto newNode = new DeBruijnNode(reverseComplementName.c_str(), node->getDepth(),
+            auto newNode = new DeBruijnNode(&graph, reverseComplementName.c_str(), node->getDepth(),
                                             nodeSequence.GetReverseComplement(),
                                             node->getLength());
             graph.m_deBruijnGraphNodes.emplace(reverseComplementName, newNode);
@@ -657,7 +657,7 @@ namespace io {
                 if (name.length() < 1)
                     throw "load error";
 
-                auto node = new DeBruijnNode(name, depth, sequence);
+                auto node = new DeBruijnNode(&graph, name, depth, sequence);
                 graph.m_deBruijnGraphNodes.emplace(name.toStdString(), node);
                 makeReverseComplementNodeIfNecessary(graph, node);
             }
@@ -730,7 +730,7 @@ namespace io {
                         nodeDepth = nodeDepthString.toDouble();
 
                         //Make the node
-                        node = new DeBruijnNode(nodeName, nodeDepth,
+                        node = new DeBruijnNode(&graph, nodeName, nodeDepth,
                                                 {}); //Sequence string is currently empty - will be added to on subsequent lines of the fastg file
                         graph.m_deBruijnGraphNodes.emplace(nodeName.toStdString(), node);
 
@@ -853,7 +853,7 @@ namespace io {
                         // ASQG files don't seem to include depth, so just set this to one for every node.
                         double nodeDepth = 1.0;
 
-                        auto node = new DeBruijnNode(nodeName, nodeDepth, sequence, length);
+                        auto node = new DeBruijnNode(&graph, nodeName, nodeDepth, sequence, length);
                         graph.m_deBruijnGraphNodes.emplace(nodeName.toStdString(), node);
                     }
                         // Lines beginning with "ED" are edge lines
@@ -1034,7 +1034,7 @@ namespace io {
 
                         Sequence nodeSequence = sequence.Subseq(nodeRangeStart, nodeRangeEnd + 1);
 
-                        auto node = new DeBruijnNode(nodeName, 1.0, nodeSequence);
+                        auto node = new DeBruijnNode(&graph, nodeName, 1.0, nodeSequence);
                         graph.m_deBruijnGraphNodes.emplace(nodeName.toStdString(), node);
                     }
 

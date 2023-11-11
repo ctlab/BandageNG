@@ -17,7 +17,7 @@
 // along with Bandage.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "graph/assemblygraph.h"
+#include "graph/assemblygraphlist.h"
 #include "features_forest/assemblyfeaturesforest.h"
 #include "hic/hicmanager.h"
 
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
 
     // Create the important global objects.
     g_blastSearch.reset(new search::BlastSearch());
-    g_assemblyGraph = QList<QSharedPointer<AssemblyGraph>>();
+    g_assemblyGraph.reset(new AssemblyGraphList());
     g_hicManager.reset(new HiCManager());
     g_assemblyFeaturesForest.reset(new AssemblyFeaturesForest());
     g_graphicsView = new BandageGraphicsView();

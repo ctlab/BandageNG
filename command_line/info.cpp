@@ -59,19 +59,19 @@ int handleInfoCmd(QApplication *app,
     QTextStream out(stdout);
     QTextStream err(stderr);
 
-    if (!g_assemblyGraph.first()->loadGraphFromFile(cmd.m_graph.c_str())) {
+    if (!g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str())) {
         err << "Bandage-NG error: could not load " << cmd.m_graph.c_str() << Qt::endl;
         return 1;
     }
 
-    int nodeCount = g_assemblyGraph.first()->m_nodeCount;
-    int edgeCount = g_assemblyGraph.first()->m_edgeCount;
-    QPair<int, int> overlapRange = g_assemblyGraph.first()->getOverlapRange();
+    int nodeCount = g_assemblyGraph->first()->m_nodeCount;
+    int edgeCount = g_assemblyGraph->first()->m_edgeCount;
+    QPair<int, int> overlapRange = g_assemblyGraph->first()->getOverlapRange();
     int smallestOverlap = overlapRange.first;
     int largestOverlap = overlapRange.second;
-    int totalLength = g_assemblyGraph.first()->m_totalLength;
-    int totalLengthNoOverlaps = g_assemblyGraph.first()->getTotalLengthMinusEdgeOverlaps();
-    int deadEnds = g_assemblyGraph.first()->getDeadEndCount();
+    int totalLength = g_assemblyGraph->first()->m_totalLength;
+    int totalLengthNoOverlaps = g_assemblyGraph->first()->getTotalLengthMinusEdgeOverlaps();
+    int deadEnds = g_assemblyGraph->first()->getDeadEndCount();
     double percentageDeadEnds = 100.0 * double(deadEnds) / (2 * nodeCount);
 
     int n50 = 0;
@@ -80,15 +80,15 @@ int handleInfoCmd(QApplication *app,
     int median = 0;
     int thirdQuartile = 0;
     int longestNode = 0;
-    g_assemblyGraph.first()->getNodeStats(&n50, &shortestNode, &firstQuartile, &median, &thirdQuartile, &longestNode);
+    g_assemblyGraph->first()->getNodeStats(&n50, &shortestNode, &firstQuartile, &median, &thirdQuartile, &longestNode);
 
     int componentCount = 0;
     int largestComponentLength = 0;
-    g_assemblyGraph.first()->getGraphComponentCountAndLargestComponentSize(&componentCount, &largestComponentLength);
-    long long totalLengthOrphanedNodes = g_assemblyGraph.first()->getTotalLengthOrphanedNodes();
+    g_assemblyGraph->first()->getGraphComponentCountAndLargestComponentSize(&componentCount, &largestComponentLength);
+    long long totalLengthOrphanedNodes = g_assemblyGraph->first()->getTotalLengthOrphanedNodes();
 
-    double medianDepthByBase = g_assemblyGraph.first()->getMedianDepthByBase();
-    long long estimatedSequenceLength = g_assemblyGraph.first()->getEstimatedSequenceLength(medianDepthByBase);
+    double medianDepthByBase = g_assemblyGraph->first()->getMedianDepthByBase();
+    long long estimatedSequenceLength = g_assemblyGraph->first()->getEstimatedSequenceLength(medianDepthByBase);
 
     if (cmd.m_tsv) {
         out << cmd.m_graph.c_str() << "\t"

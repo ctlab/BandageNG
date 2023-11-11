@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <iostream>
 #include "../ui/bandagegraphicsview.h"
+#include "graph/assemblygraphlist.h"
 
 class Path;
 
@@ -46,6 +47,42 @@ public:
     {
         if (m_linePoints.size() > 1) return m_linePoints[m_linePoints.size() - 2];
         else return m_linePoints.front();
+    }
+    qreal getMinX() const {
+        if(m_linePoints.size() > 0) {
+            qreal res = m_linePoints[0].x();
+            for (auto point : m_linePoints)
+                res = std::min(res, point.x());
+            return res;
+        }
+        return 0;
+    }
+    qreal getMaxX() const {
+        if(m_linePoints.size() > 0) {
+            qreal res = m_linePoints[0].x();
+            for (auto point : m_linePoints)
+                res = std::max(res, point.x());
+            return res;
+        }
+        return 0;
+    }
+    qreal getMinY() const {
+        if(m_linePoints.size() > 0) {
+            qreal res = m_linePoints[0].y();
+            for (auto point : m_linePoints)
+                res = std::min(res, point.y());
+            return res;
+        }
+        return 0;
+    }
+    qreal getMaxY() const {
+        if(m_linePoints.size() > 0) {
+            qreal res = m_linePoints[0].y();
+            for (auto point : m_linePoints)
+                res = std::max(res, point.y());
+            return res;
+        }
+        return 0;
     }
     bool isBig() const { return m_linePoints.size() >= 3; }
     bool isOne() const { return m_linePoints.size() == 1; }

@@ -28,12 +28,13 @@
 class DeBruijnEdge;
 class GraphicsItemNode;
 class HiCEdge;
+class AssemblyGraph;
 
 class DeBruijnNode
 {
 public:
     //CREATORS
-    DeBruijnNode(QString name, float depth, const Sequence &sequence, unsigned length = 0);
+    DeBruijnNode(AssemblyGraph* assemblyGraph, QString name, float depth, const Sequence &sequence, unsigned length = 0);
     ~DeBruijnNode() = default;
 
     //ACCESSORS
@@ -110,6 +111,13 @@ public:
     void setComponentId(int componentId) {m_componentId = componentId;}
     int getComponentId() {return m_componentId;}
     bool isNodeUnion() const {return false;}
+
+    QColor m_customColor;
+    QString m_customLabel;
+    AssemblyGraph* m_assemblyGraph;
+
+    const void setCustomColor(QColor color) { m_customColor = color; }
+    void setCustomLabel(QString label) { m_customLabel = label; }
 
 private:
     QString m_name;

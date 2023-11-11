@@ -30,6 +30,7 @@
 #include "features_forest/graphicsitemfeaturenode.h"
 #include "hic/hicedge.h"
 #include "hic/hicmanager.h"
+#include "painting/textgraphicsitemnode.h"
 
 #include <unordered_set>
 
@@ -272,11 +273,29 @@ void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
 
     // Now add the GraphicsItemNode objects to the scene, so they are drawn
     // on top
+    qreal minX, maxX, minY, maxY;
+    bool flag = false;
     for (auto *node : graph.m_deBruijnGraphNodes) {
         if (!node->hasGraphicsItem())
             continue;
-
-        addItem(node->getGraphicsItemNode());
+        GraphicsItemNode * graphicsItemNode = node->getGraphicsItemNode();
+        addItem(graphicsItemNode);
+        if (flag) {
+            maxX = std::max(maxX, graphicsItemNode->getMaxX());
+            minX = std::min(minX, graphicsItemNode->getMinX());
+            maxY = std::max(maxY, graphicsItemNode->getMaxY());
+            minY = std::min(minY, graphicsItemNode->getMinY());
+        } else {
+            minX = graphicsItemNode->getMinX();
+            maxX = graphicsItemNode->getMaxX();
+            minY = graphicsItemNode->getMinY();
+            maxY = graphicsItemNode->getMaxY();
+            flag = true;
+        }
+    }
+    //Add graph name to the scene if need
+    if ((!graph.m_graphName.isEmpty()) && graph.hasTextGraphicsItem()) {
+        addItem(graph.getTextGraphicsItemNode());
     }
 }
 
@@ -452,6 +471,7 @@ void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyFeaturesForest &graph
 
         addItem(node->getGraphicsItemFeatureNode());
     }
+
 }
 
 void BandageGraphicsScene::possiblyExpandSceneRectangle(std::vector<GraphicsItemFeatureNode *> * movedNodes)

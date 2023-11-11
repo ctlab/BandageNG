@@ -569,41 +569,6 @@ void AssemblyGraph::markNodesToDraw(const graph::Scope &scope,
         entry.second->determineIfDrawn();
 }
 
-static QStringList removeNullStringsFromList(const QStringList& in) {
-    QStringList out;
-
-    for (const auto& string : in) {
-        if (string.length() > 0)
-            out.push_back(string);
-    }
-    return out;
-}
-
-bool AssemblyGraph::checkIfStringHasNodes(QString nodesString) {
-    nodesString = nodesString.simplified();
-    QStringList nodesList = nodesString.split(",");
-    nodesList = removeNullStringsFromList(nodesList);
-    return (nodesList.empty());
-}
-
-QString AssemblyGraph::generateNodesNotFoundErrorMessage(std::vector<QString> nodesNotInGraph, bool exact) {
-    QString errorMessage;
-    if (exact)
-        errorMessage += "The following nodes are not in the graph:\n";
-    else
-        errorMessage += "The following queries do not match any nodes in the graph:\n";
-
-    for (size_t i = 0; i < nodesNotInGraph.size(); ++i) {
-        errorMessage += nodesNotInGraph[i];
-        if (i != nodesNotInGraph.size() - 1)
-            errorMessage += ", ";
-    }
-    errorMessage += "\n";
-
-    return errorMessage;
-}
-
-
 std::vector<DeBruijnNode *> AssemblyGraph::getNodesFromString(QString nodeNamesString, bool exactMatch, std::vector<QString> * nodesNotInGraph) const
 {
     nodeNamesString = nodeNamesString.simplified();
@@ -908,8 +873,8 @@ void AssemblyGraph::duplicateNodePair(DeBruijnNode * node, BandageGraphicsScene 
     double newDepth = node->getDepth() / 2.0;
 
     //Create the new nodes.
-    auto * newPosNode = new DeBruijnNode(newPosNodeName, newDepth, originalPosNode->getSequence());
-    auto * newNegNode = new DeBruijnNode(newNegNodeName, newDepth, originalNegNode->getSequence());
+    auto * newPosNode = new DeBruijnNode(this, newPosNodeName, newDepth, originalPosNode->getSequence());
+    auto * newNegNode = new DeBruijnNode(this, newNegNodeName, newDepth, originalNegNode->getSequence());
     newPosNode->setReverseComplement(newNegNode);
     newNegNode->setReverseComplement(newPosNode);
 
@@ -1071,8 +1036,8 @@ bool AssemblyGraph::mergeNodes(QList<DeBruijnNode *> nodes, BandageGraphicsScene
 
     double mergedNodeDepth = getMeanDepth(orderedList);
 
-    auto newPosNode = new DeBruijnNode(newPosNodeName, mergedNodeDepth, mergedNodePosSequence);
-    auto newNegNode = new DeBruijnNode(newNegNodeName, mergedNodeDepth, mergedNodeNegSequence);
+    auto newPosNode = new DeBruijnNode(this, newPosNodeName, mergedNodeDepth, mergedNodePosSequence);
+    auto newNegNode = new DeBruijnNode(this, newNegNodeName, mergedNodeDepth, mergedNodeNegSequence);
 
     newPosNode->setReverseComplement(newNegNode);
     newNegNode->setReverseComplement(newPosNode);
@@ -1275,8 +1240,7 @@ int AssemblyGraph::mergeAllPossible(BandageGraphicsScene * scene,
 }
 
 bool AssemblyGraph::hasCustomColour(const DeBruijnNode* node) const {
-    auto it = m_nodeColors.find(node);
-    return it != m_nodeColors.end() && it->second.isValid();
+    return node->m_customColor.isValid();
 }
 
 bool AssemblyGraph::hasCustomColour(const DeBruijnEdge* edge) const {
@@ -1289,8 +1253,7 @@ bool AssemblyGraph::hasCustomStyle(const DeBruijnEdge* edge) const {
 }
 
 QColor AssemblyGraph::getCustomColour(const DeBruijnNode* node) const {
-    auto it = m_nodeColors.find(node);
-    return it == m_nodeColors.end() ? QColor() : it->second;
+    return node->m_customColor.isValid() ? QColor() : node->m_customColor;
 }
 
 QColor AssemblyGraph::getCustomColour(const DeBruijnEdge* edge) const {
@@ -1304,7 +1267,8 @@ AssemblyGraph::EdgeStyle AssemblyGraph::getCustomStyle(const DeBruijnEdge* edge)
 }
 
 void AssemblyGraph::setCustomColour(const DeBruijnNode* node, QColor color) {
-    m_nodeColors[node] = color;
+    DeBruijnNode& ref = const_cast <DeBruijnNode&>(*node);
+    ref.setCustomColor(color);
 }
 
 void AssemblyGraph::setCustomColour(const DeBruijnEdge* edge, QColor color) {
@@ -1339,13 +1303,13 @@ void AssemblyGraph::setCustomStyle(const DeBruijnEdge* edge, EdgeStyle style) {
 }
 
 QString AssemblyGraph::getCustomLabel(const DeBruijnNode* node) const {
-    auto it = m_nodeLabels.find(node);
-    return it == m_nodeLabels.end() ? QString() : it->second;
+    return node -> m_customLabel;
 }
 
 void AssemblyGraph::setCustomLabel(const DeBruijnNode* node, QString newLabel) {
     newLabel.replace("\t", "    ");
-    m_nodeLabels[node] = newLabel;
+    DeBruijnNode& ref = const_cast <DeBruijnNode&>(*node);
+    ref.setCustomLabel(newLabel);
 }
 
 void AssemblyGraph::clearAllCsvData() {
@@ -1707,33 +1671,4 @@ long long AssemblyGraph::getTotalLengthOrphanedNodes() const {
             total += node->getLength();
     }
     return total;
-}
-
-QStringList AssemblyGraph::getCustomLabelForDisplay(const DeBruijnNode *node) const {
-    QStringList customLabelLines;
-    QString label = getCustomLabel(node);
-    if (!label.isEmpty()) {
-        QStringList labelLines = label.split("\n");
-        for (auto & labelLine : labelLines)
-            customLabelLines << labelLine;
-    }
-
-    DeBruijnNode *rc = node->getReverseComplement();
-    if (!g_settings->doubleMode && !getCustomLabel(rc).isEmpty()) {
-        QStringList labelLines2 = getCustomLabel(rc).split("\n");
-        for (auto & i : labelLines2)
-            customLabelLines << i;
-    }
-    return customLabelLines;
-}
-
-
-QColor AssemblyGraph::getCustomColourForDisplay(const DeBruijnNode *node) const {
-    if (hasCustomColour(node))
-        return getCustomColour(node);
-
-    DeBruijnNode *rc = node->getReverseComplement();
-    if (!g_settings->doubleMode && hasCustomColour(rc))
-        return getCustomColour(rc);
-    return g_settings->defaultCustomNodeColour;
 }

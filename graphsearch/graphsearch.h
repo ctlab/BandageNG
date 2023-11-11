@@ -18,6 +18,7 @@
 #pragma once
 
 #include "queries.h"
+#include "graph/assemblygraphlist.h"
 
 #include <QDir>
 #include <QString>
@@ -83,10 +84,10 @@ public:
     void emptyTempDirectory() const;
 
     virtual int loadQueriesFromFile(QString fullFileName) = 0;
-    virtual QString buildDatabase(const AssemblyGraph &graph, bool includePaths = true) = 0;
+    virtual QString buildDatabase(QSharedPointer<AssemblyGraphList> graphList, bool includePaths = true) = 0;
     virtual QString doSearch(QString extraParameters) = 0;
     virtual QString doSearch(search::Queries &queries, QString extraParameters) = 0;
-    virtual QString doAutoGraphSearch(const AssemblyGraph &graph, QString queriesFilename,
+    virtual QString doAutoGraphSearch(QSharedPointer<AssemblyGraphList> graphList, QString queriesFilename,
                                       bool includePaths = false,
                                       QString extraParameters = "") = 0;
     [[nodiscard]] virtual QString name() const = 0;

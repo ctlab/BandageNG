@@ -19,8 +19,8 @@
 
 #include <QColor>
 #include <QSharedPointer>
+#include "graph/assemblygraphlist.h"
 
-class AssemblyGraph;
 class GraphicsItemNode;
 
 // This needs to be synchronizes with selection combo box!
@@ -53,5 +53,5 @@ public:
     [[nodiscard]] NodeColorScheme scheme() const { return m_scheme; }
 protected:
     NodeColorScheme m_scheme;
-    QList<QSharedPointer<AssemblyGraph>> &m_graphs;
+    QSharedPointer<AssemblyGraphList> m_graphs;
 };

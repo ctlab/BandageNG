@@ -19,6 +19,7 @@
 #include "ui_pathlistdialog.h"
 
 #include "graph/assemblygraph.h"
+#include "graph/assemblygraphlist.h"
 #include "graph/path.h"
 
 #include <QMessageBox>
@@ -74,7 +75,7 @@ void PathListDialog::refineByNode() {
     if (!nodesNotInGraph.empty()) {
         QMessageBox::information(this, "Nodes not found",
                                  // FIXME: This is crazy!
-                                 AssemblyGraph::generateNodesNotFoundErrorMessage(nodesNotInGraph, true));
+                                 AssemblyGraphList::generateNodesNotFoundErrorMessage(nodesNotInGraph, true));
         return;
     }
 

@@ -58,4 +58,45 @@ namespace layout {
         for (auto &entry : graph.m_hicGraphEdges)
             entry.second->determineIfDrawn();
     }
+
+    qreal getMinX(const GraphLayout &layout) {
+        qreal minX = layout.begin()->second[0].x();
+        for (const auto & entry : layout) {
+            for (QPointF point : entry.second) {
+                minX = std::min(minX, point.x());
+            }
+        }
+        return minX;
+    }
+
+    qreal getMaxX(const GraphLayout &layout) {
+        qreal maxX = layout.begin()->second[0].x();
+        for (const auto & entry : layout) {
+            for (QPointF point : entry.second) {
+                maxX = std::max(maxX, point.x());
+            }
+        }
+        return maxX;
+    }
+
+
+    qreal getMinY(const GraphLayout &layout) {
+        qreal minY= layout.begin()->second[0].y();
+        for (const auto & entry : layout) {
+            for (QPointF point : entry.second) {
+                minY = std::min(minY, point.y());
+            }
+        }
+        return minY;
+    }
+
+    qreal getMaxY(const GraphLayout &layout) {
+        qreal maxY = layout.begin()->second[0].y();
+        for (const auto & entry : layout) {
+            for (QPointF point : entry.second) {
+                maxY = std::max(maxY, point.y());
+            }
+        }
+        return maxY;
+    }
 }

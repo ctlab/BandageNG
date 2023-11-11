@@ -30,6 +30,8 @@
 
 #include <cmath>
 
+#include<QDebug>
+
 using namespace search;
 
 BlastSearch::BlastSearch(const QDir &workDir, QObject *parent)
@@ -52,7 +54,7 @@ bool BlastSearch::findTools() {
     return true;
 }
 
-QString BlastSearch::buildDatabase(const AssemblyGraph &graph, bool includePaths) {
+QString BlastSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, bool includePaths) {
     DbBuildFinishedRAII watcher(this);
 
     m_lastError = "";
@@ -65,34 +67,39 @@ QString BlastSearch::buildDatabase(const AssemblyGraph &graph, bool includePaths
     m_cancelBuildDatabase = false;
 
     QFile file(temporaryDir().filePath("all_nodes.fasta"));
+    qInfo() << (file.fileName());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return (m_lastError = "Failed to open: " + file.fileName());
 
     {
         QTextStream out(&file);
-        for (const auto *node : graph.m_deBruijnGraphNodes) {
-            if (m_cancelBuildDatabase)
-                return (m_lastError = "Build cancelled.");
-
-            out << node->getFasta(true, false, false);
-        }
-
-        if (includePaths) {
-            for (auto it = graph.m_deBruijnGraphPaths.begin(); it != graph.m_deBruijnGraphPaths.end(); ++it) {
+        for (AssemblyGraph* graph: graphList->m_graphList) {
+            for (const auto *node : graph->m_deBruijnGraphNodes) {
                 if (m_cancelBuildDatabase)
                     return (m_lastError = "Build cancelled.");
 
-                out << it.value()->getFasta(it.key().c_str());
+                out << node->getFasta(true, false, false);
+            }
+
+            if (includePaths) {
+                for (auto it = graph->m_deBruijnGraphPaths.begin(); it != graph->m_deBruijnGraphPaths.end(); ++it) {
+                    if (m_cancelBuildDatabase)
+                        return (m_lastError = "Build cancelled.");
+
+                    out << it.value()->getFasta(it.key().c_str());
+                }
             }
         }
     }
 
     // Make sure the graph has sequences
     bool atLeastOneSequence = false;
-    for (const auto *node : graph.m_deBruijnGraphNodes) {
-        if (!node->sequenceIsMissing()) {
-            atLeastOneSequence = true;
-            break;
+    for (AssemblyGraph* graph: graphList->m_graphList) {
+        for (const auto *node : graph->m_deBruijnGraphNodes) {
+            if (!node->sequenceIsMissing()) {
+                atLeastOneSequence = true;
+                break;
+            }
         }
     }
 
@@ -235,12 +242,12 @@ QString BlastSearch::doSearch(Queries &queries, QString extraParameters) {
 
 //This function carries out the entire BLAST search procedure automatically, without user input.
 //It returns an error string which is empty if all goes well.
-QString BlastSearch::doAutoGraphSearch(const AssemblyGraph &graph, QString queriesFilename,
+QString BlastSearch::doAutoGraphSearch(QSharedPointer<AssemblyGraphList> graphList, QString queriesFilename,
                                        bool includePaths,
                                        QString extraParameters) {
     cleanUp();
 
-    QString maybeError = buildDatabase(graph, includePaths); // It is expected that buildDatabase will setup last error as well
+    QString maybeError = buildDatabase(graphList, includePaths); // It is expected that buildDatabase will setup last error as well
     if (!maybeError.isEmpty())
         return maybeError;
 
@@ -337,73 +344,75 @@ buildHitsFromBlastOutput(QString blastOutput,
 
     QStringList blastHitList = blastOutput.split("\n", Qt::SkipEmptyParts);
 
-    for (const auto &hitString : blastHitList) {
-        QStringList alignmentParts = hitString.split('\t');
+    for(auto graph : g_assemblyGraph->m_graphList) {
+        for (const auto &hitString : blastHitList) {
+            QStringList alignmentParts = hitString.split('\t');
 
-        if (alignmentParts.size() < 12)
-            continue;
-
-        QString queryName = alignmentParts[0];
-        QString nodeLabel = alignmentParts[1];
-        double percentIdentity = alignmentParts[2].toDouble();
-        int alignmentLength = alignmentParts[3].toInt();
-        int numberMismatches = alignmentParts[4].toInt();
-        int numberGapOpens = alignmentParts[5].toInt();
-        int queryStart = alignmentParts[6].toInt();
-        int queryEnd = alignmentParts[7].toInt();
-        int nodeStart = alignmentParts[8].toInt();
-        int nodeEnd = alignmentParts[9].toInt();
-        SciNot eValue(alignmentParts[10]);
-        double bitScore = alignmentParts[11].toDouble();
-
-        Query *query = queries.getQueryFromName(queryName);
-        if (query == nullptr)
-            continue;
-
-        // Check the user-defined filters.
-        if (g_settings->blastIdentityFilter.on &&
-            percentIdentity < g_settings->blastIdentityFilter)
-            continue;
-
-        if (g_settings->blastEValueFilter.on &&
-            eValue > g_settings->blastEValueFilter)
-            continue;
-
-        if (g_settings->blastBitScoreFilter.on &&
-            bitScore < g_settings->blastBitScoreFilter)
-            continue;
-
-        if (g_settings->blastAlignmentLengthFilter.on &&
-            alignmentLength < g_settings->blastAlignmentLengthFilter)
-            continue;
-
-        if (g_settings->blastQueryCoverageFilter.on) {
-            double hitCoveragePercentage = 100.0 * Hit::getQueryCoverageFraction(query,
-                                                                                 queryStart, queryEnd);
-            if (hitCoveragePercentage < g_settings->blastQueryCoverageFilter)
+            if (alignmentParts.size() < 12)
                 continue;
-        }
 
-            auto nodeIt = g_assemblyGraph.first()->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
-            if (nodeIt != g_assemblyGraph.first()->m_deBruijnGraphNodes.end()) {
-                // Only save BLAST hits that are on forward strands.
-                if (nodeStart > nodeEnd)
+            QString queryName = alignmentParts[0];
+            QString nodeLabel = alignmentParts[1];
+            double percentIdentity = alignmentParts[2].toDouble();
+            int alignmentLength = alignmentParts[3].toInt();
+            int numberMismatches = alignmentParts[4].toInt();
+            int numberGapOpens = alignmentParts[5].toInt();
+            int queryStart = alignmentParts[6].toInt();
+            int queryEnd = alignmentParts[7].toInt();
+            int nodeStart = alignmentParts[8].toInt();
+            int nodeEnd = alignmentParts[9].toInt();
+            SciNot eValue(alignmentParts[10]);
+            double bitScore = alignmentParts[11].toDouble();
+
+            Query *query = queries.getQueryFromName(queryName);
+            if (query == nullptr)
+                continue;
+
+            // Check the user-defined filters.
+            if (g_settings->blastIdentityFilter.on &&
+                percentIdentity < g_settings->blastIdentityFilter)
+                continue;
+
+            if (g_settings->blastEValueFilter.on &&
+                eValue > g_settings->blastEValueFilter)
+                continue;
+
+            if (g_settings->blastBitScoreFilter.on &&
+                bitScore < g_settings->blastBitScoreFilter)
+                continue;
+
+            if (g_settings->blastAlignmentLengthFilter.on &&
+                alignmentLength < g_settings->blastAlignmentLengthFilter)
+                continue;
+
+            if (g_settings->blastQueryCoverageFilter.on) {
+                double hitCoveragePercentage = 100.0 * Hit::getQueryCoverageFraction(query,
+                                                                                     queryStart, queryEnd);
+                if (hitCoveragePercentage < g_settings->blastQueryCoverageFilter)
                     continue;
-
-                nodeHits.emplace_back(query,
-                                      new Hit(query, nodeIt.value(),
-                                              percentIdentity, alignmentLength,
-                                              numberMismatches, numberGapOpens,
-                                              queryStart, queryEnd,
-                                              nodeStart, nodeEnd, eValue, bitScore));
             }
 
-            auto pathIt = g_assemblyGraph.first()->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
-            if (pathIt != g_assemblyGraph.first()->m_deBruijnGraphPaths.end()) {
-                pathHits.emplace_back(query, pathIt.value(),
-                                      Path::MappingRange{queryStart, queryEnd,
-                                                         nodeStart, nodeEnd});
-            }
+                auto nodeIt = graph->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
+                if (nodeIt != graph->m_deBruijnGraphNodes.end()) {
+                    // Only save BLAST hits that are on forward strands.
+                    if (nodeStart > nodeEnd)
+                        continue;
+
+                    nodeHits.emplace_back(query,
+                                          new Hit(query, nodeIt.value(),
+                                                  percentIdentity, alignmentLength,
+                                                  numberMismatches, numberGapOpens,
+                                                  queryStart, queryEnd,
+                                                  nodeStart, nodeEnd, eValue, bitScore));
+                }
+
+                auto pathIt = graph->m_deBruijnGraphPaths.find(nodeLabel.toStdString());
+                if (pathIt != graph->m_deBruijnGraphPaths.end()) {
+                    pathHits.emplace_back(query, pathIt.value(),
+                                          Path::MappingRange{queryStart, queryEnd,
+                                                             nodeStart, nodeEnd});
+                }
+        }
 
     }
 

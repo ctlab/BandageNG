@@ -37,8 +37,9 @@
 
 //The length parameter is optional.  If it is set, then the node will use that
 //for its length.  If not set, it will just use the sequence length.
-DeBruijnNode::DeBruijnNode(QString name, float depth, const Sequence& sequence, unsigned length)
-        : m_name(std::move(name)),
+DeBruijnNode::DeBruijnNode(AssemblyGraph* assemblyGraph, QString name, float depth, const Sequence& sequence, unsigned length)
+        : m_assemblyGraph(assemblyGraph),
+          m_name(std::move(name)),
           m_depth(depth),
           m_sequence(sequence),
           m_reverseComplement(nullptr),

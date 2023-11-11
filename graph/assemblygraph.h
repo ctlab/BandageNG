@@ -24,7 +24,7 @@
 #include "path.h"
 #include "annotation.h"
 #include "graphscope.h"
-
+#include "layout/graphlayout.h"
 #include "io/gfa.h"
 
 #include "seq/sequence.hpp"
@@ -43,6 +43,7 @@ class DeBruijnEdge;
 class HiCEdge;
 class MyProgressDialog;
 class BandageGraphicsScene;
+class TextGraphicsItemNode;
 
 class AssemblyGraphError : public std::runtime_error {
   public:
@@ -66,6 +67,9 @@ public:
     AssemblyGraph();
     ~AssemblyGraph() override;
 
+    GraphLayout* m_layout;
+    void setLayout(GraphLayout* layout) {m_layout = layout;}
+    qreal maxY;
     //Nodes are stored in a map with a key of the node's name.
     tsl::htrie_map<char, DeBruijnNode*> m_deBruijnGraphNodes;
 
@@ -114,6 +118,8 @@ public:
     QString m_filename;
     QString m_depthTag;
     SequencesLoadedFromFasta m_sequencesLoadedFromFasta;
+    QString m_graphName;
+
 
     void cleanUp();
     void createDeBruijnEdge(const QString& node1Name, const QString& node2Name,
@@ -136,9 +142,6 @@ public:
 
     bool loadCSV(const QString& filename, QStringList * columns, QString * errormsg, bool * coloursLoaded);
 
-    static bool checkIfStringHasNodes(QString nodesString);
-    static QString generateNodesNotFoundErrorMessage(std::vector<QString> nodesNotInGraph,
-                                              bool exact);
     std::vector<DeBruijnNode *> getNodesFromString(QString nodeNamesString,
                                                    bool exactMatch,
                                                    std::vector<QString> * nodesNotInGraph = nullptr) const;
@@ -192,21 +195,21 @@ public:
     void setCsvData(const DeBruijnNode* node, QStringList csvData);
     void clearCsvData(const DeBruijnNode* node);
 
-    QColor getCustomColourForDisplay(const DeBruijnNode *node) const;
-    QStringList getCustomLabelForDisplay(const DeBruijnNode *node) const;
-
-
     QString getUniqueNodeName(QString baseName) const;
     QString getNodeNameFromString(QString string) const;
 
     std::vector<DeBruijnNode *> getNodesInDepthRange(double min, double max) const;
+    void setTextGraphicsItemNode(TextGraphicsItemNode * gin) {m_textGraphicsItemNode = gin;}
+    TextGraphicsItemNode * getTextGraphicsItemNode() const {return m_textGraphicsItemNode;}
+    bool hasTextGraphicsItem() const {return m_textGraphicsItemNode != nullptr;}
+    void setGraphName(QString name) { m_graphName = name;}
 private:
     std::vector<DeBruijnNode *> getNodesFromListExact(const QStringList& nodesList, std::vector<QString> * nodesNotInGraph) const;
     std::vector<DeBruijnNode *> getNodesFromListPartial(const QStringList& nodesList, std::vector<QString> * nodesNotInGraph) const;
     std::vector<int> makeOverlapCountVector();
     void clearAllCsvData();
     QString getNewNodeName(QString oldNodeName) const;
-
+    TextGraphicsItemNode* m_textGraphicsItemNode;
 signals:
     void setMergeTotalCount(int totalCount);
     void setMergeCompletedCount(int completedCount);
