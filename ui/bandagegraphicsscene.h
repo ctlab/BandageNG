@@ -33,6 +33,7 @@ class AssemblyFeaturesForest;
 class GraphicsItemFeatureNode;
 class CommonGraphicsItemNode;
 class FeatureTreeNode;
+class TextGraphicsItemNode;
 
 class BandageGraphicsScene : public QGraphicsScene
 {
@@ -67,6 +68,7 @@ public:
     void possiblyExpandSceneRectangle(std::vector<GraphicsItemFeatureNode *> * movedNodes);
     std::vector<GraphicsItemFeatureNode*> getSelectedGraphicsItemFeatureNode();
     std::vector<FeatureTreeNode *> getSelectedFeatureNodes();
+    void possiblyExpandSceneRectangle(TextGraphicsItemNode * movedText);
 
 private:
     void removeGraphicsItemNodes(const std::unordered_set<GraphicsItemNode*> &nodes);

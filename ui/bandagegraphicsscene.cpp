@@ -207,6 +207,19 @@ void BandageGraphicsScene::possiblyExpandSceneRectangle(std::vector<GraphicsItem
         setSceneRect(newSceneRect);
 }
 
+void BandageGraphicsScene::possiblyExpandSceneRectangle(TextGraphicsItemNode * movedText)
+{
+    QRectF currentSceneRect = sceneRect();
+    QRectF newSceneRect = currentSceneRect;
+
+    QRectF nodeRect = movedText->boundingRect();
+    newSceneRect = newSceneRect.united(nodeRect);
+
+
+    if (newSceneRect != currentSceneRect)
+        setSceneRect(newSceneRect);
+}
+
 void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
                                                    const GraphLayout &layout) {
 
@@ -295,7 +308,10 @@ void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
     }
     //Add graph name to the scene if need
     if ((!graph.m_graphName.isEmpty()) && graph.hasTextGraphicsItem()) {
-        addItem(graph.getTextGraphicsItemNode());
+        auto textGraphicsItem = graph.getTextGraphicsItemNode();
+        textGraphicsItem->setFlag(QGraphicsItem::ItemIsSelectable);
+        textGraphicsItem->setFlag(QGraphicsItem::ItemIsMovable);
+        addItem(textGraphicsItem);
     }
 }
 

@@ -9,13 +9,14 @@ public:
     TextGraphicsItemNode(QString text,
                          const QPointF centre,
                          QGraphicsItem * parent = nullptr);
-    const QPointF m_centre;
+    QPointF m_centre;
     QString m_text;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem *, QWidget *) override;
 
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
     void drawTextPathAtLocation(QPainter * painter, const QPainterPath &textPath);
-    void mousePressEvent(QGraphicsSceneMouseEvent * event);
+    void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
 };
 #endif // TEXTGRAPHICSITEMNODE_H

@@ -2,6 +2,8 @@
 #include "program/globals.h"
 #include "program/settings.h"
 
+#include "ui/bandagegraphicsscene.h"
+
 TextGraphicsItemNode::TextGraphicsItemNode(QString text,
                                    const QPointF centre,
                                    QGraphicsItem *parent)
@@ -13,8 +15,8 @@ QRectF TextGraphicsItemNode::boundingRect() const
 {
     auto text = shape();
     text.translate(m_centre);
-    QRectF bound = text.boundingRect();
 
+    QRectF bound = text.boundingRect();
     bound.setTop(bound.top() - 0.5);
     bound.setBottom(bound.bottom() + 0.5);
     bound.setLeft(bound.left() - 0.5);
@@ -85,4 +87,16 @@ void TextGraphicsItemNode::drawTextPathAtLocation(QPainter * painter, const QPai
 void TextGraphicsItemNode::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     updateGrabIndex(event);
+}
+
+//When this node graphics item is moved, each of the connected edge
+//graphics items will need to be adjusted accordingly.
+void TextGraphicsItemNode::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
+{
+        QPointF difference = event->pos() - event->lastPos();
+        auto *graphicsScene = dynamic_cast<BandageGraphicsScene *>(scene());
+
+
+        m_centre += difference;
+        graphicsScene->possiblyExpandSceneRectangle(this);
 }

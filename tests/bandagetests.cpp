@@ -831,11 +831,11 @@ void BandageTests::graphLayout() {
         g_assemblyGraph->first()->markNodesToDraw(scope, startingNodes);
         QCOMPARE(g_assemblyGraph->first()->getDrawnNodeCount(), 44);
 
-        auto layout = GraphLayoutWorker(g_settings->graphLayoutQuality,
+        QList<GraphLayout*> layout = GraphLayoutWorker(g_settings->graphLayoutQuality,
                                         g_settings->linearLayout,
                                         g_settings->componentSeparation).layoutGraph(g_assemblyGraph);
 
-        QCOMPARE(layout.size(), 44);
+        QCOMPARE(layout.first()->size(), 44);
     }
 
     {
@@ -852,7 +852,7 @@ void BandageTests::graphLayout() {
                                         g_settings->linearLayout,
                                         g_settings->componentSeparation).layoutGraph(g_assemblyGraph);
 
-        QCOMPARE(layout.size(), 88);
+        QCOMPARE(layout.first()->size(), 88);
     }
 }
 
