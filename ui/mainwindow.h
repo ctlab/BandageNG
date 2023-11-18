@@ -129,8 +129,9 @@ private:
 public slots:
     void zoomedFeaturesWithMouseWheel();
 private slots:
-    void loadGraph(QString fullFileName = "",  QString graphName = "", bool printWarning = true);
+    void loadGraph(QString fullFileName = "",  QString graphName = "", bool isSingleGraphMode = true);
     void loadGraphs(QString fullDirName = "", QString basePath = "");
+    void loadGraphsIter(QString fullDirName, QString basePath);
     void loadCSV(QString fullFileName = "");
     void loadGraphLayout(QString fullFileName = "");
     void loadGraphPaths(QString fullFileName = "");

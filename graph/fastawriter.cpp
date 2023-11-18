@@ -25,7 +25,7 @@ namespace utils {
     bool saveEntireGraphToFasta(const QString &filename,
                                 const AssemblyGraph &graph) {
         QFile file(filename);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        if (!file.open(QIODevice::Append | QIODevice::Text))
             return false;
 
         QTextStream out(&file);
@@ -38,7 +38,7 @@ namespace utils {
     bool saveEntireGraphToFastaOnlyPositiveNodes(const QString &filename,
                                                  const AssemblyGraph &graph) {
         QFile file(filename);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        if (!file.open(QIODevice::Append | QIODevice::Text))
             return false;
 
         QTextStream out(&file);

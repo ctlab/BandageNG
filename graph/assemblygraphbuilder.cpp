@@ -230,7 +230,7 @@ namespace io {
                 return placeholder;
             }
 
-            return (graph.m_deBruijnGraphNodes[nodeName] = new DeBruijnNode(&graph, nodeName.c_str(), nodeDepth, sequence));
+            return (graph.m_deBruijnGraphNodes[nodeName] = new DeBruijnNode(graph.getGraphId(), nodeName.c_str(), nodeDepth, sequence));
         }
 
         static auto
@@ -294,8 +294,9 @@ namespace io {
                            AssemblyGraph &graph) {
             bool sequencesAreMissing = false;
 
-            std::string nodeName{record.name};
+            std::string nodeName{std::to_string(graph.getGraphId()) + "_"};
             const auto &seq = record.seq;
+            nodeName += record.name;
 
             // We check to see if the node ended in a "+" or "-".
             // If so, we assume that is giving the orientation and leave it.
@@ -429,9 +430,9 @@ namespace io {
 
         void handleLink(const gfa::link &record,
                         AssemblyGraph &graph) {
-            std::string fromNode{record.lhs};
+            std::string fromNode{std::to_string(graph.getGraphId()) + "_" + std::string(record.lhs)};
             fromNode.push_back(record.lhs_revcomp ? '-' : '+');
-            std::string toNode{record.rhs};
+            std::string toNode{std::to_string(graph.getGraphId()) + "_" + std::string(record.rhs)};
             toNode.push_back(record.rhs_revcomp ? '-' : '+');
 
             auto [edgePtr, rcEdgePtr] =
@@ -459,9 +460,9 @@ namespace io {
         void handleGapLink(const gfa::gaplink &record,
                            AssemblyGraph &graph) {
             // FIXME: get rid of severe duplication!
-            std::string fromNode{record.lhs};
+            std::string fromNode{std::to_string(graph.getGraphId()) + "_" + std::string(record.lhs)};
             fromNode.push_back(record.lhs_revcomp ? '-' : '+');
-            std::string toNode{record.rhs};
+            std::string toNode{std::to_string(graph.getGraphId()) + "_" + std::string(record.rhs)};
             toNode.push_back(record.rhs_revcomp ? '-' : '+');
 
             auto [edgePtr, rcEdgePtr] =
@@ -489,10 +490,9 @@ namespace io {
         void handlePath(const gfa::path &record,
                         AssemblyGraph &graph) {
             std::vector<DeBruijnNode *> pathNodes;
-            pathNodes.reserve(record.segments.size());
-
+            pathNodes.reserve(record.segments.size());            
             for (const auto &node: record.segments)
-                pathNodes.push_back(graph.m_deBruijnGraphNodes.at(node));
+                pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + std::string(node)));
             graph.m_deBruijnGraphPaths[record.name] = new Path(Path::makeFromOrderedNodes(pathNodes, false));
         }
 
@@ -565,7 +565,7 @@ namespace io {
             Sequence nodeSequence{};
             if (!node->sequenceIsMissing())
                 nodeSequence = node->getSequence();
-            auto newNode = new DeBruijnNode(&graph, reverseComplementName.c_str(), node->getDepth(),
+            auto newNode = new DeBruijnNode(graph.getGraphId(), reverseComplementName.c_str(), node->getDepth(),
                                             nodeSequence.GetReverseComplement(),
                                             node->getLength());
             graph.m_deBruijnGraphNodes.emplace(reverseComplementName, newNode);
@@ -586,7 +586,6 @@ namespace io {
             //Remove any trailing + or -.
             if (name.endsWith('+') || name.endsWith('-'))
                 name.chop(1);
-
             return name;
         }
 
@@ -632,6 +631,7 @@ namespace io {
                         name = nameParts[0];
                 }
 
+                name = QString::number(graph.getGraphId()) + "_" + name;
                 name = cleanNodeName(name);
                 name = graph.getUniqueNodeName(name) + "+";
 
@@ -657,7 +657,7 @@ namespace io {
                 if (name.length() < 1)
                     throw "load error";
 
-                auto node = new DeBruijnNode(&graph, name, depth, sequence);
+                auto node = new DeBruijnNode(graph.getGraphId(), name, depth, sequence);
                 graph.m_deBruijnGraphNodes.emplace(name.toStdString(), node);
                 makeReverseComplementNodeIfNecessary(graph, node);
             }
@@ -720,7 +720,7 @@ namespace io {
                             nodeName += "+";
                         if (graph.m_deBruijnGraphNodes.count(nodeName.toStdString()))
                             throw "load error";
-
+                        nodeName = QString::number(graph.getGraphId()) + "_" + nodeName;
                         QString nodeDepthString = thisNodeDetails.at(5);
                         if (negativeNode) {
                             //It may be necessary to remove a single quote from the end of the depth
@@ -730,7 +730,7 @@ namespace io {
                         nodeDepth = nodeDepthString.toDouble();
 
                         //Make the node
-                        node = new DeBruijnNode(&graph, nodeName, nodeDepth,
+                        node = new DeBruijnNode(graph.getGraphId(), nodeName, nodeDepth,
                                                 {}); //Sequence string is currently empty - will be added to on subsequent lines of the fastg file
                         graph.m_deBruijnGraphNodes.emplace(nodeName.toStdString(), node);
 
@@ -757,6 +757,7 @@ namespace io {
                                 edgeNodeName += "-";
                             else
                                 edgeNodeName += "+";
+                            edgeNodeName = QString::number(graph.getGraphId()) + "_" + edgeNodeName;
 
                             edgeStartingNodeNames.push_back(nodeName);
                             edgeEndingNodeNames.push_back(edgeNodeName);
@@ -846,6 +847,7 @@ namespace io {
                         if (nodeName.isEmpty())
                             nodeName = "node";
                         nodeName += "+";
+                        nodeName = QString::number(graph.getGraphId()) + "_" + nodeName;
 
                         Sequence sequence{lineParts.at(2).toLocal8Bit()};
                         int length = static_cast<int>(sequence.size());
@@ -853,7 +855,7 @@ namespace io {
                         // ASQG files don't seem to include depth, so just set this to one for every node.
                         double nodeDepth = 1.0;
 
-                        auto node = new DeBruijnNode(&graph, nodeName, nodeDepth, sequence, length);
+                        auto node = new DeBruijnNode(graph.getGraphId(), nodeName, nodeDepth, sequence, length);
                         graph.m_deBruijnGraphNodes.emplace(nodeName.toStdString(), node);
                     }
                         // Lines beginning with "ED" are edge lines
@@ -868,8 +870,8 @@ namespace io {
                         if (edgeParts.size() < 8)
                             throw "load error";
 
-                        QString s1Name = edgeParts.at(0);
-                        QString s2Name = edgeParts.at(1);
+                        QString s1Name = QString::number(graph.getGraphId()) + "_" + edgeParts.at(0);
+                        QString s2Name = QString::number(graph.getGraphId()) + "_" + edgeParts.at(1);
                         int s1OverlapStart = edgeParts.at(2).toInt();
                         int s1OverlapEnd = edgeParts.at(3).toInt();
                         int s1Length = edgeParts.at(4).toInt();
@@ -1019,7 +1021,7 @@ namespace io {
                     if (nodeNumberString.at(0) == '@')
                         nodeNumberString = nodeNumberString.mid(1, nodeNumberString.length() - 3);
 
-                    QString nodeName = component + "_" + nodeNumberString + "+";
+                    QString nodeName = QString::number(graph.getGraphId()) + "_" + component + "_" + nodeNumberString + "+";
 
                     //If the node doesn't yet exist, make it now.
                     if (!graph.m_deBruijnGraphNodes.count(nodeName.toStdString())) {
@@ -1034,7 +1036,7 @@ namespace io {
 
                         Sequence nodeSequence = sequence.Subseq(nodeRangeStart, nodeRangeEnd + 1);
 
-                        auto node = new DeBruijnNode(&graph, nodeName, 1.0, nodeSequence);
+                        auto node = new DeBruijnNode(graph.getGraphId(), nodeName, 1.0, nodeSequence);
                         graph.m_deBruijnGraphNodes.emplace(nodeName.toStdString(), node);
                     }
 

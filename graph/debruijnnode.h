@@ -20,6 +20,7 @@
 #include "llvm/ADT/iterator_range.h"
 #include "seq/sequence.hpp"
 #include "small_vector/small_pod_vector.hpp"
+//#include "graph/assemblygraph.h"
 
 #include <QColor>
 #include <QByteArray>
@@ -28,13 +29,13 @@
 class DeBruijnEdge;
 class GraphicsItemNode;
 class HiCEdge;
-class AssemblyGraph;
+//class AssemblyGraph;
 
 class DeBruijnNode
 {
 public:
     //CREATORS
-    DeBruijnNode(AssemblyGraph* assemblyGraph, QString name, float depth, const Sequence &sequence, unsigned length = 0);
+    DeBruijnNode(int graphId, QString name, float depth, const Sequence &sequence, unsigned length = 0);
     ~DeBruijnNode() = default;
 
     //ACCESSORS
@@ -43,6 +44,7 @@ public:
     QString getSign() const {if (m_name.length() > 0) return m_name.right(1); else return "+";}
 
     double getDepth() const {return m_depth;}
+    int getGraphId() const {return m_graphId;}
 
     float getGC() const;
 
@@ -114,11 +116,10 @@ public:
 
     QColor m_customColor;
     QString m_customLabel;
-    AssemblyGraph* m_assemblyGraph;
+    int m_graphId;
 
     const void setCustomColor(QColor color) { m_customColor = color; }
     void setCustomLabel(QString label) { m_customLabel = label; }
-
 private:
     QString m_name;
     Sequence m_sequence;

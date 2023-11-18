@@ -162,7 +162,7 @@ namespace gfa {
     bool saveEntireGraph(const QString &filename,
                          const AssemblyGraph &graph) {
         QFile file(filename);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        if (!file.open(QIODevice::Append | QIODevice::Text))
             return false;
 
         QTextStream out(&file);
@@ -192,7 +192,7 @@ namespace gfa {
 
     bool saveVisibleGraph(const QString &filename, const AssemblyGraph &graph) {
         QFile file(filename);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        if (!file.open(QIODevice::Append | QIODevice::Text))
             return false;
 
         QTextStream out(&file);

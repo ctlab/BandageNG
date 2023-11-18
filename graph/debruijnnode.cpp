@@ -18,7 +18,6 @@
 
 #include "debruijnnode.h"
 #include "debruijnedge.h"
-#include "assemblygraph.h"
 #include "sequenceutils.h"
 
 #include "hic/hicedge.h"
@@ -35,10 +34,13 @@
 #include <QApplication>
 #include <QSet>
 
+
+#include<QDebug>
+
 //The length parameter is optional.  If it is set, then the node will use that
 //for its length.  If not set, it will just use the sequence length.
-DeBruijnNode::DeBruijnNode(AssemblyGraph* assemblyGraph, QString name, float depth, const Sequence& sequence, unsigned length)
-        : m_assemblyGraph(assemblyGraph),
+DeBruijnNode::DeBruijnNode(const int graphId, QString name, float depth, const Sequence& sequence, unsigned length)
+        : m_graphId(graphId),
           m_name(std::move(name)),
           m_depth(depth),
           m_sequence(sequence),
@@ -47,6 +49,7 @@ DeBruijnNode::DeBruijnNode(AssemblyGraph* assemblyGraph, QString name, float dep
           m_specialNode(false),
           m_drawn(false) {
     m_length = length > 0 ? length : sequence.size();
+    qInfo() << QString("NodeName (constr) ") << m_name;
 }
 
 

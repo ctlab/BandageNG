@@ -30,8 +30,6 @@
 
 #include <cmath>
 
-#include<QDebug>
-
 using namespace search;
 
 BlastSearch::BlastSearch(const QDir &workDir, QObject *parent)
@@ -67,7 +65,6 @@ QString BlastSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, 
     m_cancelBuildDatabase = false;
 
     QFile file(temporaryDir().filePath("all_nodes.fasta"));
-    qInfo() << (file.fileName());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return (m_lastError = "Failed to open: " + file.fileName());
 
@@ -392,6 +389,7 @@ buildHitsFromBlastOutput(QString blastOutput,
                     continue;
             }
 
+                auto name = getNodeNameFromString(nodeLabel);
                 auto nodeIt = graph->m_deBruijnGraphNodes.find(getNodeNameFromString(nodeLabel).toStdString());
                 if (nodeIt != graph->m_deBruijnGraphNodes.end()) {
                     // Only save BLAST hits that are on forward strands.

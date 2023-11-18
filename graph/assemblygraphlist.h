@@ -26,7 +26,6 @@ public:
     void append(AssemblyGraph* graph) { m_graphList.append(graph); }
     void clear() { m_graphList.clear(); }
     size_t size() const { return m_graphList.size(); }
-    QList<AssemblyGraph*> m_graphList;
 
     QColor getCustomColourForDisplay(const DeBruijnNode *node) const;
     QStringList getCustomLabelForDisplay(const DeBruijnNode *node) const;
@@ -68,6 +67,8 @@ public:
     static bool checkIfStringHasNodes(QString nodesString);
     static QString generateNodesNotFoundErrorMessage(std::vector<QString> nodesNotInGraph,
                                               bool exact);
+
+    QList<AssemblyGraph*> m_graphList;
 
 private:
 

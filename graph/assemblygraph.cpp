@@ -39,6 +39,7 @@
 #include <QQueue>
 #include <QRegularExpression>
 #include <QSet>
+#include<QDebug>
 
 #include <algorithm>
 #include <limits>
@@ -397,7 +398,7 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
         std::vector<DeBruijnNode *> nodes;
         // See if this is a path name
         {
-            auto pathIt = m_deBruijnGraphPaths.find(nodeName.toStdString());
+            auto pathIt = m_deBruijnGraphPaths.find(std::to_string(getGraphId()) + "_" + nodeName.toStdString());
             if (pathIt != m_deBruijnGraphPaths.end()) {
                 for (auto *node : (*pathIt)->nodes()) {
                     nodes.emplace_back(node);
@@ -409,7 +410,10 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         // Just node name
         if (nodes.empty()) {
+            qInfo() << "CSV input node name: " << nodeName;
+            QString newNodeName = getNodeNameFromString(nodeName);
             auto nodeIt = m_deBruijnGraphNodes.find(getNodeNameFromString(nodeName).toStdString());
+            qInfo() << "CSV new node name: " << newNodeName;
             if (nodeIt != m_deBruijnGraphNodes.end())
                 nodes.emplace_back(*nodeIt);
         }
@@ -462,11 +466,12 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 //If the node name it finds does not end in a '+' or '-', it will add '+'.
 QString AssemblyGraph::getNodeNameFromString(QString string) const
 {
+    QString nameWithGraph = QString::number(getGraphId()) + "_" + string;
     // First check for the most obvious case, where the string is already a node name.
-    if (m_deBruijnGraphNodes.count(string.toStdString()))
-        return string;
-    if (m_deBruijnGraphNodes.count((string + "+").toStdString()))
-        return string + "+";
+    if (m_deBruijnGraphNodes.count(nameWithGraph.toStdString()))
+        return nameWithGraph;
+    if (m_deBruijnGraphNodes.count((nameWithGraph + "+").toStdString()))
+        return nameWithGraph + "+";
 
     QStringList parts = string.split("_");
     if (parts.empty())
@@ -509,9 +514,9 @@ QString AssemblyGraph::getNodeNameFromString(QString string) const
 
     QChar lastChar = nodeName.at(nameLength - 1);
     if (lastChar == '+' || lastChar == '-')
-        return nodeName;
+        return QString::number(getGraphId()) + "_" + nodeName;
     else
-        return nodeName + "+";
+        return QString::number(getGraphId()) + "_" + nodeName + "+";
 }
 
 // Returns true if successful, false if not.
@@ -873,8 +878,8 @@ void AssemblyGraph::duplicateNodePair(DeBruijnNode * node, BandageGraphicsScene 
     double newDepth = node->getDepth() / 2.0;
 
     //Create the new nodes.
-    auto * newPosNode = new DeBruijnNode(this, newPosNodeName, newDepth, originalPosNode->getSequence());
-    auto * newNegNode = new DeBruijnNode(this, newNegNodeName, newDepth, originalNegNode->getSequence());
+    auto * newPosNode = new DeBruijnNode(getGraphId(), newPosNodeName, newDepth, originalPosNode->getSequence());
+    auto * newNegNode = new DeBruijnNode(getGraphId(), newNegNodeName, newDepth, originalNegNode->getSequence());
     newPosNode->setReverseComplement(newNegNode);
     newNegNode->setReverseComplement(newPosNode);
 
@@ -1036,8 +1041,8 @@ bool AssemblyGraph::mergeNodes(QList<DeBruijnNode *> nodes, BandageGraphicsScene
 
     double mergedNodeDepth = getMeanDepth(orderedList);
 
-    auto newPosNode = new DeBruijnNode(this, newPosNodeName, mergedNodeDepth, mergedNodePosSequence);
-    auto newNegNode = new DeBruijnNode(this, newNegNodeName, mergedNodeDepth, mergedNodeNegSequence);
+    auto newPosNode = new DeBruijnNode(getGraphId(), newPosNodeName, mergedNodeDepth, mergedNodePosSequence);
+    auto newNegNode = new DeBruijnNode(getGraphId(), newNegNodeName, mergedNodeDepth, mergedNodeNegSequence);
 
     newPosNode->setReverseComplement(newNegNode);
     newNegNode->setReverseComplement(newPosNode);

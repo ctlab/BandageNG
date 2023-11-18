@@ -327,6 +327,8 @@ void MainWindow::cleanUp() {
 
     for (auto assemblyGraph : g_assemblyGraph->m_graphList)
         assemblyGraph->cleanUp();
+    g_assemblyGraph->m_graphList.clear();
+
     setWindowTitle("Bandage-NG");
 
     g_memory->userSpecifiedPath = Path();
@@ -387,10 +389,19 @@ void MainWindow::loadGraphs(QString fullDirName, QString basePath) {
 
     if (fullDirName.isEmpty()) //User did hit cancel
         return;
+
+    cleanUp();
+    loadGraphsIter(fullDirName, basePath);
+
+}
+
+void MainWindow::loadGraphsIter(QString fullDirName, QString basePath) {
+    if (fullDirName.isEmpty()) //User did hit cancel
+        return;
     for (const auto entry : std::filesystem::directory_iterator(fullDirName.toStdString())) {
         const std::filesystem::path path = entry.path();
         if(std::filesystem::is_directory(path)) {
-            loadGraphs(QString::fromStdString(path), basePath);
+            loadGraphsIter(QString::fromStdString(path), basePath);
         }
         if (std::filesystem::is_regular_file(path)) {
             QString qpath = QString::fromStdString(path);
@@ -400,7 +411,7 @@ void MainWindow::loadGraphs(QString fullDirName, QString basePath) {
 }
 
 
-void MainWindow::loadGraph(QString fullFileName, QString graphName, bool printWarning) {
+void MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingleGraphMode) {
     QString selectedFilter = "Any supported graph (*)";
     if (fullFileName.isEmpty())
         fullFileName =
@@ -419,7 +430,7 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool printWa
     // We need to convert unique_ptr to shared_ptr in order to get builder shared between future and callback
     std::shared_ptr<io::AssemblyGraphBuilder> builder = io::AssemblyGraphBuilder::get(fullFileName);
     if (!builder) {
-        if (printWarning)
+        if (isSingleGraphMode)
             QMessageBox::warning(this,
                              "Graph format not recognised",
                              "Cannot load file. The selected file's format was not recognised as any supported graph type.");
@@ -427,7 +438,8 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool printWa
     }
 
     resetScene();
-    //cleanUp();
+    if (isSingleGraphMode)
+        cleanUp();
     ui->selectionSearchNodesLineEdit->clear();
 
     auto *progress = new MyProgressDialog(this, "Loading " + fullFileName, false);
@@ -501,6 +513,8 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool printWa
     auto assemblyGrpah = new AssemblyGraph();
     g_assemblyGraph->m_graphList.append(assemblyGrpah);
     g_assemblyGraph->last()->setGraphName(std::move(graphName));
+    int graphId = g_assemblyGraph->m_graphList.size();
+    g_assemblyGraph->last()->setGraphId(graphId);
     auto res = QtConcurrent::run(&io::AssemblyGraphBuilder::build, builder, std::ref(*(g_assemblyGraph->last())));
     watcher->setFuture(res);
 }
@@ -1276,6 +1290,8 @@ void MainWindow::saveSelectedPathToFile()
 
 
 void MainWindow::resetAllNodeColours() {
+    /*if (g_assemblyGraph->isEmpty())
+        return;*/
     for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         for (auto &entry : assemblyGraph->m_deBruijnGraphNodes) {
             auto *graphicsItemNode = entry->getGraphicsItemNode();
@@ -2364,7 +2380,6 @@ void MainWindow::saveEntireGraphToFasta() {
     for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
-        fileInfo.baseName().append(QString("_") + QString::number(count));
         g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
         if (!utils::saveEntireGraphToFasta(fullFileName, *assemblyGraph))
             QMessageBox::warning(this, "Error saving file", "Bandage was unable to save the FASTA file.");
@@ -2384,7 +2399,6 @@ void MainWindow::saveEntireGraphToFastaOnlyPositiveNodes() {
     for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
-        fileInfo.baseName().append(QString("_") + QString::number(count));
         g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
         if (!utils::saveEntireGraphToFastaOnlyPositiveNodes(fullFileName, *assemblyGraph))
             QMessageBox::warning(this, "Error saving file", "Bandage was unable to save the FASTA file.");
@@ -2405,7 +2419,6 @@ void MainWindow::saveEntireGraphToGfa() {
     for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
-        fileInfo.baseName().append(QString("_") + QString::number(count));
         g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
         if (!gfa::saveEntireGraph(fullFileName, *assemblyGraph))
             QMessageBox::warning(this, "Error saving file", "Bandage was unable to save the graph file.");
@@ -2425,7 +2438,6 @@ void MainWindow::saveVisibleGraphToGfa() {
     for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         count += 1;
         QFileInfo fileInfo = QFileInfo(fullFileName);
-        fileInfo.baseName().append(QString("_") + QString::number(count));
         g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
         if (!gfa::saveVisibleGraph(fullFileName, *assemblyGraph))
             QMessageBox::warning(this, "Error saving file", "Bandage was unable to save the graph file.");

@@ -203,6 +203,8 @@ public:
     TextGraphicsItemNode * getTextGraphicsItemNode() const {return m_textGraphicsItemNode;}
     bool hasTextGraphicsItem() const {return m_textGraphicsItemNode != nullptr;}
     void setGraphName(QString name) { m_graphName = name;}
+    int getGraphId() const {return m_graphId;}
+    void setGraphId(int graphId){m_graphId = graphId;}
 private:
     std::vector<DeBruijnNode *> getNodesFromListExact(const QStringList& nodesList, std::vector<QString> * nodesNotInGraph) const;
     std::vector<DeBruijnNode *> getNodesFromListPartial(const QStringList& nodesList, std::vector<QString> * nodesNotInGraph) const;
@@ -210,6 +212,7 @@ private:
     void clearAllCsvData();
     QString getNewNodeName(QString oldNodeName) const;
     TextGraphicsItemNode* m_textGraphicsItemNode;
+    int m_graphId = 0;
 signals:
     void setMergeTotalCount(int totalCount);
     void setMergeCompletedCount(int completedCount);
