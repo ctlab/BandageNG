@@ -343,8 +343,6 @@ void MainWindow::cleanUp() {
 }
 
 void MainWindow::loadCSV(QString fullFileName) {
-    if (g_assemblyGraph->size() > 1)
-        return; //work only for one graph
 
     QString selectedFilter = "Comma separated value (*.csv)";
     if (fullFileName == "")
@@ -363,7 +361,12 @@ void MainWindow::loadCSV(QString fullFileName) {
 
         bool coloursLoaded = false;
         QStringList columns;
-        if (g_assemblyGraph->m_graphList[0]->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded)) {
+        bool isCSVLoaded = false;
+        for (auto graph : g_assemblyGraph->m_graphList) {
+            if (graph->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded))
+                isCSVLoaded = true;
+        }
+        if (isCSVLoaded) {
             ui->csvCheckBox->setChecked(true);
             ui->csvComboBox->setEnabled(true);
             ui->csvComboBox->clear();

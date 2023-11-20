@@ -161,7 +161,7 @@ Path Path::makeFromString(const QString& pathString, const AssemblyGraph &graph,
     std::vector<DeBruijnNode *> nodesInGraph;
     QStringList nodesNotInGraph;
     for (auto & i : nodeNameList) {
-        QString nodeName = i.simplified();
+        QString nodeName = QString::number(graph.getGraphId())+ "_" + i.simplified();
         auto nodeIt = graph.m_deBruijnGraphNodes.find(nodeName.toStdString());
         if (nodeIt != graph.m_deBruijnGraphNodes.end())
             nodesInGraph.push_back(*nodeIt);

@@ -39,7 +39,6 @@
 #include <QQueue>
 #include <QRegularExpression>
 #include <QSet>
-#include<QDebug>
 
 #include <algorithm>
 #include <limits>
@@ -371,7 +370,19 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
         *errormsg = "Not enough CSV headers: at least two required.";
         return false;
     }
+
+    //delete node name from headers
     headers.pop_front();
+
+    bool graphIdLoaded = false;
+    if (headers[0].toLower() == "graph") {
+        graphIdLoaded = true;
+
+        //delete graphId from headers
+        headers.pop_front();
+    }
+
+
 
     //Check to see if any of the columns holds colour data.
     int colourCol = -1;
@@ -394,7 +405,11 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         QStringList cols = utils::splitCsv(in.readLine(), sep);
         QString nodeName(cols[0]);
-        
+
+        if (graphIdLoaded && m_graphName != cols[1]) {
+            continue;
+        }
+
         std::vector<DeBruijnNode *> nodes;
         // See if this is a path name
         {
@@ -410,10 +425,8 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         // Just node name
         if (nodes.empty()) {
-            qInfo() << "CSV input node name: " << nodeName;
             QString newNodeName = getNodeNameFromString(nodeName);
             auto nodeIt = m_deBruijnGraphNodes.find(getNodeNameFromString(nodeName).toStdString());
-            qInfo() << "CSV new node name: " << newNodeName;
             if (nodeIt != m_deBruijnGraphNodes.end())
                 nodes.emplace_back(*nodeIt);
         }
@@ -425,6 +438,10 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         // Get rid of the node name - no need to save that.
         cols.pop_front();
+
+        if (graphIdLoaded) {
+            cols.pop_front();
+        }
 
         // Get rid of any extra data that doesn't have a header.
         cols.resize(columnCount);
@@ -451,6 +468,8 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
         for (auto *node: nodes)
             setCustomColour(node, colour);
     }
+
+    qInfo() << "Unmatched nodes " << m_graphName << " " << QString::number(unmatchedNodes);
 
     if (unmatchedNodes)
         *errormsg = "There were " + QString::number(unmatchedNodes) + " unmatched entries in the CSV.";

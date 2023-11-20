@@ -49,7 +49,6 @@ DeBruijnNode::DeBruijnNode(const int graphId, QString name, float depth, const S
           m_specialNode(false),
           m_drawn(false) {
     m_length = length > 0 ? length : sequence.size();
-    qInfo() << QString("NodeName (constr) ") << m_name;
 }
 
 

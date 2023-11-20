@@ -212,7 +212,7 @@ private:
     void clearAllCsvData();
     QString getNewNodeName(QString oldNodeName) const;
     TextGraphicsItemNode* m_textGraphicsItemNode;
-    int m_graphId = 0;
+    int m_graphId = 1;
 signals:
     void setMergeTotalCount(int totalCount);
     void setMergeCompletedCount(int completedCount);

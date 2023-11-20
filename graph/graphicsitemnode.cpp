@@ -479,10 +479,12 @@ QStringList GraphicsItemNode::getNodeText() const
         nodeText << formatIntForDisplay(m_deBruijnNode->getLength()) + " bp";
     if (g_settings->displayNodeDepth)
         nodeText << formatDepthForDisplay(m_deBruijnNode->getDepth());
-    if (g_settings->displayNodeCsvData && g_assemblyGraph->size() == 1) {
-        auto data = g_assemblyGraph->first()->getCsvLine(m_deBruijnNode, g_settings->displayNodeCsvDataCol);
-        if (data)
-            nodeText << *data;
+    if (g_settings->displayNodeCsvData) {
+        for (auto graph : g_assemblyGraph->m_graphList) {
+            auto data = graph->getCsvLine(m_deBruijnNode, g_settings->displayNodeCsvDataCol);
+            if (data)
+                nodeText << *data;
+        }
     }
     return nodeText;
 }

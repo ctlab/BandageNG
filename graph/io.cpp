@@ -47,8 +47,9 @@ namespace io {
                 std::vector<DeBruijnNode*> pathNodes;
                 pathNodes.reserve(path->segments.size());
 
-                for (const auto &node: path->segments)
-                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(node));
+                for (const auto &node: path->segments) {
+                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + std::string(node)));
+                }
                 graph.m_deBruijnGraphPaths[path->name] = new Path(
                         Path::makeFromOrderedNodes(pathNodes, false));
             }
@@ -90,7 +91,7 @@ namespace io {
                 else
                     throw std::runtime_error(std::string("invalid path string: ").append(node));
 
-                pathNodes.push_back(graph.m_deBruijnGraphNodes.at(nodeName));
+                pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + nodeName));
             }
 
             Path *p = new Path(Path::makeFromOrderedNodes(pathNodes, false));
@@ -140,7 +141,7 @@ namespace io {
                         const QString &pathPart, const QString &start, const QString &end) {
                 std::vector<DeBruijnNode *> pathNodes;
                 for (const auto &nodeName: pathPart.split(","))
-                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(nodeName.toStdString()));
+                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + nodeName.toStdString()));
 
                 auto *p = new Path(Path::makeFromOrderedNodes(pathNodes, false));
                 int sPos = start.toInt(); // if conversion fails, we'd end with zero, we're ok with it.
