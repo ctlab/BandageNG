@@ -246,6 +246,7 @@ public:
     FloatSetting hicEdgeWidth;
     FloatSetting hicEdgeLength;
     bool roundMode = false;
+    bool multyGraphMode = false;
 };
 
 #endif // SETTINGS_H

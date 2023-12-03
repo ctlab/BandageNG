@@ -342,7 +342,7 @@ void MainWindow::cleanUp() {
     switchColourScheme(RANDOM_COLOURS);
 }
 
-void MainWindow::loadCSV(QString fullFileName) {
+void MainWindow::loadCSV(QString fullFileName, AssemblyGraph* assemblyGraph) {
 
     QString selectedFilter = "Comma separated value (*.csv)";
     if (fullFileName == "")
@@ -362,9 +362,15 @@ void MainWindow::loadCSV(QString fullFileName) {
         bool coloursLoaded = false;
         QStringList columns;
         bool isCSVLoaded = false;
-        for (auto graph : g_assemblyGraph->m_graphList) {
-            if (graph->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded))
+        if (assemblyGraph != nullptr) {
+            if (assemblyGraph->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded))
                 isCSVLoaded = true;
+
+        } else {
+            for (auto graph : g_assemblyGraph->m_graphList) {
+                if (graph->loadCSV(fullFileName, &columns, &errormsg, &coloursLoaded))
+                    isCSVLoaded = true;
+            }
         }
         if (isCSVLoaded) {
             ui->csvCheckBox->setChecked(true);
@@ -393,6 +399,7 @@ void MainWindow::loadGraphs(QString fullDirName, QString basePath) {
     if (fullDirName.isEmpty()) //User did hit cancel
         return;
 
+    g_settings->multyGraphMode = true;
     cleanUp();
     loadGraphsIter(fullDirName, basePath);
 
@@ -406,15 +413,14 @@ void MainWindow::loadGraphsIter(QString fullDirName, QString basePath) {
         if(std::filesystem::is_directory(path)) {
             loadGraphsIter(QString::fromStdString(path), basePath);
         }
-        if (std::filesystem::is_regular_file(path)) {
+        if (std::filesystem::is_regular_file(path) && path.extension() != ".fasta") {
             QString qpath = QString::fromStdString(path);
-            loadGraph(qpath, qpath.right(qpath.size() - basePath.size()), false);
+            AssemblyGraph* graph = loadGraph(qpath, qpath.right(qpath.size() - basePath.size()), false);
         }
     }
 }
 
-
-void MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingleGraphMode) {
+AssemblyGraph* MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingleGraphMode) {
     QString selectedFilter = "Any supported graph (*)";
     if (fullFileName.isEmpty())
         fullFileName =
@@ -428,7 +434,7 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingl
                                              &selectedFilter);
 
     if (fullFileName.isEmpty()) //User did hit cancel
-        return;
+        return nullptr;
 
     // We need to convert unique_ptr to shared_ptr in order to get builder shared between future and callback
     std::shared_ptr<io::AssemblyGraphBuilder> builder = io::AssemblyGraphBuilder::get(fullFileName);
@@ -437,17 +443,25 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingl
             QMessageBox::warning(this,
                              "Graph format not recognised",
                              "Cannot load file. The selected file's format was not recognised as any supported graph type.");
-        return;
+        return nullptr;
     }
 
     resetScene();
-    if (isSingleGraphMode)
+    if (isSingleGraphMode) {
         cleanUp();
+        g_settings->multyGraphMode = false;
+    }
     ui->selectionSearchNodesLineEdit->clear();
 
     auto *progress = new MyProgressDialog(this, "Loading " + fullFileName, false);
     progress->setWindowModality(Qt::WindowModal);
     progress->show();
+
+    auto assemblyGrpah = new AssemblyGraph();
+    g_assemblyGraph->m_graphList.append(assemblyGrpah);
+    g_assemblyGraph->last()->setGraphName(std::move(graphName));
+    int graphId = g_assemblyGraph->m_graphList.size();
+    g_assemblyGraph->last()->setGraphId(graphId);
 
     auto *watcher = new QFutureWatcher<bool>;
     connect(watcher, &QFutureWatcher<bool>::finished,
@@ -486,6 +500,9 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingl
 
             setupPathSelectionLineEdit(ui->pathSelectionLineEdit);
             setupPathSelectionLineEdit(ui->pathSelectionLineEdit2);
+            std::filesystem::path csvFilePath = fullFileName.toStdString();
+            QString csvPath = QString::fromStdString(csvFilePath.replace_extension(".csv"));
+            loadCSV(std::move(csvPath), assemblyGrpah);
             emit graphLoaded();
         }  catch (const AssemblyGraphError &err) {
             QString errorTitle = "Error loading graph";
@@ -513,13 +530,9 @@ void MainWindow::loadGraph(QString fullFileName, QString graphName, bool isSingl
     connect(watcher, SIGNAL(finished()), progress, SLOT(deleteLater()));
     connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
 
-    auto assemblyGrpah = new AssemblyGraph();
-    g_assemblyGraph->m_graphList.append(assemblyGrpah);
-    g_assemblyGraph->last()->setGraphName(std::move(graphName));
-    int graphId = g_assemblyGraph->m_graphList.size();
-    g_assemblyGraph->last()->setGraphId(graphId);
     auto res = QtConcurrent::run(&io::AssemblyGraphBuilder::build, builder, std::ref(*(g_assemblyGraph->last())));
     watcher->setFuture(res);
+    return assemblyGrpah;
 }
 
 void MainWindow::loadGraphLayout(QString fullFileName) {

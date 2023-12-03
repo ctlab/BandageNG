@@ -20,7 +20,6 @@
 #include "llvm/ADT/iterator_range.h"
 #include "seq/sequence.hpp"
 #include "small_vector/small_pod_vector.hpp"
-//#include "graph/assemblygraph.h"
 
 #include <QColor>
 #include <QByteArray>

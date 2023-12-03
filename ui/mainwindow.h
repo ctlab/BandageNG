@@ -129,10 +129,10 @@ private:
 public slots:
     void zoomedFeaturesWithMouseWheel();
 private slots:
-    void loadGraph(QString fullFileName = "",  QString graphName = "", bool isSingleGraphMode = true);
+    AssemblyGraph* loadGraph(QString fullFileName = "",  QString graphName = "", bool isSingleGraphMode = true);
     void loadGraphs(QString fullDirName = "", QString basePath = "");
     void loadGraphsIter(QString fullDirName, QString basePath);
-    void loadCSV(QString fullFileName = "");
+    void loadCSV(QString fullFileName = "",  AssemblyGraph* assemblyGraph = nullptr);
     void loadGraphLayout(QString fullFileName = "");
     void loadGraphPaths(QString fullFileName = "");
     void selectionChanged();

@@ -21,6 +21,8 @@
 #include "graph/debruijnnode.h"
 #include "graphlayout.h"
 
+#include "program/settings.h"
+
 #include <QFile>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -80,11 +82,18 @@ namespace layout::io {
 
         QJsonObject jsonLayout = jsonLayoutDoc.object();
         const AssemblyGraph &graph = layout.graph();
+        QString prefix = "";
+        if (g_settings->multyGraphMode)
+            prefix = QString::number(graph.getGraphId()) + "_";
         for (auto it = jsonLayout.begin(); it != jsonLayout.end(); ++it) {
             QString name = it.key();
             auto node = graph.m_deBruijnGraphNodes.find(name.toStdString());
-            if (node == graph.m_deBruijnGraphNodes.end())
-                throw std::runtime_error("graph does not contain node: " + name.toStdString());
+            if (node == graph.m_deBruijnGraphNodes.end()) {
+                node = graph.m_deBruijnGraphNodes.find((prefix+ name).toStdString());
+                if (node == graph.m_deBruijnGraphNodes.end()) {
+                    throw std::runtime_error("graph does not contain node: " + name.toStdString());
+                }
+            }
             if (!it.value().isArray())
                 throw std::runtime_error("invalid layout format");
             for (const auto &point : it.value().toArray()) {

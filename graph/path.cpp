@@ -22,6 +22,8 @@
 #include "assemblygraph.h"
 #include "sequenceutils.h"
 
+#include "program/settings.h"
+
 #include <QRegularExpression>
 #include <QStringList>
 #include <QApplication>
@@ -160,8 +162,11 @@ Path Path::makeFromString(const QString& pathString, const AssemblyGraph &graph,
     //Find which node names are and are not actually in the graph.
     std::vector<DeBruijnNode *> nodesInGraph;
     QStringList nodesNotInGraph;
+    QString prefix = "";
+    if (g_settings->multyGraphMode)
+        prefix = QString::number(graph.getGraphId()) + "_";
     for (auto & i : nodeNameList) {
-        QString nodeName = QString::number(graph.getGraphId())+ "_" + i.simplified();
+        QString nodeName = prefix+ i.simplified();
         auto nodeIt = graph.m_deBruijnGraphNodes.find(nodeName.toStdString());
         if (nodeIt != graph.m_deBruijnGraphNodes.end())
             nodesInGraph.push_back(*nodeIt);

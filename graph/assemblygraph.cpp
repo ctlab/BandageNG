@@ -413,7 +413,10 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
         std::vector<DeBruijnNode *> nodes;
         // See if this is a path name
         {
-            auto pathIt = m_deBruijnGraphPaths.find(std::to_string(getGraphId()) + "_" + nodeName.toStdString());
+            QString pathName = nodeName;
+            if (g_settings->multyGraphMode)
+                pathName = QString::number(getGraphId()) + "_" + nodeName;
+            auto pathIt = m_deBruijnGraphPaths.find(pathName.toStdString());
             if (pathIt != m_deBruijnGraphPaths.end()) {
                 for (auto *node : (*pathIt)->nodes()) {
                     nodes.emplace_back(node);
@@ -433,6 +436,7 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         if (nodes.empty()) {
             unmatchedNodes += 1;
+            qInfo() << unmatchedNodes << " " << getNodeNameFromString(nodeName);
             continue;
         }
 
@@ -485,7 +489,9 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 //If the node name it finds does not end in a '+' or '-', it will add '+'.
 QString AssemblyGraph::getNodeNameFromString(QString string) const
 {
-    QString nameWithGraph = QString::number(getGraphId()) + "_" + string;
+    QString nameWithGraph = string;
+    if (g_settings -> multyGraphMode)
+        nameWithGraph = QString::number(getGraphId()) + "_" + string;
     // First check for the most obvious case, where the string is already a node name.
     if (m_deBruijnGraphNodes.count(nameWithGraph.toStdString()))
         return nameWithGraph;
@@ -532,10 +538,12 @@ QString AssemblyGraph::getNodeNameFromString(QString string) const
         return "";
 
     QChar lastChar = nodeName.at(nameLength - 1);
+    if (g_settings->multyGraphMode)
+        nodeName = QString::number(getGraphId()) + "_" + nodeName;
     if (lastChar == '+' || lastChar == '-')
-        return QString::number(getGraphId()) + "_" + nodeName;
+        return nodeName;
     else
-        return QString::number(getGraphId()) + "_" + nodeName + "+";
+        return nodeName + "+";
 }
 
 // Returns true if successful, false if not.

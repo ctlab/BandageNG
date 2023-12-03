@@ -17,6 +17,7 @@
 
 #include "io.h"
 #include "assemblygraph.h"
+#include "program/settings.h"
 
 #include "io/gfa.h"
 #include "io/gaf.h"
@@ -29,6 +30,9 @@
 namespace io {
     bool loadGFAPaths(AssemblyGraph &graph,
                       QString fileName) {
+        std::string prefix = "";
+        if (g_settings->multyGraphMode)
+            prefix = std::to_string(graph.getGraphId()) + "_";
         QFile inputFile(fileName);
         if (!inputFile.open(QIODevice::ReadOnly))
             return false;
@@ -48,7 +52,7 @@ namespace io {
                 pathNodes.reserve(path->segments.size());
 
                 for (const auto &node: path->segments) {
-                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + std::string(node)));
+                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(prefix + std::string(node)));
                 }
                 graph.m_deBruijnGraphPaths[path->name] = new Path(
                         Path::makeFromOrderedNodes(pathNodes, false));
@@ -60,6 +64,9 @@ namespace io {
 
     bool loadGAFPaths(AssemblyGraph &graph,
                       QString fileName) {
+        std::string prefix = "";
+        if (g_settings->multyGraphMode)
+            prefix = std::to_string(graph.getGraphId()) + "_";
         QFile inputFile(fileName);
         if (!inputFile.open(QIODevice::ReadOnly))
             return false;
@@ -91,7 +98,7 @@ namespace io {
                 else
                     throw std::runtime_error(std::string("invalid path string: ").append(node));
 
-                pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + nodeName));
+                pathNodes.push_back(graph.m_deBruijnGraphNodes.at(prefix + nodeName));
             }
 
             Path *p = new Path(Path::makeFromOrderedNodes(pathNodes, false));
@@ -106,6 +113,9 @@ namespace io {
 
     bool loadSPAlignerPaths(AssemblyGraph &graph,
                             QString fileName) {
+        std::string prefix = "";
+        if (g_settings->multyGraphMode)
+            prefix = std::to_string(graph.getGraphId()) + "_";
         csv::CSVFormat format;
         format.delimiter('\t')
                 .quote('"')
@@ -141,7 +151,7 @@ namespace io {
                         const QString &pathPart, const QString &start, const QString &end) {
                 std::vector<DeBruijnNode *> pathNodes;
                 for (const auto &nodeName: pathPart.split(","))
-                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(std::to_string(graph.getGraphId()) + "_" + nodeName.toStdString()));
+                    pathNodes.push_back(graph.m_deBruijnGraphNodes.at(prefix + nodeName.toStdString()));
 
                 auto *p = new Path(Path::makeFromOrderedNodes(pathNodes, false));
                 int sPos = start.toInt(); // if conversion fails, we'd end with zero, we're ok with it.
