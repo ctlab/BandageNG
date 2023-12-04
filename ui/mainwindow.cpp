@@ -150,7 +150,7 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     setTextDisplaySettings();
 
     graphScopeChanged();
-    switchColourScheme(7);
+    switchColourScheme();
     switchFeatureColourScheme();
     hicInclusionFilterChanged();
 

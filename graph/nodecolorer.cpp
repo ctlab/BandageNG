@@ -381,7 +381,14 @@ void TagValueNodeColorer::reset() {
 QColor CSVNodeColorer::get(const GraphicsItemNode *node) {
     const DeBruijnNode *deBruijnNode = node->m_deBruijnNode;
 
-    auto val = m_graphs->first()->getCsvLine(deBruijnNode, m_colIdx);
+    AssemblyGraph* graph;
+    for(auto currentGraph : m_graphs.data()->m_graphList) {
+        if (currentGraph->getGraphId() == deBruijnNode->getGraphId()) {
+            graph = currentGraph;
+            break;
+        }
+    }
+    auto val = graph->getCsvLine(deBruijnNode, m_colIdx);
     if (!val || m_colIdx >= m_colors.size())
         return m_graphs->getCustomColourForDisplay(deBruijnNode);
 
@@ -390,20 +397,24 @@ QColor CSVNodeColorer::get(const GraphicsItemNode *node) {
     if (col == cols.end())
         return m_graphs->getCustomColourForDisplay(deBruijnNode);
 
-    return *col;;
+    return *col;
 }
 
 void CSVNodeColorer::reset() {
     m_colors.clear();
 
-    size_t columns = m_graphs->first()->m_csvHeaders.size();
+    size_t columns = 0;
+    for (auto graph : m_graphs.data()->m_graphList)
+        columns = std::max(columns, size_t(graph->m_csvHeaders.size()));
     m_colors.resize(columns);
     // Store all unique values into a map
-    for (const auto &entry : m_graphs->first()->m_nodeCSVData) {
-        const auto &row = entry.second;
-        for (size_t i = 0; i < row.size() && i < columns; ++i) {
-            const auto &cell = row[i];
-            m_colors[i].insert(cell.toStdString(), QColor(cell));
+    for(auto graph : m_graphs.data()->m_graphList) {
+        for (const auto &entry : graph->m_nodeCSVData) {
+            const auto &row = entry.second;
+            for (size_t i = 0; i < row.size() && i < columns; ++i) {
+                const auto &cell = row[i];
+                m_colors[i].insert(cell.toStdString(), QColor(cell));
+            }
         }
     }
 
