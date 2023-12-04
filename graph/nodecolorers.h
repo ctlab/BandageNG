@@ -100,8 +100,7 @@ class TagValueNodeColorer : public INodeColorer {
 public:
     explicit TagValueNodeColorer(NodeColorScheme scheme)
             : INodeColorer(scheme) {
-        if (m_graphs->first())
-            TagValueNodeColorer::reset();
+        TagValueNodeColorer::reset();
     }
 
     QColor get(const GraphicsItemNode *node) override;
@@ -125,8 +124,7 @@ class CSVNodeColorer : public INodeColorer {
 public:
     explicit CSVNodeColorer(NodeColorScheme scheme)
             : INodeColorer(scheme) {
-        if (m_graphs->first())
-            CSVNodeColorer::reset();
+        CSVNodeColorer::reset();
     }
     QColor get(const GraphicsItemNode *node) override;
     void reset() override;

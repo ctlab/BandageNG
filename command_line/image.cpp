@@ -80,6 +80,7 @@ int handleImageCmd(QApplication *app,
         return 1;
     }
 
+
     // Since frame rate performance doesn't matter for a fixed image, set the
     // default node outline to a nonzero value.
     g_settings->outlineThickness = 0.3;
@@ -139,7 +140,6 @@ int handleImageCmd(QApplication *app,
         }
          g_settings->initializeColorer(CUSTOM_COLOURS);
     }
-
 
     g_assemblyGraph->first()->markNodesToDraw(scope, startingNodes);
     BandageGraphicsScene scene;

@@ -149,6 +149,7 @@ int main(int argc, char *argv[]) {
 
     g_memory.reset(new Memory());
     g_settings.reset(new Settings());
+    g_assemblyGraph.reset(new AssemblyGraphList());
 
     try {
         cmd = parseCmdLine(cli);
@@ -161,7 +162,6 @@ int main(int argc, char *argv[]) {
 
     // Create the important global objects.
     g_blastSearch.reset(new search::BlastSearch());
-    g_assemblyGraph.reset(new AssemblyGraphList());
     g_hicManager.reset(new HiCManager());
     g_assemblyFeaturesForest.reset(new AssemblyFeaturesForest());
     g_graphicsView = new BandageGraphicsView();
