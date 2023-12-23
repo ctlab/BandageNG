@@ -5,7 +5,7 @@
 
 # <img src="http://rrwick.github.io/Bandage/images/logo.png" alt="Bandage" width="115" height="115" align="middle">Bandage-NG
 
-## IMPORTANT: This is a fork of <a href="https://github.com/asl/BandageNG">Bandage-NG repo</a>. It may contain new features, new bugs and otherwise be not compatible with the Bandage by Ryan Wick.
+IMPORTANT: This is a fork of <a href="https://github.com/asl/BandageNG">Bandage-NG repo</a>. It may contain new features, new bugs and otherwise be not compatible with the Bandage by Ryan Wick.
 
 ## Table of Contents
 * [Intro](https://github.com/ctlab/BandageNG#intro)
