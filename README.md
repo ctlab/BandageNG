@@ -11,22 +11,33 @@
 * [Intro](https://github.com/ctlab/BandageNG#intro)
 * [Pre-built binaries](https://github.com/ctlab/BandageNG/wiki#pre-built-binaries)
 * [Building from source](https://github.com/ctlab/BandageNG/wiki#prerequisites-for-building-from-the-source-code)
-* [New features](https://github.com/ctlab/BandageNG/wiki#prerequisites-for-building-from-the-source-code)
-* [Contributing](https://github.com/ctlab/BandageNG#contributing)
 
 
 ## Intro
-
-New features:
-1. [Rotate contig](https://github.com/ctlab/BandageNG/wiki#contigs-rotation)
-2. [Hi-C links](https://github.com/ctlab/BandageNG/wiki#hi-c-links-visualization)
-3. [ML model](https://github.com/ctlab/BandageNG/wiki#predictive-model-visualization)
-4. [Multigraph](https://github.com/ctlab/BandageNG/wiki#multigraph-mode)
-
 Bandage-NG documentation is available on the <a href="https://github.com/ctlab/BandageNG/wiki" target="_blank">Bandage-NG GitHub wiki</a>.
 
-Bandage-NG help tips are also built into the program. Throughout the UI, you will find these icons next to controls and settings: <img src="http://rrwick.github.io/Bandage/images/helptext.png" alt="help text icon" width="16" height="16">. Click them to see a description of that element of Bandage.
+New version of BandageNG contains new features:
+1. [Rotate contig](https://github.com/ctlab/BandageNG/wiki#contigs-rotation) - the ability for nodes' rotation.
+2. [Hi-C links](https://github.com/ctlab/BandageNG/wiki#hi-c-links-visualization) - this functionality allows to visualize Hi-C links between different contigs on the de Bruijn graph. Hi-C links are drawn as dotted lines connecting the midpoints of contigs.
+3. [ML model](https://github.com/ctlab/BandageNG/wiki#predictive-model-visualization) - this functionality allows to visualize RandomForest, AdaBoost or Gradient Boosted Decision Trees machine learning. Also, the implementation of BandageNG supports mapping features, used in predictive model, on the nodes (contigs) in de Bruijn graph.
+4. [Multigraph](https://github.com/ctlab/BandageNG/wiki#multigraph-mode) - this functionality allows to visualize multiple graphs from different files on one screen.
+5. [CSV data](https://github.com/ctlab/BandageNG/wiki#csv-data) - this functionality allows to visualize CSV data for multiple graphs. To visualize taxonomy you can use CSV data with columns that contains different level of taxonomy (Superkingdom», Phylum, Class, Order, Family, Genus, Species, Serotype and Strains).
 
-## Contributing
+## Pre-built binaries
+Pre-built Linux and Mac binaries are available from [Releases](https://github.com/ctlab/BandageNG/releases) page.
 
-New contributors are welcome! If you're interested or have ideas, please use Issues section in the repo.
+**Prerequisites:**
+* libfuse2
+
+## Prerequisites (for building from the source code)
+* Qt 6
+* CMake
+* C++17-compliant compiler
+
+## Building from source
+```shell
+mkdir build
+cd build
+cmake ..
+make
+```
