@@ -1,4 +1,3 @@
-[![License](https://img.shields.io/badge/licence-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ctlab/BandageNG?include_prereleases)
 [![GitHub Downloads](https://img.shields.io/github/downloads/ctlab/BandageNG/total.svg?style=social&logo=github&label=Download)](https://github.com/ctlab/BandageNG/releases)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ctlab/BandageNG/test.yml?branch=dev)
