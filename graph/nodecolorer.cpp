@@ -335,12 +335,14 @@ QColor GCNodeColorer::get(const GraphicsItemNode *node) {
 QColor TagValueNodeColorer::get(const GraphicsItemNode *node) {
     const DeBruijnNode *deBruijnNode = node->m_deBruijnNode;
 
-    auto tags = m_graphs->first()->m_nodeTags.find(deBruijnNode);
-    if (tags != m_graphs->first()->m_nodeTags.end()) {
-        if (auto tag = gfa::getTag(m_tagName.c_str(), tags->second)) {
-            std::stringstream stream;
-            stream << *tag;
-            return m_allTags.at(stream.str());
+    for (auto graph : m_graphs.data()->m_graphList) {
+        auto tags = graph->m_nodeTags.find(deBruijnNode);
+        if (tags != graph->m_nodeTags.end()) {
+            if (auto tag = gfa::getTag(m_tagName.c_str(), tags->second)) {
+                std::stringstream stream;
+                stream << *tag;
+                return m_allTags.at(stream.str());
+            }
         }
     }
 
@@ -352,14 +354,17 @@ void TagValueNodeColorer::reset() {
     m_tagNames.clear();
 
     // Collect all tags and their corresponding values
-    for (const auto &entry : m_graphs->first()->m_nodeTags) {
-        for (const auto &tag: entry.second) {
-            std::stringstream stream;
-            stream << tag;
-            std::string tagWithValue = stream.str();
-            std::string tagName{std::string_view(tag.name, 2)};
-            m_allTags.insert(tagWithValue, QColor());
-            m_tagNames.insert(tagName);
+    for (auto graph : m_graphs.data()->m_graphList) {
+        for (const auto &entry : graph->m_nodeTags) {
+            for (const auto &tag: entry.second) {
+                std::stringstream stream;
+                stream << tag;
+                std::string tagWithValue = stream.str();
+                std::string tagName{std::string_view(tag.name, 2)};
+                m_allTags.insert(tagWithValue, QColor());
+                if (m_tagNames.find(tagName) == m_tagNames.end())
+                    m_tagNames.insert(tagName);
+            }
         }
     }
 

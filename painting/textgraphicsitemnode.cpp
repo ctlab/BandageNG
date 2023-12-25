@@ -45,12 +45,7 @@ QPainterPath TextGraphicsItemNode::shape() const
 
 void TextGraphicsItemNode::paint(QPainter * painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-      QPainterPath textPath = shape();
-      drawTextPathAtLocation(painter, textPath);
-}
-
-void TextGraphicsItemNode::drawTextPathAtLocation(QPainter * painter, const QPainterPath &textPath)
-{
+    QPainterPath textPath = shape();
     QRectF textBoundingRect = textPath.boundingRect();
     double textHeight = textBoundingRect.height();
     QPointF offset(0.0, textHeight / 2.0);
@@ -67,6 +62,19 @@ void TextGraphicsItemNode::drawTextPathAtLocation(QPainter * painter, const QPai
     painter->scale(zoomAdjustment, zoomAdjustment);
     painter->translate(offset);
 
+//    painter->setBrush(Qt::NoBrush);
+//    painter->setPen(QPen(Qt::black, 1.0));
+//    painter->drawRect(boundingRect());
+
+    drawTextPathAtLocation(painter, textPath);
+    painter->translate(-offset);
+    painter->scale(inverseZoomAdjustment, inverseZoomAdjustment);
+    painter->rotate(g_graphicsView->getRotation());
+    painter->translate(-m_centre);
+}
+
+void TextGraphicsItemNode::drawTextPathAtLocation(QPainter * painter, const QPainterPath &textPath)
+{
     if (g_settings->textOutline)
     {
         painter->setPen(QPen(g_settings->textOutlineColour,
@@ -78,15 +86,11 @@ void TextGraphicsItemNode::drawTextPathAtLocation(QPainter * painter, const QPai
     }
 
     painter->fillPath(textPath, QBrush(g_settings->textColour));
-    painter->translate(-offset);
-    painter->scale(inverseZoomAdjustment, inverseZoomAdjustment);
-    painter->rotate(g_graphicsView->getRotation());
-    painter->translate(-m_centre);
 }
 
 void TextGraphicsItemNode::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    updateGrabIndex(event);
+    //updateGrabIndex(event);
 }
 
 //When this node graphics item is moved, each of the connected edge

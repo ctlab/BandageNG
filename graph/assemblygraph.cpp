@@ -473,8 +473,6 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
             setCustomColour(node, colour);
     }
 
-    qInfo() << "Unmatched nodes " << m_graphName << " " << QString::number(unmatchedNodes);
-
     if (unmatchedNodes)
         *errormsg = "There were " + QString::number(unmatchedNodes) + " unmatched entries in the CSV.";
 

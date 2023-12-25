@@ -711,17 +711,15 @@ void MainWindow::getSelectedNodeInfo(int & selectedNodeCount, QString & selected
 
     selectedNodeLengthText = formatIntForDisplay(totalLength) + " bp";
 
-    if (g_assemblyGraph->size() > 1)
-        return;
-
-    selectedNodeDepthText = formatDepthForDisplay(g_assemblyGraph->first()->getMeanDepth(selectedNodes));
+    selectedNodeDepthText = formatDepthForDisplay(g_assemblyGraph->getMeanDepth(selectedNodes));
 
     if (selectedNodeCount == 1) {
         // FIXME: Hack!
         selectedNodeDepthText += " GC: " + formatDoubleForDisplay(100 * selectedNodes[0]->getGC(), 1) + "%";
 
-        auto tags = g_assemblyGraph->first()->m_nodeTags.find(selectedNodes.front());
-        if (tags != g_assemblyGraph->first()->m_nodeTags.end()) {
+        auto graphIndex = selectedNodes.front()->getGraphId() - 1;
+        auto tags = g_assemblyGraph->m_graphList[graphIndex]->m_nodeTags.find(selectedNodes.front());
+        if (tags != g_assemblyGraph->m_graphList[graphIndex]->m_nodeTags.end()) {
             std::stringstream txt;
             for (const auto &tag : tags->second)
                 txt << tag << ' ';
@@ -1371,9 +1369,13 @@ void MainWindow::switchColourScheme(int idx) {
     } else if (scheme == CSV_COLUMN) {
         ui->tagsComboBox->clear();
         auto *colorer = dynamic_cast<CSVNodeColorer*>(&*g_settings->nodeColorer);
-        ui->tagsComboBox->addItems(g_assemblyGraph->first()->m_csvHeaders);
-        if (!g_assemblyGraph->first()->m_csvHeaders.empty())
-            colorer->setColumnIdx(0);
+        for (auto graph : g_assemblyGraph->m_graphList) {
+            if (!graph->m_csvHeaders.empty()) {
+                ui->tagsComboBox->addItems(graph->m_csvHeaders);
+                colorer->setColumnIdx(0);
+                break;
+            }
+        }
         ui->tagsComboBox->setVisible(true);
     } else {
         ui->tagsComboBox->setVisible(false);
@@ -1690,11 +1692,9 @@ void MainWindow::openSettingsDialog() {
 
     settingsDialog.setSettingsFromWidgets();
 
-    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
-        assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
+    g_assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
                                                 g_settings->depthPower,
                                                 g_settings->depthEffectOnWidth);
-    }
     g_graphicsView->setAntialiasing(g_settings->antialiasing);
     g_settings->nodeColorer->reset();
 
@@ -2376,10 +2376,8 @@ void MainWindow::setSelectedEdgesWidgetsVisibility(bool visible)
 
 void MainWindow::nodeWidthChanged()
 {
-    for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
-        assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
+    g_assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
                                               g_settings->depthPower, g_settings->depthEffectOnWidth);
-    }
     g_graphicsView->viewport()->update();
 }
 
@@ -2711,17 +2709,17 @@ void MainWindow::changeNodeDepth()
         return;
     }
 
-    double oldDepth = g_assemblyGraph->first()->getMeanDepth(selectedNodes);
+    double oldDepth = g_assemblyGraph->getMeanDepth(selectedNodes);
     ChangeNodeDepthDialog changeNodeDepthDialog(this, &selectedNodes,
                                                 oldDepth);
 
     if (!changeNodeDepthDialog.exec())
         return;
 
-    g_assemblyGraph->first()->changeNodeDepth(selectedNodes,
+    g_assemblyGraph->changeNodeDepth(selectedNodes,
                                      changeNodeDepthDialog.getNewDepth());
     selectionChanged();
-    g_assemblyGraph->first()->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
+    g_assemblyGraph->recalculateAllNodeWidths(ui->nodeWidthSpinBox->value(),
                                               g_settings->depthPower, g_settings->depthEffectOnWidth);
     g_graphicsView->viewport()->update();
 }

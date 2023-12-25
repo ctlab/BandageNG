@@ -68,6 +68,11 @@ public:
     static QString generateNodesNotFoundErrorMessage(std::vector<QString> nodesNotInGraph,
                                               bool exact);
 
+    double getMeanDepth(const std::vector<DeBruijnNode *> &nodes);
+
+    void changeNodeDepth(const std::vector<DeBruijnNode *> &nodes, double newDepth);
+    void recalculateAllNodeWidths(double averageNodeWidth, double depthPower, double depthEffectOnWidth);
+
     QList<AssemblyGraph*> m_graphList;
 
 private:

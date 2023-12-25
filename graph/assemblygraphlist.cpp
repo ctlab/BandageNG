@@ -69,3 +69,62 @@ QString AssemblyGraphList::generateNodesNotFoundErrorMessage(std::vector<QString
     return errorMessage;
 }
 
+void AssemblyGraphList::recalculateAllNodeWidths(double averageNodeWidth,
+                              double depthPower, double depthEffectOnWidth)
+{
+    for (auto assemblyGraph : m_graphList)
+        assemblyGraph->recalculateAllNodeWidths(averageNodeWidth,depthPower, depthEffectOnWidth);
+}
+
+void AssemblyGraphList::changeNodeDepth(const std::vector<DeBruijnNode *> &nodes,
+                                    double newDepth)
+{
+    if (nodes.empty())
+        return;
+
+    for (auto node : nodes) {
+        node->setDepth(newDepth);
+        node->getReverseComplement()->setDepth(newDepth);
+    }
+
+    for (auto node : nodes) {
+        auto graphIndex = node->getGraphId() - 1;
+
+        //If this graph does not already have a depthTag, give it a depthTag of KC
+        //so the depth info will be saved.
+        if (m_graphList[graphIndex]->m_depthTag == "")
+            m_graphList[graphIndex]->m_depthTag = "KC";
+    }
+}
+
+double AssemblyGraphList::getMeanDepth(const std::vector<DeBruijnNode *> &nodes)
+{
+    if (nodes.empty())
+        return 0.0;
+
+    if (nodes.size() == 1)
+        return nodes[0]->getDepth();
+
+    int nodeCount = 0;
+    long double depthSum = 0.0;
+    long long totalLength = 0;
+
+    for (auto node : nodes)
+    {
+        ++nodeCount;
+        totalLength += node->getLength();
+        depthSum += node->getLength() * node->getDepth();
+    }
+
+    //If the total length is zero, that means all nodes have a length of zero.
+    //In this case, just return the average node depth.
+    if (totalLength == 0)
+    {
+        long double depthSum = 0.0;
+        for (auto & node : nodes)
+            depthSum += node->getDepth();
+        return depthSum / nodes.size();
+    }
+
+    return depthSum / totalLength;
+}
