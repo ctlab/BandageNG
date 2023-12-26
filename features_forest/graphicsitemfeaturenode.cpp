@@ -150,7 +150,7 @@ void GraphicsItemFeatureNode::drawNodeText(QPainter* painter, QStringList nodeTe
     QPainterPath textPath;
 
     QFont font = g_settings->labelFont;
-    font.setPixelSize(g_settings->textSize);
+
     QFontMetrics metrics(font);
     double fontHeight = metrics.ascent();
 

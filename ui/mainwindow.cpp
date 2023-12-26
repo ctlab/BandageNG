@@ -1998,6 +1998,8 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_paths->setEnabled(false);
         ui->actionExport_layout->setEnabled(false);
         ui->actionLoad_HiC_data->setEnabled(false);
+        ui->HiCSettingsWidget->setEnabled(false);
+        ui->HiC_label->setEnabled(false);
         break;
     case GRAPH_LOADED:
         ui->graphDetailsWidget->setEnabled(true);
@@ -2012,6 +2014,11 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_paths->setEnabled(true);
         ui->actionExport_layout->setEnabled(false);
         ui->actionLoad_HiC_data->setEnabled(true);
+        if (g_settings->multyGraphMode) {
+            ui->moreInfoButton->setEnabled(false);
+        } else {
+            ui->moreInfoButton->setEnabled(true);
+        }
         break;
     case GRAPH_DRAWN:
         ui->graphDetailsWidget->setEnabled(true);
@@ -2028,6 +2035,11 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_paths->setEnabled(true);
         ui->actionExport_layout->setEnabled(true);
         ui->actionLoad_HiC_data->setEnabled(true);
+        if (g_settings->multyGraphMode) {
+            ui->moreInfoButton->setEnabled(false);
+        } else {
+            ui->moreInfoButton->setEnabled(true);
+        }
         break;
     }
 }
@@ -3183,10 +3195,8 @@ void MainWindow::loadHiC(QString fullFileName) {
 
 void MainWindow::setHiCWidgetVisibility(bool visible)
 {
-    //ui->hicSeqLenInfoText->setVisible(visible);
-    ui->hicSeqLenSpinBox->setVisible(visible);
-    //ui->hicWeightInfoText->setVisible(visible);
-    ui->hicWeightSpinBox->setVisible(visible);
+    ui->HiCSettingsWidget->setEnabled(visible);
+    ui->HiC_label->setEnabled(visible);
 }
 
 void MainWindow::hicInclusionFilterChanged() {

@@ -187,7 +187,6 @@ void GraphicsItemNode::paint(QPainter * painter, const QStyleOptionGraphicsItem 
           QPainterPath textPath;
 
           QFont font = g_settings->labelFont;
-          font.setPixelSize(g_settings->textSize);
 
           QFontMetrics metrics(font);
           double fontHeight = metrics.ascent();

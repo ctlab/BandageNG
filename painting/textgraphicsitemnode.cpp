@@ -30,7 +30,7 @@ QPainterPath TextGraphicsItemNode::shape() const
     QPainterPath textPath;
 
     QFont font = g_settings->labelFont;
-    font.setPixelSize(g_settings->textSize);
+    font.setBold(true);
 
     QFontMetrics metrics(font);
     double fontHeight = metrics.ascent();

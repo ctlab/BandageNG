@@ -72,6 +72,7 @@ Settings::Settings()
     displayNodeCsvData = false;
     displayNodeCsvDataCol = 0;
     labelFont = QFont();
+    labelFont.setPixelSize(12);
     textOutline = false;
     antialiasing = true;
     positionTextNodeCentre = false;
