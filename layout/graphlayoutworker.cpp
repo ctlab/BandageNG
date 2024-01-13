@@ -592,7 +592,9 @@ static void reassembleDrawings(ogdf::GraphAttributes &GA,
 QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphList> graphList) {
     QList<GraphLayout*> resList;
 
-    double boardWidth = 400;
+    double boardWidth = 1000;
+    qreal sumX = 0;
+    qreal oneMaxX = 0;
     for(AssemblyGraph* graph : graphList->m_graphList) {
         const AssemblyGraph& refGraph = std::cref(*graph);
         ogdf::Graph G;
@@ -671,6 +673,8 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
                 double curX = GA.x(node);
                 double curY = GA.y(node);
                 res->add(entry.first, { curX, curY });
+                sumX += curX;
+                oneMaxX = std::max(oneMaxX, curX);
             }
         }
         // In double mode add layout for the reverse-complement nodes (in opposite direction)
@@ -685,23 +689,25 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
         graph->setLayout(res);
     }
 
+    qreal boundX = std::max(oneMaxX, std::round(std::sqrt(sumX))) + 1.0;
+
     qreal prevX = 0.0;
     qreal prevY = 0.0;
+    qreal curMaxX = 0.0;
+    qreal curMaxY = -boardWidth;
     qreal maxX = 0.0;
     qreal maxY = -boardWidth;
     double textWidth = 0.0;
-    int maxNumInRow = std::round(std::sqrt(graphList->size()));
-    int curNumInRow = maxNumInRow;
 
-    std::sort(graphList->m_graphList.begin(), graphList->m_graphList.end(), [](AssemblyGraph* a, AssemblyGraph* b)->bool{return layout::getMaxY(*a->m_layout) > layout::getMaxY(*b->m_layout);});
+    std::sort(graphList->m_graphList.begin(), graphList->m_graphList.end(), [](AssemblyGraph* a, AssemblyGraph* b)->bool{
+        return (layout::getMaxX(*a->m_layout) + layout::getMaxY(*a->m_layout)) > (layout::getMaxX(*b->m_layout) + layout::getMaxY(*b->m_layout));
+    });
 
     for(AssemblyGraph* graph : graphList->m_graphList) {
-        if (curNumInRow < maxNumInRow) {
-            curNumInRow++;
+        if (maxX < boundX) {
             maxX = std::max(maxX, prevX + textWidth) + boardWidth;
             prevX = maxX;
         } else {
-            curNumInRow = 1;
             prevX = 0;
             maxX = 0;
             prevY = maxY + boardWidth;
@@ -725,6 +731,7 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
         resList.append(graph->m_layout);
 
     }
+
     return resList;
 }
 

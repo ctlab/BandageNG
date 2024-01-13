@@ -94,6 +94,7 @@ private:
     void clearGraphDetails();
     void resetScene();
     void resetAllNodeColours();
+    void resetAllNodeColoursInGraph(AssemblyGraph* assemblyGraph);
     void layoutGraph();
     void zoomToFitRect(QRectF rect, BandageGraphicsView* graphicsView);
     void setZoomSpinBoxStep();
@@ -148,6 +149,9 @@ private slots:
     void copySelectedPathToClipboard();
     void saveSelectedPathToFile();
     void switchColourScheme(int idx = -1);
+    void fixSettingsColourScheme(int idx);
+    void switchColourSchemeInGraph(AssemblyGraph* assemblyGraph, int idx = -1);
+
     void switchTagValue();
     void determineContiguityFromSelectedNode();
     void setTextDisplaySettings();

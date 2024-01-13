@@ -70,7 +70,8 @@ namespace layout {
     }
 
     qreal getMaxX(const GraphLayout &layout) {
-        qreal maxX = layout.begin()->second[0].x();
+        //qreal maxX = layout.begin()->second[0].x();
+        qreal maxX = 0.0;
         for (const auto & entry : layout) {
             for (QPointF point : entry.second) {
                 maxX = std::max(maxX, point.x());
@@ -91,7 +92,8 @@ namespace layout {
     }
 
     qreal getMaxY(const GraphLayout &layout) {
-        qreal maxY = layout.begin()->second[0].y();
+        //qreal maxY = layout.begin()->second[0].y();
+        qreal maxY = 0.0;
         for (const auto & entry : layout) {
             for (QPointF point : entry.second) {
                 maxY = std::max(maxY, point.y());

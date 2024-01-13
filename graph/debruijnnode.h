@@ -130,7 +130,7 @@ private:
 
     float m_depth;
 
-    unsigned m_length : 30;
+    unsigned m_length = 0;
     bool m_specialNode : 1;
     bool m_drawn : 1;
     int m_componentId = 0;

@@ -480,9 +480,6 @@ AssemblyGraph* MainWindow::loadGraph(QString fullFileName, QString graphName, bo
 
             setUiState(GRAPH_LOADED);
             setWindowTitle("BandageNG - " + fullFileName);
-
-            g_assemblyGraph->determineGraphInfo();
-            displayGraphDetails();
             g_memory->rememberedPath = QFileInfo(fullFileName).absolutePath();
             g_memory->clearGraphSpecificMemory();
 
@@ -491,7 +488,7 @@ AssemblyGraph* MainWindow::loadGraph(QString fullFileName, QString graphName, bo
 
             // If the graph has custom colours, automatically switch the colour scheme to custom colours.
             if (customColours)
-                switchColourScheme(CUSTOM_COLOURS);
+                switchColourSchemeInGraph(assemblyGrpah, CUSTOM_COLOURS);
 
             // If the graph doesn't have custom colours, but the colour scheme is on 'Custom', automatically switch it back
             // to the default of 'Random colours'.
@@ -503,6 +500,8 @@ AssemblyGraph* MainWindow::loadGraph(QString fullFileName, QString graphName, bo
             std::filesystem::path csvFilePath = fullFileName.toStdString();
             QString csvPath = QString::fromStdString(csvFilePath.replace_extension(".csv"));
             loadCSV(std::move(csvPath), assemblyGrpah);
+            assemblyGrpah->determineGraphInfo();
+            displayGraphDetails();
             emit graphLoaded();
         }  catch (const AssemblyGraphError &err) {
             QString errorTitle = "Error loading graph";
@@ -1010,6 +1009,7 @@ void MainWindow::drawGraph() {
 void MainWindow::graphLayoutFinished(QList<GraphLayout*> layouts) {
     int i = 0;
     m_scene->clear();
+    int drawnNodeCount = 0;
     for(auto layout : layouts) {
         m_scene->addGraphicsItemsToScene(*g_assemblyGraph->m_graphList[i], *layout);
 
@@ -1023,12 +1023,15 @@ void MainWindow::graphLayoutFinished(QList<GraphLayout*> layouts) {
         selectionChanged();
 
         setUiState(GRAPH_DRAWN);
+        drawnNodeCount += (g_assemblyGraph->m_graphList[i]->getDrawnNodeCount());
         i += 1;
     }
-    m_scene->setSceneRectangle();
-    zoomToFitScene();
-    //Move the focus to the view so the user can use keyboard controls to navigate.
-    g_graphicsView->setFocus();
+    if (drawnNodeCount > 0) {
+        m_scene->setSceneRectangle();
+        zoomToFitScene();
+        //Move the focus to the view so the user can use keyboard controls to navigate.
+        g_graphicsView->setFocus();
+    }
 }
 
 
@@ -1302,10 +1305,7 @@ void MainWindow::saveSelectedPathToFile()
     }
 }
 
-
 void MainWindow::resetAllNodeColours() {
-    /*if (g_assemblyGraph->isEmpty())
-        return;*/
     for (auto assemblyGraph : g_assemblyGraph->m_graphList) {
         for (auto &entry : assemblyGraph->m_deBruijnGraphNodes) {
             auto *graphicsItemNode = entry->getGraphicsItemNode();
@@ -1316,6 +1316,17 @@ void MainWindow::resetAllNodeColours() {
         }
     }
 
+    g_graphicsView->viewport()->update();
+}
+
+void MainWindow::resetAllNodeColoursInGraph(AssemblyGraph* assemblyGraph) {
+    for (auto &entry : assemblyGraph->m_deBruijnGraphNodes) {
+        auto *graphicsItemNode = entry->getGraphicsItemNode();
+        if (!graphicsItemNode)
+            continue;
+
+        graphicsItemNode->setNodeColour(g_settings->nodeColorer->get(graphicsItemNode));
+    }
     g_graphicsView->viewport()->update();
 }
 
@@ -1347,6 +1358,16 @@ void MainWindow::switchTagValue() {
 }
 
 void MainWindow::switchColourScheme(int idx) {
+    fixSettingsColourScheme(idx);
+    resetAllNodeColours();
+}
+
+void MainWindow::switchColourSchemeInGraph(AssemblyGraph* assemblyGraph, int idx) {
+    fixSettingsColourScheme(idx);
+    resetAllNodeColoursInGraph(assemblyGraph);
+}
+
+void MainWindow::fixSettingsColourScheme(int idx) {
     if (idx != -1) {
         if (ui->coloursComboBox->currentIndex() != idx)
             ui->coloursComboBox->setCurrentIndex(idx);
@@ -1380,11 +1401,7 @@ void MainWindow::switchColourScheme(int idx) {
     } else {
         ui->tagsComboBox->setVisible(false);
     }
-
-    resetAllNodeColours();
 }
-
-
 
 void MainWindow::determineContiguityFromSelectedNode() {
     auto *colorer = dynamic_cast<ContiguityNodeColorer*>(&*g_settings->nodeColorer);

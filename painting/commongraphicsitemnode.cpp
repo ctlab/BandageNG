@@ -140,19 +140,21 @@ void CommonGraphicsItemNode::remakePath()
 {
     QPainterPath path;
 
-    path.moveTo(m_linePoints[0]);
-    if (m_linePoints.size() <= 2 || !(g_settings->isHiCLoaded)) {
-        for (size_t i = 1; i < m_linePoints.size(); ++i)
-            path.lineTo(m_linePoints[i]);
-    }
-    else {
-        int middleInd = m_linePoints.size() / 2;
-        for (size_t i = 1; i < middleInd - 1; ++i)
-            path.lineTo(m_linePoints[i]);
-        path.quadTo(m_linePoints[middleInd], m_linePoints[middleInd + 1]);
+    if (m_linePoints.size() > 0) {
+        path.moveTo(m_linePoints[0]);
+        if (m_linePoints.size() <= 2 || !(g_settings->isHiCLoaded)) {
+            for (size_t i = 1; i < m_linePoints.size(); ++i)
+                path.lineTo(m_linePoints[i]);
+        }
+        else {
+            int middleInd = m_linePoints.size() / 2;
+            for (size_t i = 1; i < middleInd - 1; ++i)
+                path.lineTo(m_linePoints[i]);
+            path.quadTo(m_linePoints[middleInd], m_linePoints[middleInd + 1]);
 
-        for (size_t i = middleInd + 1; i < m_linePoints.size(); ++i)
-            path.lineTo(m_linePoints[i]);
+            for (size_t i = middleInd + 1; i < m_linePoints.size(); ++i)
+                path.lineTo(m_linePoints[i]);
+        }
     }
 
     m_path = path;
