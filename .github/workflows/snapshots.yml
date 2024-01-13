@@ -61,6 +61,7 @@ jobs:
 
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
           mv BandageNG*.AppImage BandageNG-Linux.AppImage
+          chmod +x BandageNG-Linux.AppImage
         shell: bash
 
       - name: '📤 Upload artifact: AppImage'
