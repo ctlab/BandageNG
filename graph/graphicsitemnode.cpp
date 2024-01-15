@@ -23,6 +23,8 @@
 #include "assemblygraph.h"
 #include "annotationsmanager.h"
 
+#include "painting/textgraphicsitemnode.h"
+
 #include "program/globals.h"
 #include "program/memory.h"
 #include "program/settings.h"
@@ -394,6 +396,13 @@ void GraphicsItemNode::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
         fixEdgePaths(&nodesToMove);
         fixHiCEdgePaths(&nodesToMove);
+        if (g_settings->multyGraphMode && g_settings->moveGraphTitle) {
+            AssemblyGraph& currrentGraph = *g_assemblyGraph->m_graphMap[m_deBruijnNode->getGraphId()];
+            if (currrentGraph.hasTextGraphicsItem()) {
+                TextGraphicsItemNode * graphTitle = currrentGraph.getTextGraphicsItemNode();
+                graphTitle->mouseMoveEvent(event);
+            }
+        }
     }
 }
 
@@ -479,7 +488,7 @@ QStringList GraphicsItemNode::getNodeText() const
     if (g_settings->displayNodeDepth)
         nodeText << formatDepthForDisplay(m_deBruijnNode->getDepth());
     if (g_settings->displayNodeCsvData) {
-        for (auto graph : g_assemblyGraph->m_graphList) {
+        for (auto graph : g_assemblyGraph->m_graphMap.values()) {
             auto data = graph->getCsvLine(m_deBruijnNode, g_settings->displayNodeCsvDataCol);
             if (data)
                 nodeText << *data;

@@ -60,7 +60,7 @@ QString Minimap2Search::buildDatabase(QSharedPointer<AssemblyGraphList> graphLis
 
     {
         QTextStream out(&file);
-        for (AssemblyGraph* graph: graphList->m_graphList) {
+        for (AssemblyGraph* graph: graphList->m_graphMap.values()) {
         for (const auto *node : graph->m_deBruijnGraphNodes) {
             if (m_cancelBuildDatabase)
                 return (m_lastError = "Build cancelled.");
@@ -81,7 +81,7 @@ QString Minimap2Search::buildDatabase(QSharedPointer<AssemblyGraphList> graphLis
 
     // Make sure the graph has sequences
     bool atLeastOneSequence = false;
-    for (AssemblyGraph* graph: graphList->m_graphList) {
+    for (AssemblyGraph* graph: graphList->m_graphMap.values()) {
     for (const auto *node : graph->m_deBruijnGraphNodes) {
         if (!node->sequenceIsMissing()) {
             atLeastOneSequence = true;

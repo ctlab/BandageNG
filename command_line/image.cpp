@@ -73,7 +73,7 @@ int handleImageCmd(QApplication *app,
     }
 
     g_assemblyGraph->clear();
-    g_assemblyGraph->append(new AssemblyGraph());
+    g_assemblyGraph->m_graphMap[1] = new AssemblyGraph();
     bool loadSuccess = g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str());
     if (!loadSuccess) {
         outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME

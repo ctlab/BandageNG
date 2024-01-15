@@ -11,56 +11,56 @@ public:
     AssemblyGraphList();
 
     AssemblyGraph* first() {
-        if (m_graphList.isEmpty()) {
+        if (m_graphMap.isEmpty()) {
             auto assemblyGraph = new AssemblyGraph();
-            m_graphList.append(assemblyGraph);
+            m_graphMap[1] = assemblyGraph;
         }
-        return m_graphList.first();
+        return m_graphMap[1];
     }
-    AssemblyGraph* last() { return m_graphList.last(); }
-    bool isEmpty() { return m_graphList.isEmpty(); }
-    auto begin() { return m_graphList.begin(); }
-    auto begin() const { return m_graphList.begin(); }
-    auto end() { return m_graphList.end(); }
-    auto end() const { return m_graphList.end(); }
-    void append(AssemblyGraph* graph) { m_graphList.append(graph); }
-    void clear() { m_graphList.clear(); }
-    size_t size() const { return m_graphList.size(); }
+    //AssemblyGraph* last() { return m_graphList.last(); }
+    bool isEmpty() { return m_graphMap.isEmpty(); }
+    //auto begin() { return m_graphList.begin(); }
+    //auto begin() const { return m_graphList.begin(); }
+    //auto end() { return m_graphList.end(); }
+    //auto end() const { return m_graphList.end(); }
+    //void append(AssemblyGraph* graph) { m_graphList.append(graph); }
+    void clear() { m_graphMap.clear(); }
+    size_t size() const { return m_graphMap.size(); }
 
     QColor getCustomColourForDisplay(const DeBruijnNode *node) const;
     QStringList getCustomLabelForDisplay(const DeBruijnNode *node) const;
 
     int getNodeCount(){
         int count = 0;
-        for (auto graph : m_graphList) {
+        for (auto graph : m_graphMap.values()) {
             count += graph->m_nodeCount;
         }
         return count;
     }
     int getEdgeCount() {
         int count = 0;
-        for (auto graph : m_graphList) {
+        for (auto graph : m_graphMap.values()) {
             count += graph->m_edgeCount;
         }
         return count;
     }
     int getPathCount() {
         int count = 0;
-        for (auto graph : m_graphList) {
+        for (auto graph : m_graphMap.values()) {
             count += graph->m_pathCount;
         }
         return count;
     }
     int getTotalLength() {
         int count = 0;
-        for (auto graph : m_graphList) {
+        for (auto graph : m_graphMap.values()) {
             count += graph->m_totalLength;
         }
         return count;
     }
 
     void determineGraphInfo() {
-        for (auto graph : m_graphList) {
+        for (auto graph : m_graphMap.values()) {
             graph -> determineGraphInfo();
         }
     }
@@ -73,7 +73,7 @@ public:
     void changeNodeDepth(const std::vector<DeBruijnNode *> &nodes, double newDepth);
     void recalculateAllNodeWidths(double averageNodeWidth, double depthPower, double depthEffectOnWidth);
 
-    QList<AssemblyGraph*> m_graphList;
+    QMap<int, AssemblyGraph*> m_graphMap;
 
 private:
 

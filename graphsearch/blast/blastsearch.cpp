@@ -70,7 +70,7 @@ QString BlastSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, 
 
     {
         QTextStream out(&file);
-        for (AssemblyGraph* graph: graphList->m_graphList) {
+        for (AssemblyGraph* graph: graphList->m_graphMap.values()) {
             for (const auto *node : graph->m_deBruijnGraphNodes) {
                 if (m_cancelBuildDatabase)
                     return (m_lastError = "Build cancelled.");
@@ -91,7 +91,7 @@ QString BlastSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, 
 
     // Make sure the graph has sequences
     bool atLeastOneSequence = false;
-    for (AssemblyGraph* graph: graphList->m_graphList) {
+    for (AssemblyGraph* graph: graphList->m_graphMap.values()) {
         for (const auto *node : graph->m_deBruijnGraphNodes) {
             if (!node->sequenceIsMissing()) {
                 atLeastOneSequence = true;
@@ -341,7 +341,7 @@ buildHitsFromBlastOutput(QString blastOutput,
 
     QStringList blastHitList = blastOutput.split("\n", Qt::SkipEmptyParts);
 
-    for(auto graph : g_assemblyGraph->m_graphList) {
+    for(auto graph : g_assemblyGraph->m_graphMap.values()) {
         for (const auto &hitString : blastHitList) {
             QStringList alignmentParts = hitString.split('\t');
 

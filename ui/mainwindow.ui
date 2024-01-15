@@ -61,8 +61,8 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-503</y>
-         <width>336</width>
+         <y>0</y>
+         <width>332</width>
          <height>1876</height>
         </rect>
        </property>
@@ -2010,10 +2010,10 @@ then colour which other nodes in the graph are likely to be contiguous
       <widget class="QWidget" name="selectionScrollAreaWidgetContents">
        <property name="geometry">
         <rect>
-         <x>0</x>
-         <y>0</y>
+         <x>-14</x>
+         <y>-185</y>
          <width>237</width>
-         <height>1024</height>
+         <height>1051</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -2628,6 +2628,19 @@ then colour which other nodes in the graph are likely to be contiguous
          <widget class="QPushButton" name="connectSelectedFeatureNodes">
           <property name="text">
            <string>Map features to De Bruijn graph</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="moveTitlesCheckBox">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Move nodes with graph's title</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

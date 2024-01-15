@@ -335,7 +335,7 @@ QColor GCNodeColorer::get(const GraphicsItemNode *node) {
 QColor TagValueNodeColorer::get(const GraphicsItemNode *node) {
     const DeBruijnNode *deBruijnNode = node->m_deBruijnNode;
 
-    for (auto graph : m_graphs.data()->m_graphList) {
+    for (auto graph : m_graphs.data()->m_graphMap.values()) {
         auto tags = graph->m_nodeTags.find(deBruijnNode);
         if (tags != graph->m_nodeTags.end()) {
             if (auto tag = gfa::getTag(m_tagName.c_str(), tags->second)) {
@@ -354,7 +354,7 @@ void TagValueNodeColorer::reset() {
     m_tagNames.clear();
 
     // Collect all tags and their corresponding values
-    for (auto graph : m_graphs.data()->m_graphList) {
+    for (auto graph : m_graphs.data()->m_graphMap.values()) {
         for (const auto &entry : graph->m_nodeTags) {
             for (const auto &tag: entry.second) {
                 std::stringstream stream;
@@ -386,13 +386,7 @@ void TagValueNodeColorer::reset() {
 QColor CSVNodeColorer::get(const GraphicsItemNode *node) {
     const DeBruijnNode *deBruijnNode = node->m_deBruijnNode;
 
-    AssemblyGraph* graph;
-    for(auto currentGraph : m_graphs.data()->m_graphList) {
-        if (currentGraph->getGraphId() == deBruijnNode->getGraphId()) {
-            graph = currentGraph;
-            break;
-        }
-    }
+    AssemblyGraph* graph = m_graphs.data()->m_graphMap[deBruijnNode->getGraphId()];
     auto val = graph->getCsvLine(deBruijnNode, m_colIdx);
     if (!val || m_colIdx >= m_colors.size())
         return m_graphs->getCustomColourForDisplay(deBruijnNode);
@@ -409,11 +403,11 @@ void CSVNodeColorer::reset() {
     m_colors.clear();
 
     size_t columns = 0;
-    for (auto graph : m_graphs.data()->m_graphList)
+    for (auto graph : m_graphs.data()->m_graphMap.values())
         columns = std::max(columns, size_t(graph->m_csvHeaders.size()));
     m_colors.resize(columns);
     // Store all unique values into a map
-    for(auto graph : m_graphs.data()->m_graphList) {
+    for(auto graph : m_graphs.data()->m_graphMap.values()) {
         for (const auto &entry : graph->m_nodeCSVData) {
             const auto &row = entry.second;
             for (size_t i = 0; i < row.size() && i < columns; ++i) {

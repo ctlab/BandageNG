@@ -595,7 +595,7 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
     double boardWidth = 1000;
     qreal sumX = 0;
     qreal oneMaxX = 0;
-    for(AssemblyGraph* graph : graphList->m_graphList) {
+    for(AssemblyGraph* graph : graphList->m_graphMap.values()) {
         const AssemblyGraph& refGraph = std::cref(*graph);
         ogdf::Graph G;
         ogdf::EdgeArray<double> edgeLengths(G);
@@ -699,11 +699,15 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
     qreal maxY = -boardWidth;
     double textWidth = 0.0;
 
-    std::sort(graphList->m_graphList.begin(), graphList->m_graphList.end(), [](AssemblyGraph* a, AssemblyGraph* b)->bool{
-        return (layout::getMaxX(*a->m_layout) + layout::getMaxY(*a->m_layout)) > (layout::getMaxX(*b->m_layout) + layout::getMaxY(*b->m_layout));
+    QList<int> idGraphs = graphList->m_graphMap.keys();
+
+    std::sort(idGraphs.begin(), idGraphs.end(), [&](int a, int b)->bool{
+        return (layout::getMaxX(*(graphList->m_graphMap[a])->m_layout) + layout::getMaxY(*(graphList->m_graphMap[a])->m_layout)) >
+                (layout::getMaxX(*(graphList->m_graphMap[b])->m_layout) + layout::getMaxY(*(graphList->m_graphMap[b])->m_layout));
     });
 
-    for(AssemblyGraph* graph : graphList->m_graphList) {
+    for(int id : idGraphs) {
+        AssemblyGraph* graph = graphList->m_graphMap[id];
         if (maxX < boundX) {
             maxX = std::max(maxX, prevX + textWidth) + boardWidth;
             prevX = maxX;

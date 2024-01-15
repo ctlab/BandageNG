@@ -72,7 +72,7 @@ QString AssemblyGraphList::generateNodesNotFoundErrorMessage(std::vector<QString
 void AssemblyGraphList::recalculateAllNodeWidths(double averageNodeWidth,
                               double depthPower, double depthEffectOnWidth)
 {
-    for (auto assemblyGraph : m_graphList)
+    for (auto assemblyGraph : m_graphMap.values())
         assemblyGraph->recalculateAllNodeWidths(averageNodeWidth,depthPower, depthEffectOnWidth);
 }
 
@@ -88,12 +88,11 @@ void AssemblyGraphList::changeNodeDepth(const std::vector<DeBruijnNode *> &nodes
     }
 
     for (auto node : nodes) {
-        auto graphIndex = node->getGraphId() - 1;
 
         //If this graph does not already have a depthTag, give it a depthTag of KC
         //so the depth info will be saved.
-        if (m_graphList[graphIndex]->m_depthTag == "")
-            m_graphList[graphIndex]->m_depthTag = "KC";
+        if (m_graphMap[node->getGraphId()]->m_depthTag == "")
+            m_graphMap[node->getGraphId()]->m_depthTag = "KC";
     }
 }
 

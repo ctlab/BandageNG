@@ -73,7 +73,7 @@ QString HmmerSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, 
         // in order to mitigate this, emit the largest (=more diverse) node first
         const DeBruijnNode *longest = nullptr;
         size_t length = 0;
-        for (AssemblyGraph* graph: graphList->m_graphList) {
+        for (AssemblyGraph* graph: graphList->m_graphMap.values()) {
             for (const auto *node : graph->m_deBruijnGraphNodes) {
                 if (!node->sequenceIsMissing() && node->getLength() > length) {
                     length = node->getLength();
@@ -115,7 +115,7 @@ QString HmmerSearch::buildDatabase(QSharedPointer<AssemblyGraphList> graphList, 
 
         QTextStream out(&file);
 
-        for (AssemblyGraph* graph: graphList->m_graphList) {
+        for (AssemblyGraph* graph: graphList->m_graphMap.values()) {
             for (const auto *node : graph->m_deBruijnGraphNodes) {
                 if (m_cancelBuildDatabase)
                     return (m_lastError = "Build cancelled.");

@@ -62,10 +62,6 @@ void TextGraphicsItemNode::paint(QPainter * painter, const QStyleOptionGraphicsI
     painter->scale(zoomAdjustment, zoomAdjustment);
     painter->translate(offset);
 
-//    painter->setBrush(Qt::NoBrush);
-//    painter->setPen(QPen(Qt::black, 1.0));
-//    painter->drawRect(boundingRect());
-
     drawTextPathAtLocation(painter, textPath);
     painter->translate(-offset);
     painter->scale(inverseZoomAdjustment, inverseZoomAdjustment);
@@ -97,10 +93,10 @@ void TextGraphicsItemNode::mousePressEvent(QGraphicsSceneMouseEvent * event)
 //graphics items will need to be adjusted accordingly.
 void TextGraphicsItemNode::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-        QPointF difference = event->pos() - event->lastPos();
-        auto *graphicsScene = dynamic_cast<BandageGraphicsScene *>(scene());
+    prepareGeometryChange();
+    QPointF difference = event->pos() - event->lastPos();
+    auto *graphicsScene = dynamic_cast<BandageGraphicsScene *>(scene());
 
-
-        m_centre += difference;
-        graphicsScene->possiblyExpandSceneRectangle(this);
+    m_centre = m_centre + difference;
+    graphicsScene->possiblyExpandSceneRectangle(this);
 }

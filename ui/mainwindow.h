@@ -225,6 +225,7 @@ private slots:
     void loadHiC(QString fullFileName = "");
     void setHiCWidgetVisibility(bool visible);
     void hicInclusionFilterChanged();
+    void setMoveGraphTitleSetting();
 protected:
       void showEvent(QShowEvent *ev) override;
 
