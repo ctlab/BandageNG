@@ -69,7 +69,7 @@ namespace gfa {
         //We use the depthTag to guide how we save the node depth.
         //If it is empty, that implies that the loaded graph did not have depth
         //information and so we don't save depth.
-        if (depthTag == "DP")
+        if (depthTag == "DP" || depthTag == "dp")
             gfaSegmentLine += "\tDP:f:" + QString::number(node->getDepth()).toLatin1();
         else if (depthTag == "KC" || depthTag == "RC" || depthTag == "FC")
             gfaSegmentLine += "\t" + depthTag.toLatin1() + ":i:" +

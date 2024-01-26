@@ -41,14 +41,14 @@
 #include <QSet>
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <cmath>
 #include <utility>
 #include <deque>
 
 AssemblyGraph::AssemblyGraph()
-        : m_kmer(0),
-          m_sequencesLoadedFromFasta(NOT_READY)
+        : m_sequencesLoadedFromFasta(NOT_READY)
 {
     clearGraphInfo();
 }
@@ -296,7 +296,6 @@ void AssemblyGraph::determineGraphInfo()
     m_edgeCount = edgeCount;
     m_totalLength = totalLength;
     m_meanDepth = getMeanDepth();
-    m_pathCount = m_deBruijnGraphPaths.size();
 
     std::sort(nodeDepths.begin(), nodeDepths.end());
 
@@ -412,17 +411,17 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         std::vector<DeBruijnNode *> nodes;
         // See if this is a path name
-        {
-            QString pathName = nodeName;
-            if (g_settings->multyGraphMode)
-                pathName = QString::number(getGraphId()) + "_" + nodeName;
-            auto pathIt = m_deBruijnGraphPaths.find(pathName.toStdString());
-            if (pathIt != m_deBruijnGraphPaths.end()) {
-                for (auto *node : (*pathIt)->nodes()) {
-                    nodes.emplace_back(node);
-                    if (!g_settings->doubleMode)
-                        nodes.emplace_back(node->getReverseComplement());
-                }
+        QString pathName = nodeName;
+        if (g_settings->multyGraphMode)
+            pathName = QString::number(getGraphId()) + "_" + nodeName;
+        // Match using unique prefix of path name. This allows us to load segmented SPAdes
+        // scaffold paths (e.g. NODE_1_foo_1) and assign CSV data to all of them
+        for (auto range = m_deBruijnGraphPaths.equal_prefix_range(pathName.toStdString());
+             range.first != range.second; ++range.first) {
+            for (auto *node : (*range.first)->nodes()) {
+                nodes.emplace_back(node);
+                if (!g_settings->doubleMode)
+                    nodes.emplace_back(node->getReverseComplement());
             }
         }
 

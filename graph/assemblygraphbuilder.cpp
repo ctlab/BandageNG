@@ -199,6 +199,7 @@ namespace io {
 
         static bool isStandardTag(const char name[2]) {
             switch (makeTag(name)) {
+                case makeTag("dp"):
                 case makeTag("DP"):
                 case makeTag("LN"):
                 case makeTag("KC"):
@@ -329,6 +330,9 @@ namespace io {
 
             double nodeDepth = 0;
             if (auto dpTag = gfa::getTag<float>("DP", record.tags)) {
+                graph.m_depthTag = "DP";
+                nodeDepth = *dpTag;
+            } else if (auto dpTag = gfa::getTag<float>("dp", record.tags)) {
                 graph.m_depthTag = "DP";
                 nodeDepth = *dpTag;
             } else if (auto kcTag = gfa::getTag<int64_t>("KC", record.tags)) {

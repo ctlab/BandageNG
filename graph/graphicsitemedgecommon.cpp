@@ -128,17 +128,6 @@ void GraphicsItemEdge::paint(QPainter * painter, const QStyleOptionGraphicsItem 
 }
 
 void GraphicsItemEdge::remakePath() {
-    QPointF startLocation, beforeStartLocation, endLocation, afterEndLocation;
-    getControlPointLocations(m_deBruijnEdge,
-                             startLocation, beforeStartLocation,
-                             endLocation, afterEndLocation);
-    GraphicsItemEdgeCommon::calculateAndSetPath(
-                m_deBruijnEdge->getStartingNode(),
-                m_deBruijnEdge->getEndingNode(),
-                startLocation,
-                beforeStartLocation,
-                endLocation,
-                afterEndLocation);
 }
 
 void GraphicsItemEdge::getControlPointLocations(const DeBruijnEdge *edge,

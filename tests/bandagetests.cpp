@@ -105,6 +105,7 @@ private slots:
     void loadGFA12();
     void loadGFA();
     void loadGAF();
+    void loadSPAdesPaths();
     void loadTrinity();
     void pathFunctionsOnGFA();
     void pathFunctionsOnFastg();
@@ -226,6 +227,31 @@ void BandageTests::loadGAF()
     QVERIFY(io::loadGAFPaths(*g_assemblyGraph->first(), testFile("test.gaf")));
     Path *p = g_assemblyGraph->first()->m_deBruijnGraphPaths["read"];
     QCOMPARE(p->getLength(), 71);
+}
+
+void BandageTests::loadSPAdesPaths()
+{
+    // Check that the graph loaded properly.
+    QVERIFY(g_assemblyGraph->first()->loadGraphFromFile(testFile("test.gfa")));
+
+    // Check that the appropriate number of nodes/edges are present.
+    QCOMPARE(g_assemblyGraph->first()->m_deBruijnGraphNodes.size(), 34);
+    QCOMPARE(g_assemblyGraph->first()->m_deBruijnGraphEdges.size(), 32);
+
+    // Check the length of a couple nodes.
+    DeBruijnNode * node1 = g_assemblyGraph->first()->m_deBruijnGraphNodes["1+"];
+    DeBruijnNode * node14 = g_assemblyGraph->first()->m_deBruijnGraphNodes["14-"];
+    QCOMPARE(node1->getLength(), 2060);
+    QCOMPARE(node14->getLength(), 120);
+
+    QVERIFY(io::loadSPAdesPaths(*g_assemblyGraph->first(), testFile("test.paths")));
+    Path *p1 = g_assemblyGraph->first()->m_deBruijnGraphPaths["NODE_FIRST"];
+    QCOMPARE(p1->getLength(), 4060);
+
+    Path *p21 = g_assemblyGraph->first()->m_deBruijnGraphPaths["NODE_SECOND_1"];
+    QCOMPARE(p21->getLength(), 4000);
+    Path *p22 = g_assemblyGraph->first()->m_deBruijnGraphPaths["NODE_SECOND_2"];
+    QCOMPARE(p22->getLength(), 6000);
 }
 
 
@@ -428,11 +454,12 @@ void BandageTests::graphLocationFunctions()
 
 void BandageTests::loadCsvData()
 {
-    QVERIFY(g_assemblyGraph->first()->loadGraphFromFile(testFile("test.fastg")));
+    QVERIFY(g_assemblyGraph->first()->loadGraphFromFile(testFile("test.gfa")));
 
     QString errormsg;
     QStringList columns;
     bool coloursLoaded = false;
+
     g_assemblyGraph->first()->loadCSV(testFile("test.csv"), &columns, &errormsg, &coloursLoaded);
 
     DeBruijnNode * node6Plus = g_assemblyGraph->first()->m_deBruijnGraphNodes["6+"];
@@ -444,6 +471,7 @@ void BandageTests::loadCsvData()
     DeBruijnNode * node5Minus = g_assemblyGraph->first()->m_deBruijnGraphNodes["5-"];
     DeBruijnNode * node8Plus = g_assemblyGraph->first()->m_deBruijnGraphNodes["8+"];
     DeBruijnNode * node9Plus = g_assemblyGraph->first()->m_deBruijnGraphNodes["9+"];
+    DeBruijnNode * node14Plus = g_assemblyGraph->first()->m_deBruijnGraphNodes["14+"];
 
     QCOMPARE(columns.size(), 3);
     QCOMPARE(errormsg, QString("There were 2 unmatched entries in the CSV."));
@@ -488,6 +516,14 @@ void BandageTests::loadCsvData()
     QCOMPARE(g_assemblyGraph->first()->getCsvLine(node9Plus, 3), QString(""));
     QCOMPARE(g_assemblyGraph->first()->getCsvLine(node9Plus, 4), QString(""));
     QCOMPARE(g_assemblyGraph->first()->getCsvLine(node9Plus, 5), QString(""));
+
+    errormsg = "";
+    QVERIFY(g_assemblyGraph->first()->loadCSV(testFile("test_paths.csv"), &columns, &errormsg, &coloursLoaded));
+    QCOMPARE(columns.size(), 3);
+    QCOMPARE(errormsg, "");
+    QCOMPARE(g_assemblyGraph->first()->getAllCsvData(node4Plus).join("|"), "P21|P22|P23");
+    QCOMPARE(g_assemblyGraph->first()->getAllCsvData(node8Plus).join("|"), "P21|P22|P23");
+    QCOMPARE(g_assemblyGraph->first()->getAllCsvData(node14Plus).join("|"), "P11|P12|P13");
 }
 
 

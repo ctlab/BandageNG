@@ -17,13 +17,7 @@ public:
         }
         return m_graphMap[1];
     }
-    //AssemblyGraph* last() { return m_graphList.last(); }
     bool isEmpty() { return m_graphMap.isEmpty(); }
-    //auto begin() { return m_graphList.begin(); }
-    //auto begin() const { return m_graphList.begin(); }
-    //auto end() { return m_graphList.end(); }
-    //auto end() const { return m_graphList.end(); }
-    //void append(AssemblyGraph* graph) { m_graphList.append(graph); }
     void clear() { m_graphMap.clear(); }
     size_t size() const { return m_graphMap.size(); }
 
@@ -44,10 +38,10 @@ public:
         }
         return count;
     }
-    int getPathCount() {
-        int count = 0;
+    unsigned getPathCount() {
+        unsigned count = 0;
         for (auto graph : m_graphMap.values()) {
-            count += graph->m_pathCount;
+            count += graph->pathCount();
         }
         return count;
     }

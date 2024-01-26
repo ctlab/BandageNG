@@ -252,7 +252,8 @@ void GraphSearchDialog::buildDatabase(bool separateThread, bool showProgress) {
     connect(m_graphSearch.get(), SIGNAL(finishedDbBuild(QString)), this, SLOT(graphDatabaseBuildFinished(QString)));
     connect(progress, SIGNAL(halt()), m_graphSearch.get(), SLOT(cancelDatabaseBuild()));
 
-    auto builder = [&]() { m_graphSearch->buildDatabase(g_assemblyGraph); };
+    //TODO: check [=]
+    auto builder = [&]() { m_graphSearch->buildDatabase(g_assemblyGraph, ui->includeGFAPaths->isChecked()); };
     if (separateThread) {
         QFuture<void> res = QtConcurrent::run(builder);
     } else
@@ -426,6 +427,8 @@ void GraphSearchDialog::setUiStep(SearchUiState uiState) {
         ui->blastHitsTable->setEnabled(false);
         ui->blastSearchWidget->setEnabled(false);
         ui->blastHitsTableInfoText->setEnabled(false);
+        ui->includeGFAPaths->setEnabled(true);
+        ui->includeGFAPathsInfoText->setEnabled(true);
         break;
 
     case GRAPH_DB_BUILD_IN_PROGRESS:
@@ -454,6 +457,8 @@ void GraphSearchDialog::setUiStep(SearchUiState uiState) {
         ui->blastHitsTable->setEnabled(false);
         ui->blastSearchWidget->setEnabled(false);
         ui->blastHitsTableInfoText->setEnabled(false);
+        ui->includeGFAPaths->setEnabled(true);
+        ui->includeGFAPathsInfoText->setEnabled(true);
         break;
 
     case GRAPH_DB_BUILT_BUT_NO_QUERIES:
@@ -482,6 +487,8 @@ void GraphSearchDialog::setUiStep(SearchUiState uiState) {
         ui->blastHitsTable->setEnabled(false);
         ui->blastSearchWidget->setEnabled(false);
         ui->blastHitsTableInfoText->setEnabled(false);
+        ui->includeGFAPaths->setEnabled(false);
+        ui->includeGFAPathsInfoText->setEnabled(false);
         break;
 
     case READY_FOR_GRAPH_SEARCH:
@@ -509,6 +516,8 @@ void GraphSearchDialog::setUiStep(SearchUiState uiState) {
         ui->blastHitsTable->setEnabled(false);
         ui->blastSearchWidget->setEnabled(true);
         ui->blastHitsTableInfoText->setEnabled(false);
+        ui->includeGFAPaths->setEnabled(false);
+        ui->includeGFAPathsInfoText->setEnabled(false);
         break;
 
     case GRAPH_SEARCH_IN_PROGRESS:
@@ -536,6 +545,8 @@ void GraphSearchDialog::setUiStep(SearchUiState uiState) {
         ui->blastHitsTable->setEnabled(false);
         ui->blastSearchWidget->setEnabled(true);
         ui->blastHitsTableInfoText->setEnabled(false);
+        ui->includeGFAPaths->setEnabled(false);
+        ui->includeGFAPathsInfoText->setEnabled(false);
         break;
 
     case GRAPH_SEARCH_COMPLETE:
@@ -563,6 +574,8 @@ void GraphSearchDialog::setUiStep(SearchUiState uiState) {
         ui->blastHitsTable->setEnabled(true);
         ui->blastSearchWidget->setEnabled(true);
         ui->blastHitsTableInfoText->setEnabled(true);
+        ui->includeGFAPaths->setEnabled(false);
+        ui->includeGFAPathsInfoText->setEnabled(false);
         break;
     }
 }
@@ -872,8 +885,12 @@ QVariant HitsListModel::data(const QModelIndex &index, int role) const {
         case HitsColumns::NodeEnd:
             return hit->m_nodeEnd;
         case HitsColumns::Evalue:
+            if (std::isnan(hit->m_eValue.toDouble()))
+                return "N/A";
             return hit->m_eValue.asString(false);
         case HitsColumns::BitScore:
+            if (hit->m_bitScore < 0)
+                return "N/A";
             return hit->m_bitScore;
     }
 

@@ -17,6 +17,8 @@
 
 
 #include "queries.h"
+#include "graph/path.h"
+#include "querypath.h"
 #include "hits.h"
 
 #include "graph/debruijnnode.h"
@@ -163,6 +165,15 @@ void Queries::findQueryPaths() {
         query->findQueryPaths();
 }
 
+size_t Queries::numHits() const {
+    size_t res = 0;
+
+    for (const auto *query : m_queries)
+        res += query->getHits().size();
+
+    return res;
+}
+
 Query::Hits Queries::allHits() const {
     Query::Hits res;
 
@@ -218,6 +229,7 @@ void Queries::addPathHits(const PathHits &hits) {
         if (invert)
             std::swap(pathStart, pathEnd);
 
+        std::vector<DeBruijnNode*> pathNodes;
         for (auto entry: path->getNodeCovering(pathStart, pathEnd)) {
             DeBruijnNode *node = entry.first;
             int nodeStart = entry.second.mapped_range.from, nodeEnd = entry.second.mapped_range.to;
@@ -229,13 +241,47 @@ void Queries::addPathHits(const PathHits &hits) {
                 std::swap(nodeEnd, nodeStart);
             }
 
+            pathNodes.push_back(node);
             pathHits.push_back(query->emplaceHit(query, node, -1, nodeEnd - nodeStart + 1,
                                                  -1, -1,
                                                  queryStart, queryEnd,
                                                  nodeStart, nodeEnd,
-                                                 0, 0));
+                                                 NAN, -1));
         }
 
-        query->emplaceQueryPath(*path, query, pathHits);
+        if (invert) {
+            std::reverse(pathNodes.begin(), pathNodes.end());
+            std::reverse(pathHits.begin(), pathHits.end());
+        }
+
+        Path p(Path::makeFromOrderedNodes(pathNodes, false));
+        // Something went wrong, ignore
+        if (p.nodes().size() != pathNodes.size())
+            continue;
+        p.trim(pathHits.front()->m_nodeStart - 1, pathHits.back()->m_node->getLength() - pathHits.back()->m_nodeEnd);
+
+        QueryPath queryPath(std::move(p), query, pathHits);
+
+        // We now want to throw out any paths for which the hits fail to meet the
+        // thresholds in settings.
+        if (queryPath.getPathQueryCoverage() < g_settings->minQueryCoveredByPath)
+            continue;
+        if (g_settings->minQueryCoveredByHits.on &&
+            queryPath.getHitsQueryCoverage() < g_settings->minQueryCoveredByHits)
+            continue;
+        if (g_settings->minLengthPercentage.on &&
+            queryPath.getRelativePathLength() < g_settings->minLengthPercentage)
+            continue;
+        if (g_settings->maxLengthPercentage.on &&
+            queryPath.getRelativePathLength() > g_settings->maxLengthPercentage)
+            continue;
+        if (g_settings->minLengthBaseDiscrepancy.on &&
+            queryPath.getAbsolutePathLengthDifference() < g_settings->minLengthBaseDiscrepancy)
+            continue;
+        if (g_settings->maxLengthBaseDiscrepancy.on &&
+            queryPath.getAbsolutePathLengthDifference() > g_settings->maxLengthBaseDiscrepancy)
+            continue;
+
+        query->emplaceQueryPath(std::move(queryPath));
     }
 }

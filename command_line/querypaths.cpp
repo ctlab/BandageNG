@@ -26,6 +26,7 @@
 #include <CLI/CLI.hpp>
 
 #include <QDateTime>
+#include <type_traits>
 
 CLI::App *addQueryPathsSubcommand(CLI::App &app,
                                   QueryPathsCmd &cmd) {
@@ -38,9 +39,9 @@ CLI::App *addQueryPathsSubcommand(CLI::App &app,
             ->required();
     qp->add_flag("--pathfasta", cmd.m_pathFasta, "Put all query path sequences in a multi-FASTA file, not in the TSV file");
     qp->add_flag("--hitsfasta", cmd.m_hitsFasta, "Produce a multi-FASTA file of all BLAST hits in the query paths");
+    qp->add_flag("--gfapaths", cmd.m_gfaPaths, "Align to GFA path sequences in addition to nodes");
 
     qp->footer("Bandage querypaths searches for queries in the graph using BLAST and outputs the results to a tab-delimited file.");
-
 
     return qp;
 
@@ -85,7 +86,11 @@ int handleQueryPathsCmd(QApplication *app,
 
     QDateTime startTime = QDateTime::currentDateTime();
 
-    out << Qt::endl << "(" << QDateTime::currentDateTime().toString("dd MMM yyyy hh:mm:ss") << ") Loading graph...        " << Qt::flush;
+    auto log = [&out](const char * msg) {
+        out << "(" << QDateTime::currentDateTime().toString("dd MMM yyyy hh:mm:ss") << ") " << msg  << Qt::flush;
+    };
+
+    log("Loading graph...        ");
 
     if (!g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str())) {
         err << "Bandage-NG error: could not load " << cmd.m_graph.c_str() << Qt::endl;
@@ -96,18 +101,19 @@ int handleQueryPathsCmd(QApplication *app,
         err << g_blastSearch->lastError() << Qt::endl;
         return 1;
     }
+    out << "done" << Qt::endl;
 
-    out << "(" << QDateTime::currentDateTime().toString("dd MMM yyyy hh:mm:ss") << ") Running BLAST search... " << Qt::flush;
+    log("Running BLAST search... ");
     QString blastError = g_blastSearch->doAutoGraphSearch(g_assemblyGraph,
                                                           g_settings->blastQueryFilename,
-                                                          false, /* include paths */
+                                                          cmd.m_gfaPaths,
                                                           g_settings->blastSearchParameters);
     if (!blastError.isEmpty()) {
         err << Qt::endl << blastError << Qt::endl;
         return 1;
     }
     out << "done" << Qt::endl;
-    out << "(" << QDateTime::currentDateTime().toString("dd MMM yyyy hh:mm:ss") << ") Saving results...       " << Qt::flush;
+    log("Saving results...       ");
 
     // Create the table file.
     tableFile.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -117,6 +123,8 @@ int handleQueryPathsCmd(QApplication *app,
     tableOut << "Query\t"
                 "Path\t"
                 "Length\t"
+                "Query start\t"
+                "Query end\t"
                 "Query covered by path\t"
                 "Query covered by hits\t"
                 "Mean hit identity\t"
@@ -144,22 +152,43 @@ int handleQueryPathsCmd(QApplication *app,
     QList<QString> hitSequenceIDs;
     QList<QByteArray> hitSequences;
 
+    auto maybeNA = [](auto val) -> QString {
+        using ValT = typeof(val);
+        if constexpr (std::is_same_v<ValT, double>) {
+            if (std::isnan(val))
+            return "N/A";
+        } else if constexpr (std::is_same_v<ValT, SciNot>) {
+            if (std::isnan(val.toDouble()))
+                return "N/A";
+            return val.asString(false);
+        } else {
+            if (val < 0)
+                return "N/A";
+
+            return QString::number(val);
+        }
+
+        return "N/A";
+    };
+
     for (const auto *query : g_blastSearch->queries()) {
         unsigned num = 0;
         for (const auto & queryPath : query->getPaths()) {
             Path path = queryPath.getPath();
 
-            tableOut << query->getName() << "\t"
-                     << path.getString(true) << "\t"
-                     << QString::number(path.getLength()) << "\t"
-                     << QString::number(100.0 * queryPath.getPathQueryCoverage()) << "%\t"
-                     << QString::number(100.0 * queryPath.getHitsQueryCoverage()) << "%\t"
-                     << QString::number(queryPath.getMeanHitPercIdentity()) << "%\t"
-                     << QString::number(queryPath.getTotalHitMismatches()) << "\t"
-                     << QString::number(queryPath.getTotalHitGapOpens()) << "\t"
-                     << QString::number(100.0 * queryPath.getRelativePathLength()) << "%\t"
-                     << queryPath.getAbsolutePathLengthDifferenceString(false) << "\t"
-                     << queryPath.getEvalueProduct().asString(false) << "\t";
+            tableOut << query->getName() << '\t'
+                     << path.getString(true) << '\t'
+                     << QString::number(path.getLength()) << '\t'
+                     << QString::number(queryPath.queryStart()) << '\t'
+                     << QString::number(queryPath.queryEnd()) << '\t'
+                     << QString::number(queryPath.getPathQueryCoverage()) << '\t'
+                     << QString::number(queryPath.getHitsQueryCoverage()) << '\t'
+                     << maybeNA(queryPath.getMeanHitPercIdentity()) << '\t'
+                     << maybeNA(queryPath.getTotalHitMismatches()) << '\t'
+                     << maybeNA(queryPath.getTotalHitGapOpens()) << '\t'
+                     << QString::number(queryPath.getRelativePathLength()) << '\t'
+                     << queryPath.getAbsolutePathLengthDifferenceString(false) << '\t'
+                     << maybeNA(queryPath.getEvalueProduct()) << '\t';
 
             // If we are using a separate file for the path sequences, save the
             // sequence along with its ID to save later, and store the ID here.
@@ -212,13 +241,14 @@ int handleQueryPathsCmd(QApplication *app,
 
     out << "done" << Qt::endl;
 
-    out << Qt::endl << "Results:      " + tableFilename << Qt::endl;
+    out << Qt::endl << "Results: " + tableFilename << Qt::endl;
     if (cmd.m_pathFasta)
         out << "              " + pathFastaFilename << Qt::endl;
     if (cmd.m_hitsFasta)
         out << "              " + hitsFastaFilename << Qt::endl;
 
     out << Qt::endl << "Summary: Total BLAST queries:           " << g_blastSearch->getQueryCount() << Qt::endl;
+    out << "         Total hits:                    " << g_blastSearch->getNumHits() << Qt::endl;
     out << "         Queries with found paths:      " << g_blastSearch->getQueryCountWithAtLeastOnePath() << Qt::endl;
     out << "         Total query paths:             " << g_blastSearch->getQueryPathCount() << Qt::endl;
 
