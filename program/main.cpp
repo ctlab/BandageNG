@@ -61,7 +61,7 @@ using SubCmd = std::variant<std::monostate,
                             QueryPathsCmd,
                             LayoutCmd>;
 
-static SubCmd parseCmdLine(CLI::App &app) {
+static SubCmd parseCmdLine(CLI::App &app, int argc, char *argv[]) {
     SubCmd subcmd;
 
     app.description(getBandageTitleAsciiArt() + '\n' +
@@ -99,7 +99,7 @@ static SubCmd parseCmdLine(CLI::App &app) {
 
     app.footer("Online Bandage help: https://github.com/asl/BandageNG/wiki");
 
-    app.parse();
+    app.parse(argc, argv);
 
     if (app.got_subcommand(load)) {
         g_memory->commandLineCommand = BANDAGE_LOAD; // FIXME: not needed
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
     g_assemblyGraph.reset(new AssemblyGraphList());
 
     try {
-        cmd = parseCmdLine(cli);
+        cmd = parseCmdLine(cli, argc, argv);
     } catch (const CLI::ParseError &e) {
         return cli.exit(e);
     }

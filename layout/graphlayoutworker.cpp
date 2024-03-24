@@ -42,6 +42,8 @@
 
 #include <ctime>
 
+#include<QDebug>
+
 GraphLayouter::GraphLayouter(int graphLayoutQuality, bool useLinearLayout,
                              double graphLayoutComponentSeparation, double aspectRatio)
         :   m_graphLayoutQuality(graphLayoutQuality),
@@ -590,105 +592,115 @@ static void reassembleDrawings(ogdf::GraphAttributes &GA,
 }
 
 QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphList> graphList) {
+    time_t start, end;
+    time(&start);
     QList<GraphLayout*> resList;
 
     double boardWidth = 1000;
     qreal sumX = 0;
     qreal oneMaxX = 0;
+    int numGraph = 0;
     for(AssemblyGraph* graph : graphList->m_graphMap.values()) {
-        const AssemblyGraph& refGraph = std::cref(*graph);
-        ogdf::Graph G;
-        ogdf::EdgeArray<double> edgeLengths(G);
-        ogdf::GraphAttributes GA(G,
-                                 ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics);
-        OGDFGraphLayout layout(refGraph);
-        buildGraph(G, GA, edgeLengths, layout, m_useLinearLayout);
+        QFutureSynchronizer<void> * synch = new QFutureSynchronizer<void>();
+        m_taskSynchronizers.push_back(std::move(synch));
+        m_taskSynchronizerMultiGraph.addFuture(
+                    QtConcurrent::run([&](AssemblyGraph* graph, QFutureSynchronizer<void> * taskSynchronizer) {
+                        const AssemblyGraph& refGraph = std::cref(*graph);
+                        ogdf::Graph G;
+                        ogdf::EdgeArray<double> edgeLengths(G);
+                        ogdf::GraphAttributes GA(G,
+                                                 ogdf::GraphAttributes::nodeGraphics | ogdf::GraphAttributes::edgeGraphics);
+                        OGDFGraphLayout layout(refGraph);
+                        std::vector<std::unique_ptr<GraphLayouter>> m_state;
+                        buildGraph(G, GA, edgeLengths, layout, m_useLinearLayout);
 
-        //first we split the graph into its components
-        ogdf::NodeArray<int> componentNumber(G);
-        int numberOfComponents = connectedComponents(G, componentNumber);
-        if (numberOfComponents == 0) {
-            GraphLayout res(refGraph);
-            graph->setLayout(&res);
-            continue;
-        }
-
-        ogdf::Array<ogdf::List<ogdf::node> > nodesInCC(numberOfComponents);
-        for (auto v : G.nodes)
-            nodesInCC[componentNumber[v]].pushBack(v);
-
-        for (size_t i= 0; i < numberOfComponents; ++i) {
-            m_state.emplace_back(new FMMGraphLayout(m_graphLayoutQuality,
-                                                   m_useLinearLayout,
-                                                   m_graphLayoutComponentSeparation,
-                                                   m_aspectRatio));
-            m_state.back()->init();
-        }
-
-        for (int i = 0; i < numberOfComponents; i++) {
-            m_taskSynchronizer.addFuture(
-                    QtConcurrent::run([&](GraphLayouter *layout,
-                            const ogdf::List<ogdf::node> &nodesInCC) {
-
-                        ogdf::GraphCopy GC;
-                        ogdf::EdgeArray<double> cedgeLengths(GC);
-                        ogdf::EdgeArray<ogdf::edge> auxCopy(G);
-
-                        GC.createEmpty(G);
-
-                        GC.initByNodes(nodesInCC, auxCopy);
-                        ogdf::GraphAttributes cGA(GC, GA.attributes());
-                        for (ogdf::node v : GC.nodes) {
-                            cGA.x(v) = GA.x(GC.original(v));
-                            cGA.y(v) = GA.y(GC.original(v));
-                            cGA.width(v) = GA.width(GC.original(v));
-                            cGA.height(v) = GA.height(GC.original(v));
+                        //first we split the graph into its components
+                        ogdf::NodeArray<int> componentNumber(G);
+                        int numberOfComponents = connectedComponents(G, componentNumber);
+                        if (numberOfComponents == 0) {
+                            GraphLayout res(refGraph);
+                            graph->setLayout(&res);
+                            return;
                         }
 
-                        for (ogdf::edge e : GC.edges)
-                            cedgeLengths(e) = edgeLengths(GC.original(e));
+                        ogdf::Array<ogdf::List<ogdf::node> > nodesInCC(numberOfComponents);
+                        for (auto v : G.nodes)
+                            nodesInCC[componentNumber[v]].pushBack(v);
 
-                        layout->run(cGA, cedgeLengths);
+                        for (size_t i= 0; i < numberOfComponents; ++i) {
+                            m_state.emplace_back(new FMMGraphLayout(m_graphLayoutQuality,
+                                                                   m_useLinearLayout,
+                                                                   m_graphLayoutComponentSeparation,
+                                                                   m_aspectRatio));
+                            m_state.back()->init();
+                        }
 
-                        for (ogdf::node v : GC.nodes) {
-                            ogdf::node w = GC.original(v);
-                            if (w == nullptr)
+                        for (int i = 0; i < numberOfComponents; i++) {
+                            taskSynchronizer->addFuture(
+                                    QtConcurrent::run([&](GraphLayouter *layout,
+                                            const ogdf::List<ogdf::node> &nodesInCC) {
+
+                                        ogdf::GraphCopy GC;
+                                        ogdf::EdgeArray<double> cedgeLengths(GC);
+                                        ogdf::EdgeArray<ogdf::edge> auxCopy(G);
+
+                                        GC.createEmpty(G);
+
+                                        GC.initByNodes(nodesInCC, auxCopy);
+                                        ogdf::GraphAttributes cGA(GC, GA.attributes());
+                                        for (ogdf::node v : GC.nodes) {
+                                            cGA.x(v) = GA.x(GC.original(v));
+                                            cGA.y(v) = GA.y(GC.original(v));
+                                            cGA.width(v) = GA.width(GC.original(v));
+                                            cGA.height(v) = GA.height(GC.original(v));
+                                        }
+
+                                        for (ogdf::edge e : GC.edges)
+                                            cedgeLengths(e) = edgeLengths(GC.original(e));
+
+                                        layout->run(cGA, cedgeLengths);
+
+                                        for (ogdf::node v : GC.nodes) {
+                                            ogdf::node w = GC.original(v);
+                                            if (w == nullptr)
+                                                continue;
+
+                                            GA.x(w) = cGA.x(v);
+                                            GA.y(w) = cGA.y(v);
+                                        }
+
+                                    }, m_state[i].get(), nodesInCC[i]));
+                        }
+                        taskSynchronizer->waitForFinished();
+
+                        reassembleDrawings(GA,
+                                           m_graphLayoutComponentSeparation, m_aspectRatio,
+                                           nodesInCC);
+
+                        GraphLayout* res = new GraphLayout(refGraph);
+                        for (const auto & entry : layout) {
+                            for (ogdf::node node : entry.second) {
+                                double curX = GA.x(node);
+                                double curY = GA.y(node);
+                                res->add(entry.first, { curX, curY });
+                                sumX += curX;
+                                oneMaxX = std::max(oneMaxX, curX);
+                            }
+                        }
+                        // In double mode add layout for the reverse-complement nodes (in opposite direction)
+                        for (const auto & entry : layout) {
+                            auto *rcNode = entry.first->getReverseComplement();
+                            if (!rcNode->isDrawn())
                                 continue;
-
-                            GA.x(w) = cGA.x(v);
-                            GA.y(w) = cGA.y(v);
+                            for (auto rIt = entry.second.rbegin(); rIt != entry.second.rend(); ++rIt)
+                                res->add(rcNode, { GA.x(*rIt), GA.y(*rIt) });
                         }
 
-                    }, m_state[i].get(), nodesInCC[i]));
-        }
-        m_taskSynchronizer.waitForFinished();
-
-        reassembleDrawings(GA,
-                           m_graphLayoutComponentSeparation, m_aspectRatio,
-                           nodesInCC);
-
-        GraphLayout* res = new GraphLayout(refGraph);
-        for (const auto & entry : layout) {
-            for (ogdf::node node : entry.second) {
-                double curX = GA.x(node);
-                double curY = GA.y(node);
-                res->add(entry.first, { curX, curY });
-                sumX += curX;
-                oneMaxX = std::max(oneMaxX, curX);
-            }
-        }
-        // In double mode add layout for the reverse-complement nodes (in opposite direction)
-        for (const auto & entry : layout) {
-            auto *rcNode = entry.first->getReverseComplement();
-            if (!rcNode->isDrawn())
-                continue;
-            for (auto rIt = entry.second.rbegin(); rIt != entry.second.rend(); ++rIt)
-                res->add(rcNode, { GA.x(*rIt), GA.y(*rIt) });
-        }
-
-        graph->setLayout(res);
+                        graph->setLayout(res);
+        }, graph, (m_taskSynchronizers[numGraph])));
+        numGraph+=1;
     }
-
+    m_taskSynchronizerMultiGraph.waitForFinished();
     qreal boundX = std::max(oneMaxX, std::round(std::sqrt(sumX))) + 1.0;
 
     qreal prevX = 0.0;
@@ -736,12 +748,17 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
 
     }
 
+    time(&end);
+    double second = difftime(end, start);
+    qInfo() << "Time "<<second<<"\n";
     return resList;
 }
 
 [[maybe_unused]] void GraphLayoutWorker::cancelLayout() {
-    for (auto &layouter : m_state)
+    /*for (auto &layouter : m_state)
         layouter->cancel();
-    for (auto & future : m_taskSynchronizer.futures())
-        future.cancel();
+    for (auto taskSynchronizer : m_taskSynchronizers) {
+        for (auto & future : taskSynchronizer.futures())
+            future.cancel();
+    }*/
 }

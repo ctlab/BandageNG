@@ -37,7 +37,7 @@ Settings::Settings()
     nodeSegmentLength = FloatSetting(20.0, 1.0, 1000.0);
     componentSeparation = FloatSetting(50.0, 0, 1000.0);
 
-    averageNodeWidth = FloatSetting(5.0, 0.5, 1000.0);
+    averageNodeWidth = FloatSetting(10.0, 0.5, 1000.0);
     depthEffectOnWidth = FloatSetting(0.5, 0.0, 1.0);
     depthPower = FloatSetting(0.5, 0.0, 1.0);
 

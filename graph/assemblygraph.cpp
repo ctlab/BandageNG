@@ -662,6 +662,46 @@ std::vector<DeBruijnNode *> AssemblyGraph::getNodesFromListExact(const QStringLi
     return returnVector;
 }
 
+std::vector<DeBruijnNode *> AssemblyGraph::getNodeFromNameExact(QString nodeName) const
+{
+    std::vector<DeBruijnNode *> returnVector;
+
+    nodeName = nodeName.simplified();
+
+
+    //If the node name ends in +/-, then we assume the user was specifying the exact
+    //node in the pair.  If the node name does not end in +/-, then we assume the
+    //user is asking for either node in the pair.
+    QChar lastChar = nodeName.at(nodeName.length() - 1);
+    if (lastChar == '+' || lastChar == '-')
+    {
+        if (m_deBruijnGraphNodes.count(nodeName.toStdString()))
+            returnVector.push_back(m_deBruijnGraphNodes.at(nodeName.toStdString()));
+    }
+    else
+    {
+        QString posNodeName = nodeName + "+";
+        QString negNodeName = nodeName + "-";
+
+        bool posNodeFound = false;
+        if (m_deBruijnGraphNodes.count(posNodeName.toStdString()))
+        {
+            returnVector.push_back(m_deBruijnGraphNodes.at(posNodeName.toStdString()));
+            posNodeFound = true;
+        }
+
+        bool negNodeFound = false;
+        if (m_deBruijnGraphNodes.count(negNodeName.toStdString()))
+        {
+            returnVector.push_back(m_deBruijnGraphNodes.at(negNodeName.toStdString()));
+            negNodeFound = true;
+        }
+    }
+
+
+    return returnVector;
+}
+
 std::vector<DeBruijnNode *> AssemblyGraph::getNodesFromListPartial(const QStringList& nodesList,
                                                                    std::vector<QString> * nodesNotInGraph) const
 {

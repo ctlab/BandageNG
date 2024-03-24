@@ -251,11 +251,13 @@ void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
 
         bool colSet = false;
         if (auto *rcNode = node->getReverseComplement()) {
-            if (auto *revCompGraphNode = rcNode->getGraphicsItemNode()) {
-                auto colPair = g_settings->nodeColorer->get(graphicsItemNode, revCompGraphNode);
-                graphicsItemNode->setNodeColour(colPair.first);
-                revCompGraphNode->setNodeColour(colPair.second);
-                colSet = true;
+            if (rcNode->hasGraphicsItem()) {
+                if (auto *revCompGraphNode = rcNode->getGraphicsItemNode()) {
+                    auto colPair = g_settings->nodeColorer->get(graphicsItemNode, revCompGraphNode);
+                    graphicsItemNode->setNodeColour(colPair.first);
+                    revCompGraphNode->setNodeColour(colPair.second);
+                    colSet = true;
+                }
             }
         }
         if (!colSet)
@@ -297,11 +299,19 @@ void BandageGraphicsScene::addGraphicsItemsToScene(AssemblyGraph &graph,
         addItem(graphicsItemNode);
     }
     //Add graph name to the scene if need
-    if ((!graph.m_graphName.isEmpty()) && graph.hasTextGraphicsItem()) {
-        auto textGraphicsItem = graph.getTextGraphicsItemNode();
-        textGraphicsItem->setFlag(QGraphicsItem::ItemIsSelectable);
-        textGraphicsItem->setFlag(QGraphicsItem::ItemIsMovable);
-        addItem(textGraphicsItem);
+    if (!graph.m_graphName.isEmpty()) {
+        if (graph.hasTextGraphicsItem()) {
+            auto textGraphicsItem = graph.getTextGraphicsItemNode();
+            textGraphicsItem->setFlag(QGraphicsItem::ItemIsSelectable);
+            textGraphicsItem->setFlag(QGraphicsItem::ItemIsMovable);
+            addItem(textGraphicsItem); //segmentation fault (load layout twice)
+        } else {
+            auto textGraphicsItemNode = new TextGraphicsItemNode(graph.m_graphName, QPointF(layout::getMinX(layout), layout::getMinY(layout)));
+            graph.setTextGraphicsItemNode(textGraphicsItemNode);
+            textGraphicsItemNode->setFlag(QGraphicsItem::ItemIsSelectable);
+            textGraphicsItemNode->setFlag(QGraphicsItem::ItemIsMovable);
+            addItem(textGraphicsItemNode);
+        }
     }
 }
 

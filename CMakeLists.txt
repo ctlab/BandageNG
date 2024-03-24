@@ -74,7 +74,6 @@ set(LIB_SOURCES
     features_forest/graphicsitemfeaturenode.cpp
     painting/commongraphicsitemnode.cpp
     ui/featuresforestwidget.cpp
-    painting/commongraphicsitemnode.cpp
     hic/hicmanager.cpp
     hic/hicedge.cpp
     graph/graphicsitemedgecommon.cpp

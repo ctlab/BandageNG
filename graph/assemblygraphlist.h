@@ -67,6 +67,15 @@ public:
     void changeNodeDepth(const std::vector<DeBruijnNode *> &nodes, double newDepth);
     void recalculateAllNodeWidths(double averageNodeWidth, double depthPower, double depthEffectOnWidth);
 
+    AssemblyGraph* getGraphByName(QString name) {
+        for (AssemblyGraph * graph : m_graphMap.values()) {
+            if (graph->getGraphName() == name) {
+                return graph;
+            }
+        }
+        return nullptr;
+    }
+
     QMap<int, AssemblyGraph*> m_graphMap;
 
 private:

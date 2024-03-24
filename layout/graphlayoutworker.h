@@ -63,8 +63,8 @@ public:
     //void layoutGraph(QSharedPointer<AssemblyGraphList> graphList);
 
 private:
-    QFutureSynchronizer<void> m_taskSynchronizer;
-    std::vector<std::unique_ptr<GraphLayouter>> m_state;
+    std::vector<QFutureSynchronizer<void>*> m_taskSynchronizers;
+    QFutureSynchronizer<void> m_taskSynchronizerMultiGraph;
     int m_graphLayoutQuality;
     bool m_useLinearLayout;
     double m_graphLayoutComponentSeparation;

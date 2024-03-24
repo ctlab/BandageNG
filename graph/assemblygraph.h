@@ -145,6 +145,7 @@ public:
     std::vector<DeBruijnNode *> getNodesFromString(QString nodeNamesString,
                                                    bool exactMatch,
                                                    std::vector<QString> * nodesNotInGraph = nullptr) const;
+    std::vector<DeBruijnNode *> getNodeFromNameExact(QString nodeName) const;
 
     void setAllEdgesExactOverlap(int overlap);
     void autoDetermineAllEdgesExactOverlap();
@@ -203,6 +204,7 @@ public:
     TextGraphicsItemNode * getTextGraphicsItemNode() const {return m_textGraphicsItemNode;}
     bool hasTextGraphicsItem() const {return m_textGraphicsItemNode != nullptr;}
     void setGraphName(QString name) { m_graphName = name;}
+    QString getGraphName() {return m_graphName;}
     int getGraphId() const {return m_graphId;}
     void setGraphId(int graphId){m_graphId = graphId;}
 private:
@@ -211,7 +213,7 @@ private:
     std::vector<int> makeOverlapCountVector();
     void clearAllCsvData();
     QString getNewNodeName(QString oldNodeName) const;
-    TextGraphicsItemNode* m_textGraphicsItemNode;
+    TextGraphicsItemNode* m_textGraphicsItemNode = nullptr;
     int m_graphId = 1;
 signals:
     void setMergeTotalCount(int totalCount);

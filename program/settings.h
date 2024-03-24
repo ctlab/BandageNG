@@ -247,7 +247,7 @@ public:
     FloatSetting hicEdgeLength;
     bool roundMode = false;
     bool multyGraphMode = false;
-    bool moveGraphTitle = true;
+    bool moveGraphTitle = false;
 };
 
 #endif // SETTINGS_H

@@ -16,12 +16,18 @@
 // along with Bandage.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "graphlayout.h"
+#include "graph/assemblygraphlist.h"
 
 namespace layout::io {
     bool load(const QString &filename,
               GraphLayout &layout);
+    bool loadLayoutList(const QString &filename,
+              QSharedPointer<AssemblyGraphList> graphList);
     bool save(const QString &filename,
               const GraphLayout &layout);
     bool saveTSV(const QString &filename,
                  const GraphLayout &layout);
-};
+
+    bool saveGraphList(const QString &filename, QSharedPointer<AssemblyGraphList> graphList);
+    bool saveGraphListTSV(const QString &filename, QSharedPointer<AssemblyGraphList> graphList);
+}

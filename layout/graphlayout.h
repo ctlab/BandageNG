@@ -24,6 +24,7 @@
 
 class DeBruijnNode;
 class AssemblyGraph;
+class AssemblyGraphList;
 
 template<class T>
 class GraphLayoutStorage {
@@ -53,6 +54,7 @@ using GraphLayout = GraphLayoutStorage<QPointF>;
 
 namespace layout {
     GraphLayout fromGraph(const AssemblyGraph &graph, bool simplified = false);
+    //std::vector<GraphLayout> fromGraphList(AssemblyGraphList & graphList, bool simplified = false);
     void apply(AssemblyGraph &graph, const GraphLayout &layout);
     qreal getMinX(const GraphLayout &layout);
     qreal getMaxX(const GraphLayout &layout);

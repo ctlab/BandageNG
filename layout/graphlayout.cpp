@@ -45,6 +45,14 @@ namespace layout {
         return res;
     }
 
+    /*std::vector<GraphLayout> fromGraphList(AssemblyGraphList & graphList, bool simplified) {
+        std::vector<GraphLayout> res;
+        for (AssemblyGraph * graph : graphList.m_graphMap.values()) {
+            res.append(*graph, simplified);
+        }
+        return res;
+    }*/
+
     void apply(AssemblyGraph &graph, const GraphLayout &layout) {
         // First, determine the set of nodes to be drawn from the layout
         graph.resetNodes();

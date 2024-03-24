@@ -539,8 +539,6 @@ AssemblyGraph* MainWindow::loadGraph(QString fullFileName, QString graphName, bo
 }
 
 void MainWindow::loadGraphLayout(QString fullFileName) {
-    g_assemblyGraph->clear();
-    g_assemblyGraph->m_graphMap[1] = new AssemblyGraph();
     if (fullFileName.isEmpty())
         fullFileName = QFileDialog::getOpenFileName(this, "Load Bandage layout", "",
                                                     "Bandage layout (*.layout)");
@@ -548,23 +546,97 @@ void MainWindow::loadGraphLayout(QString fullFileName) {
     if (fullFileName.isEmpty())
         return; // user clicked on cancel
 
-    GraphLayout layout(*(g_assemblyGraph->first()));
-    try {
-        layout::io::load(fullFileName, layout);
-    } catch (std::runtime_error &err) {
-        QString errorTitle = "Error loading layout";
-        QString errorMessage = "There was an error when attempting to load:\n"
-                               + fullFileName + ":\n"
-                               + err.what() + "\n\n"
-                                 "Please verify that this file has the correct format.";
-        QMessageBox::warning(this, errorTitle, errorMessage);
-        return;
+    if (!g_settings->multyGraphMode) {
+        GraphLayout layout(*(g_assemblyGraph->first()));
+        try {
+            layout::io::load(fullFileName, layout);
+        } catch (std::runtime_error &err) {
+            QString errorTitle = "Error loading layout";
+            QString errorMessage = "There was an error when attempting to load:\n"
+                                   + fullFileName + ":\n"
+                                   + err.what() + "\n\n"
+                                     "Please verify that this file has the correct format.";
+            QMessageBox::warning(this, errorTitle, errorMessage);
+            return;
+        }
+
+        layout::apply(*(g_assemblyGraph->first()), layout);
+        g_assemblyGraph->first()->setLayout(&layout);
+        graphLayoutFinished();
+    } else {
+        try {
+            for (AssemblyGraph* graph : g_assemblyGraph->m_graphMap.values()) {
+                graph->setTextGraphicsItemNode(nullptr);
+            }
+            layout::io::loadLayoutList(fullFileName, g_assemblyGraph);
+        } catch (std::runtime_error &err) {
+            QString errorTitle = "Error loading layout";
+            QString errorMessage = "There was an error when attempting to load:\n"
+                                   + fullFileName + ":\n"
+                                   + err.what() + "\n\n"
+                                     "Please verify that this file has the correct format.";
+            QMessageBox::warning(this, errorTitle, errorMessage);
+            return;
+        }
+        graphLayoutFinished();
+    }
+}
+
+bool MainWindow::loadLayoutList(const QString &filename) {
+    QFile loadFile(filename);
+    // FIXME: Switch to Error return object stuff!
+    if (!loadFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        throw std::runtime_error("cannot open file: " + filename.toStdString());
+
+    QJsonParseError error;
+    auto jsonLayoutDoc = QJsonDocument::fromJson(loadFile.readAll(), &error);
+    if (error.error != QJsonParseError::NoError)
+        throw std::runtime_error(error.errorString().toStdString());
+
+    if (!jsonLayoutDoc.isObject())
+        throw std::runtime_error("invalid layout format");
+
+    QJsonObject jsonLayout = jsonLayoutDoc.object();
+
+    for (auto graphIt = jsonLayout.begin(); graphIt != jsonLayout.end(); ++graphIt) {
+        QString graphName = graphIt.key();
+        AssemblyGraph* graph = g_assemblyGraph->getGraphByName(graphName);
+        if (graph == nullptr) {
+            throw std::runtime_error("Graph with name " + graphName.toStdString() + " not found");
+        }
+        GraphLayout layout(*graph);
+        QJsonObject graphLayout = graphIt.value().toObject();
+        for (auto it = graphLayout.begin(); it != graphLayout.end(); ++it) {
+            QStringList parts = it.key().split("_");
+            parts.pop_front();
+
+            QString nodeName;
+            for (auto & part : parts)
+            {
+                if (nodeName.length() > 0)
+                    nodeName += "_";
+                nodeName += part;
+            }
+
+            std::vector<DeBruijnNode *> nodes = graph->getNodeFromNameExact(QString::number(graph->getGraphId()) + "_" + nodeName);
+            if (nodes.size() != 1) {
+                throw std::runtime_error("graph does not contain node: " + (graph->getNodeNameFromString(nodeName)).toStdString());
+            }
+            DeBruijnNode * node = nodes[0];
+            if (!it.value().isArray())
+                throw std::runtime_error("invalid layout format");
+            for (const auto &point : it.value().toArray()) {
+                QJsonArray pointArray = point.toArray();
+                if (pointArray.size() != 2)
+                    throw std::runtime_error("invalid layout format: point size is " + std::to_string(pointArray.size()));
+                layout.add(node, { pointArray[0].toDouble(), pointArray[1].toDouble() });
+            }
+        }
+        layout::apply(*graph, layout);
+        graph->setLayout(&layout);
     }
 
-    layout::apply(*(g_assemblyGraph->first()), layout);
-    QList<GraphLayout*> layouts;
-    layouts.append(&layout);
-    graphLayoutFinished(layouts);
+    return true;
 }
 
 void MainWindow::loadGraphPaths(QString fullFileName) {
@@ -609,7 +681,14 @@ void MainWindow::displayGraphDetails()
 {
     ui->nodeCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getNodeCount()));
     ui->edgeCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getEdgeCount()));
-    ui->pathCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getPathCount()));
+    if (g_settings->multyGraphMode) {
+        ui->label_6p->setVisible(false);
+        ui->pathCountLabel->setVisible(false);
+    } else {
+        ui->label_6p->setVisible(true);
+        ui->pathCountLabel->setVisible(true);
+        ui->pathCountLabel->setText(formatIntForDisplay(g_assemblyGraph->getPathCount()));
+    }
     ui->totalLengthLabel->setText(formatIntForDisplay(g_assemblyGraph->getTotalLength()));
 }
 
@@ -1012,7 +1091,7 @@ void MainWindow::drawGraph() {
 }
 
 
-void MainWindow::graphLayoutFinished(QList<GraphLayout*> layouts) {
+void MainWindow::graphLayoutFinished() {
     //int i = 1;
     m_scene->clear();
     int drawnNodeCount = 0;
@@ -1093,7 +1172,7 @@ void MainWindow::layoutGraph()
         auto *watcher = new QFutureWatcher<QList<GraphLayout*>>;
 
         connect(watcher, &QFutureWatcher<GraphLayout>::finished,
-                this, [=]() { this->graphLayoutFinished(watcher->future().result()); });
+                this, [=]() { this->graphLayoutFinished(); });
         connect(watcher, SIGNAL(finished()), graphLayoutWorker, SLOT(deleteLater()));
         connect(watcher, SIGNAL(finished()), progress, SLOT(deleteLater()));
         connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
@@ -2039,8 +2118,17 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_HiC_data->setEnabled(true);
         if (g_settings->multyGraphMode) {
             ui->moreInfoButton->setEnabled(false);
+            ui->actionRemove_selection_from_graph->setEnabled(false);
+            ui->actionDuplicate_selected_nodes->setEnabled(false);
+            ui->actionMerge_selected_nodes->setEnabled(false);
+            ui->actionMerge_all_possible_nodes->setEnabled(false);
+            //ui->actionLoad_layout->setEnabled(false);
         } else {
             ui->moreInfoButton->setEnabled(true);
+            ui->actionRemove_selection_from_graph->setEnabled(true);
+            ui->actionDuplicate_selected_nodes->setEnabled(true);
+            ui->actionMerge_selected_nodes->setEnabled(true);
+            ui->actionMerge_all_possible_nodes->setEnabled(true);
         }
         break;
     case GRAPH_DRAWN:
@@ -2060,8 +2148,18 @@ void MainWindow::setUiState(UiState uiState)
         ui->actionLoad_HiC_data->setEnabled(true);
         if (g_settings->multyGraphMode) {
             ui->moreInfoButton->setEnabled(false);
+            ui->actionRemove_selection_from_graph->setEnabled(false);
+            ui->actionDuplicate_selected_nodes->setEnabled(false);
+            ui->actionMerge_selected_nodes->setEnabled(false);
+            ui->actionMerge_all_possible_nodes->setEnabled(false);
+            //ui->actionLoad_layout->setEnabled(false);
+            //ui->actionExport_layout->setEnabled(false);
         } else {
             ui->moreInfoButton->setEnabled(true);
+            ui->actionRemove_selection_from_graph->setEnabled(true);
+            ui->actionDuplicate_selected_nodes->setEnabled(true);
+            ui->actionMerge_selected_nodes->setEnabled(true);
+            ui->actionMerge_all_possible_nodes->setEnabled(true);
         }
         break;
     }
@@ -2581,8 +2679,6 @@ void MainWindow::removeSelection()
     resetAllNodeColours();
 }
 
-
-
 void MainWindow::duplicateSelectedNodes()
 {
     if (g_assemblyGraph->size() > 1)
@@ -2767,8 +2863,8 @@ void MainWindow::openGraphInfoDialog()
 }
 
 void MainWindow::exportGraphLayout() {
-    if (g_assemblyGraph->size() > 1)
-        return;
+    //if (g_assemblyGraph->size() > 1)
+    //    return;
     QString filter = "Bandage layout (*.layout)";
     QString fullFileName = QFileDialog::getSaveFileName(this, "Export graph layout",
                                                         "",
@@ -2779,12 +2875,21 @@ void MainWindow::exportGraphLayout() {
         return;
 
     bool isTSV = filter == "TSV (*.tsv)";
-    GraphLayout layout = layout::fromGraph(*g_assemblyGraph->first(),
-                                           /* simplified */ isTSV);
-    if (isTSV)
-        layout::io::saveTSV(fullFileName, layout);
-    else
-        layout::io::save(fullFileName, layout);
+    if (g_assemblyGraph->size() == 1) {
+        GraphLayout layout = layout::fromGraph(*g_assemblyGraph->first(),
+                                               /* simplified */ isTSV);
+        if (isTSV)
+            layout::io::saveTSV(fullFileName, layout);
+        else
+            layout::io::save(fullFileName, layout);
+    } else {
+        if (isTSV) {
+            GraphLayout layout = layout::fromGraph(*g_assemblyGraph->first(), isTSV);
+            layout::io::saveGraphListTSV(fullFileName, g_assemblyGraph);
+        } else {
+            layout::io::saveGraphList(fullFileName, g_assemblyGraph);
+        }
+    }
 }
 
 void MainWindow::showPathListDialog() {

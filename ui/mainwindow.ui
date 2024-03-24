@@ -61,7 +61,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-377</y>
+         <y>0</y>
          <width>332</width>
          <height>1903</height>
         </rect>
@@ -997,7 +997,7 @@ then colour which other nodes in the graph are likely to be contiguous
                  <string>Move nodes with graph's title</string>
                 </property>
                 <property name="checked">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -1031,7 +1031,7 @@ then colour which other nodes in the graph are likely to be contiguous
                  <double>0.500000000000000</double>
                 </property>
                 <property name="value">
-                 <double>5.000000000000000</double>
+                 <double>10.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -2050,7 +2050,7 @@ then colour which other nodes in the graph are likely to be contiguous
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-158</y>
+         <y>0</y>
          <width>237</width>
          <height>1024</height>
         </rect>

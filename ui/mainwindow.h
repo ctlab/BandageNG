@@ -127,6 +127,7 @@ private:
     void resetFeatureForestScene();
     void cleanUpFeatureForest();
     void setHiCInclusionFilterComboBox(HiCInclusionFilter filter);
+    bool loadLayoutList(const QString &filename);
 public slots:
     void zoomedFeaturesWithMouseWheel();
 private slots:
@@ -167,7 +168,7 @@ private slots:
     void selectPathNodes();
     void showPathListDialog();
     void selectUserSpecifiedNodes();
-    void graphLayoutFinished(QList<GraphLayout*> layout);
+    void graphLayoutFinished();
     void openBlastSearchDialog();
     void blastChanged(QString chosenTypeName = "");
     void blastQueryChanged(QString chosenTypeName = "");

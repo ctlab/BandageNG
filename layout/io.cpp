@@ -49,6 +49,31 @@ namespace layout::io {
         return true;
     }
 
+    bool saveGraphList(const QString &filename, QSharedPointer<AssemblyGraphList> graphList) {
+        QJsonObject jsonLayoutGraphList;
+        for (AssemblyGraph* graph : graphList->m_graphMap.values()) {
+            GraphLayout layout = layout::fromGraph(*graph, false);
+            QJsonObject jsonLayoutGraph;
+            for (const auto &entry: layout) {
+                QJsonArray segments;
+                for (QPointF point: entry.second)
+                    segments.append(QJsonArray{point.x(), point.y()});
+
+                jsonLayoutGraph[entry.first->getName()] = segments;
+            }
+            jsonLayoutGraphList[graph->getGraphName()] = jsonLayoutGraph;
+        }
+
+
+        QFile saveFile(filename);
+        if (!saveFile.open(QIODevice::WriteOnly))
+            return false;
+
+        saveFile.write(QJsonDocument(jsonLayoutGraphList).toJson());
+
+        return true;
+    }
+
     bool saveTSV(const QString &filename,
                  const GraphLayout &layout) {
         QFile saveFile(filename);
@@ -60,6 +85,25 @@ namespace layout::io {
             const DeBruijnNode *node = entry.first;
             QPointF pos = entry.second.front();
             out << entry.first->getName() << '\t' << pos.x() << '\t' << pos.y() << '\n';
+        }
+
+        return true;
+    }
+
+    bool saveGraphListTSV(const QString &filename, QSharedPointer<AssemblyGraphList> graphList) {
+        QFile saveFile(filename);
+        if (!saveFile.open(QIODevice::WriteOnly | QIODevice::Text))
+            return false;
+
+        QTextStream out(&saveFile);
+        for (AssemblyGraph* graph : graphList->m_graphMap.values()) {
+            GraphLayout layout = layout::fromGraph(*graph, false);
+            out << graph->getGraphName() << '\n';
+            for (const auto &entry: layout) {
+                const DeBruijnNode *node = entry.first;
+                QPointF pos = entry.second.front();
+                out << entry.first->getName() << '\t' << pos.x() << '\t' << pos.y() << '\n';
+            }
         }
 
         return true;
@@ -82,28 +126,82 @@ namespace layout::io {
 
         QJsonObject jsonLayout = jsonLayoutDoc.object();
         const AssemblyGraph &graph = layout.graph();
-        QString prefix = "";
-        if (g_settings->multyGraphMode)
-            prefix = QString::number(graph.getGraphId()) + "_";
         for (auto it = jsonLayout.begin(); it != jsonLayout.end(); ++it) {
             QString name = it.key();
-            auto node = graph.m_deBruijnGraphNodes.find(name.toStdString());
-            if (node == graph.m_deBruijnGraphNodes.end()) {
-                node = graph.m_deBruijnGraphNodes.find((prefix+ name).toStdString());
-                if (node == graph.m_deBruijnGraphNodes.end()) {
-                    throw std::runtime_error("graph does not contain node: " + name.toStdString());
-                }
+            std::vector<DeBruijnNode *> nodes = graph.getNodeFromNameExact(name);
+            if (nodes.size() != 1) {
+                throw std::runtime_error("graph does not contain node: " + (graph.getNodeNameFromString(name)).toStdString());
             }
+            DeBruijnNode * node = nodes[0];
             if (!it.value().isArray())
                 throw std::runtime_error("invalid layout format");
             for (const auto &point : it.value().toArray()) {
                 QJsonArray pointArray = point.toArray();
                 if (pointArray.size() != 2)
                     throw std::runtime_error("invalid layout format: point size is " + std::to_string(pointArray.size()));
-                layout.add(*node, { pointArray[0].toDouble(), pointArray[1].toDouble() });
+                layout.add(node, { pointArray[0].toDouble(), pointArray[1].toDouble() });
             }
         }
 
+        return true;
+    }
+
+    bool loadLayoutList(const QString &filename,
+                        QSharedPointer<AssemblyGraphList> graphList) {
+        QFile loadFile(filename);
+        // FIXME: Switch to Error return object stuff!
+        if (!loadFile.open(QIODevice::ReadOnly | QIODevice::Text))
+            throw std::runtime_error("cannot open file: " + filename.toStdString());
+
+        QJsonParseError error;
+        auto jsonLayoutDoc = QJsonDocument::fromJson(loadFile.readAll(), &error);
+        if (error.error != QJsonParseError::NoError)
+            throw std::runtime_error(error.errorString().toStdString());
+
+        if (!jsonLayoutDoc.isObject())
+            throw std::runtime_error("invalid layout format");
+
+        QJsonObject jsonLayout = jsonLayoutDoc.object();
+
+        for (auto graphIt = jsonLayout.begin(); graphIt != jsonLayout.end(); ++graphIt) {
+            QString graphName = graphIt.key();
+            AssemblyGraph* graph = graphList->getGraphByName(graphName);
+            const AssemblyGraph& refGraph = std::cref(*graph);
+            if (graph == nullptr) {
+                throw std::runtime_error("Graph with name " + graphName.toStdString() + " not found");
+            }
+
+            GraphLayout * layout = new GraphLayout(refGraph);
+            QJsonObject graphLayout = graphIt.value().toObject();
+            for (auto it = graphLayout.begin(); it != graphLayout.end(); ++it) {
+                QStringList parts = it.key().split("_");
+                parts.pop_front();
+
+                QString nodeName;
+                for (auto & part : parts)
+                {
+                    if (nodeName.length() > 0)
+                        nodeName += "_";
+                    nodeName += part;
+                }
+
+                std::vector<DeBruijnNode *> nodes = graph->getNodeFromNameExact(QString::number(graph->getGraphId()) + "_" + nodeName);
+                if (nodes.size() != 1) {
+                    throw std::runtime_error("graph does not contain node: " + (graph->getNodeNameFromString(nodeName)).toStdString());
+                }
+                DeBruijnNode * node = nodes[0];
+                if (!it.value().isArray())
+                    throw std::runtime_error("invalid layout format");
+                for (const auto &point : it.value().toArray()) {
+                    QJsonArray pointArray = point.toArray();
+                    if (pointArray.size() != 2)
+                        throw std::runtime_error("invalid layout format: point size is " + std::to_string(pointArray.size()));
+                    layout->add(node, { pointArray[0].toDouble(), pointArray[1].toDouble() });
+                }
+            }
+            layout::apply(*graph, *layout);
+            graph->setLayout(layout);
+        }
         return true;
     }
 }
