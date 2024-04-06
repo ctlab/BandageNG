@@ -255,7 +255,6 @@ MainWindow::MainWindow(QString fileToLoadOnStartup, QString featuresForestFileTo
     connect(this, SIGNAL(windowLoaded()), this, SLOT(afterMainWindowShow()), Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
     connect(ui->actionLoad_HiC_data, SIGNAL(triggered()), this, SLOT(loadHiC()));
     connect(ui->hicInclusionFilterComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(hicInclusionFilterChanged()));
-    connect(ui->moveTitlesCheckBox, SIGNAL(toggled(bool)), this, SLOT(setMoveGraphTitleSetting()));
 }
 
 
@@ -391,7 +390,6 @@ void MainWindow::loadCSV(QString fullFileName, AssemblyGraph* assemblyGraph) {
 }
 
 void MainWindow::loadGraphs(QString fullDirName, QString basePath) {
-    ui->moveTitlesCheckBox->setEnabled(true);
     if (fullDirName.isEmpty()) {
         fullDirName =
                 QFileDialog::getExistingDirectory(this, "Load graphs from dir", g_memory->rememberedPath, QFileDialog::ShowDirsOnly);
@@ -452,7 +450,6 @@ AssemblyGraph* MainWindow::loadGraph(QString fullFileName, QString graphName, bo
     if (isSingleGraphMode) {
         cleanUp();
         g_settings->multyGraphMode = false;
-        ui->moveTitlesCheckBox->setEnabled(false);
     }
     ui->selectionSearchNodesLineEdit->clear();
 
@@ -3135,10 +3132,6 @@ void MainWindow::setFeatureTextDisplaySettings()
     g_graphicsViewFeaturesForest->viewport()->update();
 }
 
-void MainWindow::setMoveGraphTitleSetting()
-{
-    g_settings->moveGraphTitle = ui->moveTitlesCheckBox->isChecked();
-}
 void MainWindow::setFeatureNodeCustomColour()
 {
     std::vector<FeatureTreeNode*> selectedNodes = m_featuresForestWidget->m_scene->getSelectedFeatureNodes();

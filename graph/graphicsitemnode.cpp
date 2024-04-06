@@ -403,7 +403,7 @@ void GraphicsItemNode::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         fixEdgePaths(&nodesToMove);
         fixHiCEdgePaths(&nodesToMove);
         AssemblyGraph& currrentGraph = *g_assemblyGraph->m_graphMap[graphId];
-        if (g_settings->multyGraphMode && (g_settings->moveGraphTitle || nodesToMove.size() == currrentGraph.getDrawnNodeCount())) {
+        if (g_settings->multyGraphMode && nodesToMove.size() == currrentGraph.getDrawnNodeCount()) {
             if (currrentGraph.hasTextGraphicsItem()) {
                 TextGraphicsItemNode * graphTitle = currrentGraph.getTextGraphicsItemNode();
                 graphTitle->mouseMoveEvent(event);

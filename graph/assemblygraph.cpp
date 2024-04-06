@@ -435,7 +435,6 @@ bool AssemblyGraph::loadCSV(const QString &filename, QStringList *columns, QStri
 
         if (nodes.empty()) {
             unmatchedNodes += 1;
-            qInfo() << unmatchedNodes << " " << getNodeNameFromString(nodeName);
             continue;
         }
 

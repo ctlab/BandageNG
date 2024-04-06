@@ -118,7 +118,7 @@ private slots:
     void blastSearchFilters();
     void graphScope();
     void graphLayout();
-//    void commandLineSettings();
+    void commandLineSettings();
     void sciNotComparisons();
     void graphEdits();
     void fastgToGfa();
@@ -913,7 +913,7 @@ static void parseSettings(const QStringList &commandLineSettings) {
     QVERIFY_THROWS_NO_EXCEPTION(app.parse(argv.size(), argv.data()));
 #endif
 }
-/*
+
 void BandageTests::commandLineSettings() {
     QStringList commandLineSettings;
 
@@ -1226,7 +1226,6 @@ void BandageTests::commandLineSettings() {
     parseSettings(commandLineSettings);
     QCOMPARE(g_settings->maxEValueProduct.on, false);
 }
-*/
 
 void BandageTests::sciNotComparisons()
 {

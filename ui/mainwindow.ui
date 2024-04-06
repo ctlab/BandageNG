@@ -61,9 +61,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-461</y>
          <width>332</width>
-         <height>1903</height>
+         <height>1892</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -988,16 +988,6 @@ then colour which other nodes in the graph are likely to be contiguous
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the average width for each node. The exact width for each node is also influenced by the node's depth. The effect of depth on width can be adjusted in Bandage %SETTINGS%.  &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QCheckBox" name="moveTitlesCheckBox">
-                <property name="text">
-                 <string>Move nodes with graph's title</string>
-                </property>
-                <property name="checked">
-                 <bool>false</bool>
                 </property>
                </widget>
               </item>

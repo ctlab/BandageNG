@@ -750,15 +750,13 @@ QList<GraphLayout*> GraphLayoutWorker::layoutGraph(QSharedPointer<AssemblyGraphL
 
     time(&end);
     double second = difftime(end, start);
-    qInfo() << "Time "<<second<<"\n";
     return resList;
 }
 
 [[maybe_unused]] void GraphLayoutWorker::cancelLayout() {
-    /*for (auto &layouter : m_state)
-        layouter->cancel();
     for (auto taskSynchronizer : m_taskSynchronizers) {
-        for (auto & future : taskSynchronizer.futures())
+        for (auto & future : taskSynchronizer->futures()) {
             future.cancel();
-    }*/
+        }
+    }
 }
