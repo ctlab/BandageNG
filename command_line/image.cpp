@@ -41,7 +41,7 @@
 CLI::App *addImageSubcommand(CLI::App &app, ImageCmd &cmd) {
     auto *image = app.add_subcommand("image", "Generate an image file of a graph");
     image->add_option("<graph>", cmd.m_graph, "A graph file of any type supported by Bandage")
-            ->required()->check(CLI::ExistingFile);
+            ->required()->check(CLI::ExistingPath);
     image->add_option("<output_file>", cmd.m_image, "The image file to be created (must end in '.jpg', '.png' or '.svg')")
             ->required();
     image->add_option("--height", cmd.m_height, "Image height")
@@ -72,12 +72,18 @@ int handleImageCmd(QApplication *app,
         return 1;
     }
 
-    g_assemblyGraph->clear();
-    g_assemblyGraph->m_graphMap[1] = new AssemblyGraph();
-    bool loadSuccess = g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str());
-    if (!loadSuccess) {
-        outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME
-        return 1;
+    if(std::filesystem::is_directory(cmd.m_graph.c_str())) {
+        g_settings->multyGraphMode = true;
+        g_assemblyGraph->clear();
+        g_assemblyGraph->loadGraphsFromDir(cmd.m_graph.c_str());
+    } else {
+        g_assemblyGraph->clear();
+        g_assemblyGraph->m_graphMap[1] = new AssemblyGraph();
+        bool loadSuccess = g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str());
+        if (!loadSuccess) {
+            outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME
+            return 1;
+        }
     }
 
 
@@ -112,24 +118,20 @@ int handleImageCmd(QApplication *app,
 
     QString errorTitle;
     QString errorMessage;
-    auto scope = graph::scope(g_settings->graphScope,
-                              g_settings->startingNodes,
-                              g_settings->minDepthRange, g_settings->maxDepthRange,
-                              &g_blastSearch->queries(), "all",
-                              "", g_settings->nodeDistance);
-    std::vector<DeBruijnNode *> startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
-                                                                        *g_assemblyGraph->first(), scope);
-    if (!errorMessage.isEmpty()) {
-        err << errorMessage << Qt::endl;
-        return 1;
-    }
 
     if (!cmd.m_color.empty()) {
         QString errormsg;
         QStringList columns;
         bool coloursLoaded = false;
+        bool isCSVLoaded = false;
 
-        if (!g_assemblyGraph->first()->loadCSV(cmd.m_color.c_str(), &columns, &errormsg, &coloursLoaded)) {
+        for (auto graph : g_assemblyGraph->m_graphMap.values()) {
+            if (graph->loadCSV(cmd.m_color.c_str(), &columns, &errormsg, &coloursLoaded)) {
+                isCSVLoaded = true;
+            }
+        }
+
+        if (!isCSVLoaded) {
             err << errormsg << Qt::endl;
             return 1;
         }
@@ -141,17 +143,43 @@ int handleImageCmd(QApplication *app,
          g_settings->initializeColorer(CUSTOM_COLOURS);
     }
 
-    g_assemblyGraph->first()->markNodesToDraw(scope, startingNodes);
+    for(auto& assemblyGraph : g_assemblyGraph->m_graphMap.values()) {
+        auto scope = graph::scope(g_settings->graphScope,
+                                      g_settings->startingNodes,
+                                      g_settings->minDepthRange, g_settings->maxDepthRange,
+                                      &g_blastSearch->queries(), "all",
+                                      "", g_settings->nodeDistance);
+            std::vector<DeBruijnNode *> startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
+                                                                                *assemblyGraph, scope);
+
+        if (!errorMessage.isEmpty()) {
+            err << errorMessage << Qt::endl;
+            return 1;
+        }
+
+        assemblyGraph->resetEdges();
+        assemblyGraph->resetNodes();
+        assemblyGraph->markNodesToDraw(scope, startingNodes);
+    }
+
     BandageGraphicsScene scene;
     {
-        GraphLayoutStorage layout =
-                *GraphLayoutWorker(g_settings->graphLayoutQuality,
-                                  g_settings->linearLayout,
-                                  g_settings->componentSeparation).layoutGraph(g_assemblyGraph)[0];
+        GraphLayoutWorker(g_settings->graphLayoutQuality, g_settings->linearLayout, g_settings->componentSeparation).layoutGraph(g_assemblyGraph);
 
         scene.clear();
-        scene.addGraphicsItemsToScene(*g_assemblyGraph->first(), layout);
-        scene.setSceneRectangle();
+        int drawnNodeCount = 0;
+        for(AssemblyGraph* graph : g_assemblyGraph->m_graphMap.values()) {
+            GraphLayout* layout = graph->m_layout;
+            scene.addGraphicsItemsToScene(*graph, *layout);
+
+            double averageNodeWidth = g_settings->averageNodeWidth / pow(g_absoluteZoom, 0.75);
+            graph->recalculateAllNodeWidths(averageNodeWidth,
+                                            g_settings->depthPower,
+                                            g_settings->depthEffectOnWidth);
+            drawnNodeCount += (graph->getDrawnNodeCount());
+        }
+        if (drawnNodeCount > 0)
+            scene.setSceneRectangle();
     }
     double sceneRectAspectRatio = scene.sceneRect().width() / scene.sceneRect().height();
 

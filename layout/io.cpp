@@ -49,10 +49,10 @@ namespace layout::io {
         return true;
     }
 
-    bool saveGraphList(const QString &filename, QSharedPointer<AssemblyGraphList> graphList) {
+    bool saveGraphList(const QString &filename, QSharedPointer<AssemblyGraphList> graphList, bool isCliMode) {
         QJsonObject jsonLayoutGraphList;
         for (AssemblyGraph* graph : graphList->m_graphMap.values()) {
-            GraphLayout layout = layout::fromGraph(*graph, false);
+            GraphLayout layout = isCliMode ? *graph->m_layout : layout::fromGraph(*graph, false);
             QJsonObject jsonLayoutGraph;
             for (const auto &entry: layout) {
                 QJsonArray segments;
@@ -90,19 +90,17 @@ namespace layout::io {
         return true;
     }
 
-    bool saveGraphListTSV(const QString &filename, QSharedPointer<AssemblyGraphList> graphList) {
+    bool saveGraphListTSV(const QString &filename, QSharedPointer<AssemblyGraphList> graphList, bool isCliMode) {
         QFile saveFile(filename);
         if (!saveFile.open(QIODevice::WriteOnly | QIODevice::Text))
             return false;
 
         QTextStream out(&saveFile);
         for (AssemblyGraph* graph : graphList->m_graphMap.values()) {
-            GraphLayout layout = layout::fromGraph(*graph, false);
-            out << graph->getGraphName() << '\n';
+            GraphLayout layout = isCliMode ? *graph->m_layout : layout::fromGraph(*graph, false);
             for (const auto &entry: layout) {
                 const DeBruijnNode *node = entry.first;
                 QPointF pos = entry.second.front();
-                out << entry.first->getName() << '\t' << pos.x() << '\t' << pos.y() << '\n';
             }
         }
 

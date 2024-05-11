@@ -42,6 +42,22 @@ QPainterPath TextGraphicsItemNode::shape() const
     return textPath;
 }
 
+void TextGraphicsItemNode::remakePath()
+{
+    QPainterPath path;
+
+    QFont font = g_settings->labelFont;
+    font.setBold(true);
+
+    QFontMetrics metrics(font);
+    double fontHeight = metrics.ascent();
+
+    int stepsUntilLast = m_text.size() - 1;
+    double shiftLeft = -metrics.boundingRect(m_text).width() / 2.0;
+    path.addText(0, -fontHeight, font, m_text);
+
+    m_path = path;
+}
 
 void TextGraphicsItemNode::paint(QPainter * painter, const QStyleOptionGraphicsItem *, QWidget *)
 {

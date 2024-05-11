@@ -37,7 +37,7 @@
 CLI::App *addLayoutSubcommand(CLI::App &app, LayoutCmd &cmd) {
     auto *layout = app.add_subcommand("layout", "Layout the graph");
     layout->add_option("<graph>", cmd.m_graph, "A graph file of any type supported by Bandage")
-            ->required()->check(CLI::ExistingFile);
+            ->required()->check(CLI::ExistingPath);
     layout->add_option("<layout>", cmd.m_layout, "The layout file to be created (must end with .tsv or .layout)")
             ->required();
 
@@ -60,10 +60,18 @@ int handleLayoutCmd(QApplication *app,
         return 1;
     }
 
-    bool loadSuccess = g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str());
-    if (!loadSuccess) {
-        outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME
-        return 1;
+    if(std::filesystem::is_directory(cmd.m_graph.c_str())) {
+        g_settings->multyGraphMode = true;
+        g_assemblyGraph->clear();
+        g_assemblyGraph->loadGraphsFromDir(cmd.m_graph.c_str());
+    } else {
+        g_assemblyGraph->clear();
+        g_assemblyGraph->m_graphMap[1] = new AssemblyGraph();
+        bool loadSuccess = g_assemblyGraph->first()->loadGraphFromFile(cmd.m_graph.c_str());
+        if (!loadSuccess) {
+            outputText(("Bandage-NG error: could not load " + cmd.m_graph.native()).c_str(), &err); // FIXME
+            return 1;
+        }
     }
 
     if (cli.count("--query")) {
@@ -84,28 +92,44 @@ int handleLayoutCmd(QApplication *app,
 
     QString errorTitle;
     QString errorMessage;
-    auto scope = graph::scope(g_settings->graphScope,
-                              g_settings->startingNodes,
-                              g_settings->minDepthRange, g_settings->maxDepthRange,
-                              &g_blastSearch->queries(), "all",
-                              "", g_settings->nodeDistance);
-    std::vector<DeBruijnNode *> startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
-                                                                        *g_assemblyGraph->first(), scope);
-    if (!errorMessage.isEmpty()) {
-        err << errorMessage << Qt::endl;
-        return 1;
+
+    for(auto& assemblyGraph : g_assemblyGraph->m_graphMap.values()) {
+        auto scope = graph::scope(g_settings->graphScope,
+                                      g_settings->startingNodes,
+                                      g_settings->minDepthRange, g_settings->maxDepthRange,
+                                      &g_blastSearch->queries(), "all",
+                                      "", g_settings->nodeDistance);
+            std::vector<DeBruijnNode *> startingNodes = graph::getStartingNodes(&errorTitle, &errorMessage,
+                                                                                *assemblyGraph, scope);
+
+        if (!errorMessage.isEmpty()) {
+            err << errorMessage << Qt::endl;
+            return 1;
+        }
+
+        assemblyGraph->resetEdges();
+        assemblyGraph->resetNodes();
+        assemblyGraph->markNodesToDraw(scope, startingNodes);
     }
 
-    g_assemblyGraph->first()->markNodesToDraw(scope, startingNodes);
+    GraphLayoutWorker(g_settings->graphLayoutQuality,
+                       g_settings->linearLayout,
+                       g_settings->componentSeparation).layoutGraph(g_assemblyGraph);
 
-    GraphLayoutStorage layout =
-            *GraphLayoutWorker(g_settings->graphLayoutQuality,
-                              g_settings->linearLayout,
-                              g_settings->componentSeparation).layoutGraph(g_assemblyGraph)[0];
+    bool success;
 
-    bool success = (isTSV ?
-                    layout::io::saveTSV(cmd.m_layout.c_str(), layout) :
-                    layout::io::save(cmd.m_layout.c_str(), layout));
+    if (g_assemblyGraph->size() == 1) {
+        if (isTSV)
+            success = layout::io::saveTSV(cmd.m_layout.c_str(), *g_assemblyGraph->first()->m_layout);
+        else
+            success = layout::io::save(cmd.m_layout.c_str(), *g_assemblyGraph->first()->m_layout);
+    } else {
+        if (isTSV) {
+            success = layout::io::saveGraphListTSV(cmd.m_layout.c_str(), g_assemblyGraph, true);
+        } else {
+            success = layout::io::saveGraphList(cmd.m_layout.c_str(), g_assemblyGraph, true);
+        }
+    }
     
     if (!success) {
         out << "There was an error writing the layout to file." << Qt::endl;

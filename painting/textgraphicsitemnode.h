@@ -18,5 +18,6 @@ public:
     void drawTextPathAtLocation(QPainter * painter, const QPainterPath &textPath);
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
+    void remakePath() override;
 };
 #endif // TEXTGRAPHICSITEMNODE_H

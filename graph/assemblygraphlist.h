@@ -76,6 +76,9 @@ public:
         return nullptr;
     }
 
+    bool loadGraphsFromDir(const QString& dirname);
+    void loadGraphsIter(QString fullDirName, const QString& basePath);
+
     QMap<int, AssemblyGraph*> m_graphMap;
 
 private:

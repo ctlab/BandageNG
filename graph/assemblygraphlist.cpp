@@ -2,6 +2,11 @@
 #include "program/globals.h"
 #include "program/settings.h"
 
+#include <iostream>
+#include <filesystem>
+
+#include<QDebug>
+
 AssemblyGraphList::AssemblyGraphList()
 {
 }
@@ -126,4 +131,39 @@ double AssemblyGraphList::getMeanDepth(const std::vector<DeBruijnNode *> &nodes)
     }
 
     return depthSum / totalLength;
+}
+
+bool AssemblyGraphList::loadGraphsFromDir(const QString& basePath) {
+
+    if (basePath.isEmpty()) //User did hit cancel
+        return false;
+
+    QString dirname = basePath;
+
+    clear();
+
+    loadGraphsIter(dirname, basePath);
+    return true;
+}
+
+void AssemblyGraphList::loadGraphsIter(QString fullDirName, const QString& basePath) {
+    if (fullDirName.isEmpty()) //User did hit cancel
+        return;
+    for (const auto entry : std::filesystem::directory_iterator(fullDirName.toStdString())) {
+        const std::filesystem::path path = entry.path();
+        if(std::filesystem::is_directory(path)) {
+            loadGraphsIter(QString::fromStdString(path), basePath);
+        }
+        if (std::filesystem::is_regular_file(path) && path.extension() != ".fasta") {
+            QString qpath = QString::fromStdString(path);
+
+            qInfo() << "loadGraphFromFile: " << qpath;
+            int graphId = g_assemblyGraph->m_graphMap.size() + 1;
+            g_assemblyGraph->m_graphMap[graphId] = new AssemblyGraph();
+            g_assemblyGraph->m_graphMap[graphId] -> setGraphId(graphId);
+            bool loadSuccess = g_assemblyGraph->m_graphMap[graphId]->loadGraphFromFile(qpath);
+
+            g_assemblyGraph->m_graphMap[graphId]->setGraphName(qpath.right(qpath.size() - basePath.size()));
+        }
+    }
 }

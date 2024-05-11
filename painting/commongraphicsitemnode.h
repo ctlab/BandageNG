@@ -34,7 +34,7 @@ public:
 
     static double distance(QPointF p1, QPointF p2);
     void shiftPoints(QPointF difference);
-    void remakePath();
+    virtual void remakePath();
     void setWidth(double width) { m_width = width; }
     void updateGrabIndex(QGraphicsSceneMouseEvent* event);
     QPointF getFirst() const { return m_linePoints.front(); }

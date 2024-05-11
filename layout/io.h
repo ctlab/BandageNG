@@ -28,6 +28,6 @@ namespace layout::io {
     bool saveTSV(const QString &filename,
                  const GraphLayout &layout);
 
-    bool saveGraphList(const QString &filename, QSharedPointer<AssemblyGraphList> graphList);
-    bool saveGraphListTSV(const QString &filename, QSharedPointer<AssemblyGraphList> graphList);
+    bool saveGraphList(const QString &filename, QSharedPointer<AssemblyGraphList> graphList, bool isCliMode = false);
+    bool saveGraphListTSV(const QString &filename, QSharedPointer<AssemblyGraphList> graphList, bool isCliMode = false);
 }
