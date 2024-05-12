@@ -147,7 +147,7 @@ test_all "$bandagepath image inputs/test.fastg tmp/test.png  --width 400 --heigh
 test_image_width_and_height tmp/test.png 400 500; rm tmp/test.png
 test_all "$bandagepath image inputs/test.fastg tmp/test.png  --width 500 --height 400" 0 "" ""
 test_image_width_and_height tmp/test.png 500 400; rm tmp/test.png
-test_all "$bandagepath image abc.fastg test.png" 105 "" "<graph>: File does not exist: abc.fastg Run with --help or --helpall for more information."
+test_all "$bandagepath image abc.fastg test.png" 105 "" "<graph>: Path does not exist: abc.fastg Run with --help or --helpall for more information."
 test_all "$bandagepath image inputs/test.fastg test.abc" 1 "" "Bandage-NG error: the output filename must end in .png, .jpg or .svg"
 test_all "$bandagepath image inputs/test.csv tmp/test.png" 1 "" "Bandage-NG error: could not load inputs/test.csv"
 test_all "$bandagepath image inputs/test.fastg test.png --query abc.fasta" 105 "" "--query: File does not exist: abc.fasta Run with --help or --helpall for more information."
